@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package test;
+
+option go_package = "test";
+
+// Test message
+message Test {
+  // ID
+  int32 id = 1;
+  // Name
+  string name = 2;
+}

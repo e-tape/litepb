@@ -1,2 +1,8 @@
 # IDE files
 .idea/
+
+# Binaries
+bin/
+
+# Generated files
+**/generated/**
