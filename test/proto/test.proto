@@ -25,7 +25,7 @@ message Foo {
   //Ok
   int64 id = 1; // Deprecated
   // Bars list
-  // repeated Bar bars = 2;
+  repeated Bar bars = 2;
   // The bar
   Bar bar = 3;
 }
@@ -33,4 +33,6 @@ message Foo {
 message Bar {
   string text = 1;
   bool done = 2;
+  // Numbers
+  repeated int32 numbers = 3;
 }

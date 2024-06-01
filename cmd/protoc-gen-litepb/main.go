@@ -106,11 +106,15 @@ func generate(request *pluginpb.CodeGeneratorRequest) *pluginpb.CodeGeneratorRes
 		for i, message := range protoFile.GetMessageType() {
 			fields := make([]GoTypeField, 0, len(message.GetField()))
 			for j, field := range message.GetField() {
+				typ := fieldType(field, definedTypes, goPackage)
+				if field.GetLabel() == descriptorpb.FieldDescriptorProto_LABEL_REPEATED {
+					typ = "[]" + typ
+				}
 				fields = append(fields, GoTypeField{
 					Name:      snakeCaseToCamelCase(field.GetName()),
 					Comments:  findMessageFieldComments(protoFile.GetSourceCodeInfo(), i, j),
 					SnakeName: field.GetName(),
-					Type:      fieldType(field, definedTypes, goPackage),
+					Type:      typ,
 				})
 			}
 
