@@ -98,11 +98,19 @@ func generate(request *pluginpb.CodeGeneratorRequest) *pluginpb.CodeGeneratorRes
 		logf("\tGO FILE: %s", fileName)
 
 		packagePrefix := "." + protoFile.GetPackage() + "."
-		parseDefinedMessages(nil, protoFile.GetMessageType(), packagePrefix, goPackage, definedTypes)
+		parseDefinedTypes(
+			nil,
+			protoFile.GetMessageType(),
+			protoFile.GetEnumType(),
+			packagePrefix,
+			goPackage,
+			definedTypes,
+		)
 
 		mapTypes := make(map[string][2]string) // Message name => [key type, value type]
-		types := generateTypes(
+		types, enumTypes := generateTypes(
 			protoFile.GetMessageType(),
+			protoFile.GetEnumType(),
 			goPackage,
 			packagePrefix,
 			definedTypes,
@@ -128,10 +136,11 @@ func generate(request *pluginpb.CodeGeneratorRequest) *pluginpb.CodeGeneratorRes
 
 		buf := bytes.NewBuffer(nil)
 		err := goTemplate.Execute(buf, GoFile{
-			Package: path.Base(goPackage),
-			Source:  protoFile.GetName(),
-			Imports: imports,
-			Types:   types,
+			Package:   path.Base(goPackage),
+			Source:    protoFile.GetName(),
+			Imports:   imports,
+			Types:     types,
+			EnumTypes: enumTypes,
 		})
 		if err != nil {
 			failf("execute template: %s", err)
@@ -151,24 +160,41 @@ func generate(request *pluginpb.CodeGeneratorRequest) *pluginpb.CodeGeneratorRes
 	}
 }
 
-func parseDefinedMessages(
-	parentMessage *descriptorpb.DescriptorProto, messages []*descriptorpb.DescriptorProto, packagePrefix string,
-	goPackage string, definedTypes map[string]string,
+func parseDefinedTypes(
+	parentMessage *descriptorpb.DescriptorProto, messages []*descriptorpb.DescriptorProto,
+	enums []*descriptorpb.EnumDescriptorProto, packagePrefix, goPackage string, definedTypes map[string]string,
 ) {
 	for _, message := range messages {
 		if parentMessage != nil {
 			message.Name = ptr(parentMessage.GetName() + "." + message.GetName())
 		}
 		definedTypes[packagePrefix+message.GetName()] = goPackage + "." + strings.ReplaceAll(message.GetName(), ".", "_")
-		parseDefinedMessages(message, message.GetNestedType(), packagePrefix, goPackage, definedTypes)
+		parseDefinedTypes(message, message.GetNestedType(), message.GetEnumType(), packagePrefix, goPackage, definedTypes)
+	}
+
+	for _, enum := range enums {
+		if parentMessage != nil {
+			enum.Name = ptr(parentMessage.GetName() + "." + enum.GetName())
+		}
+		definedTypes[packagePrefix+enum.GetName()] = goPackage + "." + strings.ReplaceAll(enum.GetName(), ".", "_")
 	}
 }
 
 func generateTypes(
-	messages []*descriptorpb.DescriptorProto, goPackage, packagePrefix string, definedTypes map[string]string,
-	mapTypes map[string][2]string, sourceCodeInfo *descriptorpb.SourceCodeInfo, sourceCodePath []int32,
-) []GoType {
+	messages []*descriptorpb.DescriptorProto, enums []*descriptorpb.EnumDescriptorProto,
+	goPackage, packagePrefix string, definedTypes map[string]string, mapTypes map[string][2]string,
+	sourceCodeInfo *descriptorpb.SourceCodeInfo, sourceCodePath []int32,
+) ([]GoType, []GoEnumType) {
 	types := make([]GoType, 0, len(messages))
+	enumTypes := make([]GoEnumType, 0, len(enums))
+
+	for i, enum := range enums {
+		enumTypes = append(enumTypes, GoEnumType{
+			Name:     strings.ReplaceAll(enum.GetName(), ".", "_"),
+			Comments: findEnumComments(sourceCodeInfo, sourceCodePath, i),
+		})
+	}
+
 	for i, message := range messages {
 		if message.GetOptions().GetMapEntry() {
 			mapTypes[packagePrefix+message.GetName()] = [2]string{
@@ -178,8 +204,8 @@ func generateTypes(
 			continue
 		}
 
-		nestedTypes := generateTypes(
-			message.GetNestedType(), goPackage, packagePrefix, definedTypes, mapTypes, sourceCodeInfo,
+		nestedTypes, nestedEnumTypes := generateTypes(
+			message.GetNestedType(), message.GetEnumType(), goPackage, packagePrefix, definedTypes, mapTypes, sourceCodeInfo,
 			append(sourceCodePath, int32(i), 3),
 		)
 
@@ -204,15 +230,18 @@ func generateTypes(
 		})
 
 		types = append(types, nestedTypes...)
+		enumTypes = append(enumTypes, nestedEnumTypes...)
 	}
-	return types
+
+	return types, enumTypes
 }
 
 type GoFile struct {
-	Package string
-	Source  string
-	Imports []string
-	Types   []GoType
+	Package   string
+	Source    string
+	Imports   []string
+	Types     []GoType
+	EnumTypes []GoEnumType
 }
 
 type GoType struct {
@@ -228,12 +257,21 @@ type GoTypeField struct {
 	Type      string
 }
 
+type GoEnumType struct {
+	Name     string
+	Comments string
+}
+
 func findMessageComments(info *descriptorpb.SourceCodeInfo, sourceCodePath []int32, messageIndex int) string {
 	return findComments(info, append(sourceCodePath, int32(messageIndex)))
 }
 
 func findMessageFieldComments(info *descriptorpb.SourceCodeInfo, sourceCodePath []int32, messageIndex, fieldIndex int) string {
 	return findComments(info, append(sourceCodePath, int32(messageIndex), 2, int32(fieldIndex)))
+}
+
+func findEnumComments(info *descriptorpb.SourceCodeInfo, sourceCodePath []int32, enumIndex int) string {
+	return findComments(info, append(sourceCodePath, int32(enumIndex))) // FIXME
 }
 
 func findComments(info *descriptorpb.SourceCodeInfo, ps []int32) string {
@@ -291,11 +329,24 @@ func fieldType(
 		} else {
 			goType = goType[strings.LastIndex(goType, "/")+1:]
 		}
+
 		return "*" + goType
 	case descriptorpb.FieldDescriptorProto_TYPE_BYTES:
 		return "[]byte"
 	case descriptorpb.FieldDescriptorProto_TYPE_ENUM:
-		panic("unimplemented")
+		goType, ok := definedTypes[field.GetTypeName()]
+		if !ok {
+			failf("unknown enum type %s", field.GetTypeName())
+			return ""
+		}
+
+		if strings.HasPrefix(goType, goPackage+".") {
+			goType = goType[strings.LastIndex(goType, ".")+1:]
+		} else {
+			goType = goType[strings.LastIndex(goType, "/")+1:]
+		}
+
+		return goType
 	case descriptorpb.FieldDescriptorProto_TYPE_SFIXED32:
 		return "int32"
 	case descriptorpb.FieldDescriptorProto_TYPE_SFIXED64:

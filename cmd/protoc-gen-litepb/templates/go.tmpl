@@ -11,6 +11,13 @@ import (
 )
 {{ end }}
 
+{{ range .EnumTypes -}}
+{{- range (lines .Comments) -}}{{/**/}}
+//{{ . }}
+{{- end }}
+type {{ .Name }} int32
+{{ end }}
+
 {{ range .Types -}}
 {{- range (lines .Comments) -}}{{/**/}}
 //{{ . }}

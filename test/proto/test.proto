@@ -39,6 +39,14 @@ message Foo {
   // The bar
   Bar bar = 3;
 
+  Status status = 4;
+
+  // Status of FOO
+  enum Status {
+    OK = 0;
+    ERROR = 1;
+  }
+
   // Inner message
   message Inner {
     // Inner text
