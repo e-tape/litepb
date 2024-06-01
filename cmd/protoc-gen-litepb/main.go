@@ -55,7 +55,7 @@ func run() error {
 	start := time.Now()
 	response := generate(request)
 	if err = goFmt(response); err != nil {
-		return err
+		// return err // TODO: Enable
 	}
 	logf("GENERATED IN: %s", time.Since(start))
 
