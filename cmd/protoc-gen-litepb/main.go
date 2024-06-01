@@ -97,34 +97,12 @@ func generate(request *pluginpb.CodeGeneratorRequest) *pluginpb.CodeGeneratorRes
 		fileName := path.Join(goPackage, strings.TrimSuffix(protoFileName, protoFileNameExt)+".go")
 		logf("\tGO FILE: %s", fileName)
 
-		packageSuffix := "." + protoFile.GetPackage() + "."
-		for _, message := range protoFile.GetMessageType() {
-			definedTypes[packageSuffix+message.GetName()] = goPackage + "." + message.GetName()
-		}
+		packagePrefix := "." + protoFile.GetPackage() + "."
+		parseDefinedMessages(nil, protoFile.GetMessageType(), packagePrefix, goPackage, definedTypes)
 
-		types := make([]GoType, 0, len(protoFile.GetMessageType()))
-		for i, message := range protoFile.GetMessageType() {
-			fields := make([]GoTypeField, 0, len(message.GetField()))
-			for j, field := range message.GetField() {
-				typ := fieldType(field, definedTypes, goPackage)
-				if field.GetLabel() == descriptorpb.FieldDescriptorProto_LABEL_REPEATED {
-					typ = "[]" + typ
-				}
-				fields = append(fields, GoTypeField{
-					Name:      snakeCaseToCamelCase(field.GetName()),
-					Comments:  findMessageFieldComments(protoFile.GetSourceCodeInfo(), i, j),
-					SnakeName: field.GetName(),
-					Type:      typ,
-				})
-			}
-
-			comment := findMessageComments(protoFile.GetSourceCodeInfo(), i)
-			types = append(types, GoType{
-				Name:     message.GetName(),
-				Comments: comment,
-				Fields:   fields,
-			})
-		}
+		types := generateTypes(
+			protoFile.GetMessageType(), goPackage, definedTypes, protoFile.GetSourceCodeInfo(), []int32{4},
+		)
 
 		imports := make([]string, 0, len(protoFile.GetDependency()))
 		for _, dependency := range protoFile.GetDependency() {
@@ -166,6 +144,55 @@ func generate(request *pluginpb.CodeGeneratorRequest) *pluginpb.CodeGeneratorRes
 	}
 }
 
+func parseDefinedMessages(
+	parentMessage *descriptorpb.DescriptorProto, messages []*descriptorpb.DescriptorProto, packagePrefix string,
+	goPackage string, definedTypes map[string]string,
+) {
+	for _, message := range messages {
+		if parentMessage != nil {
+			message.Name = ptr(parentMessage.GetName() + "." + message.GetName())
+		}
+		definedTypes[packagePrefix+message.GetName()] = goPackage + "." + strings.ReplaceAll(message.GetName(), ".", "_")
+		parseDefinedMessages(message, message.GetNestedType(), packagePrefix, goPackage, definedTypes)
+	}
+}
+
+func generateTypes(
+	messages []*descriptorpb.DescriptorProto, goPackage string, definedTypes map[string]string,
+	sourceCodeInfo *descriptorpb.SourceCodeInfo, sourceCodePath []int32,
+) []GoType {
+	types := make([]GoType, 0, len(messages))
+	for i, message := range messages {
+		nestedTypes := generateTypes(
+			message.GetNestedType(), goPackage, definedTypes, sourceCodeInfo,
+			append(sourceCodePath, int32(i), 3),
+		)
+
+		fields := make([]GoTypeField, 0, len(message.GetField()))
+		for j, field := range message.GetField() {
+			typ := fieldType(field, definedTypes, goPackage)
+			if field.GetLabel() == descriptorpb.FieldDescriptorProto_LABEL_REPEATED {
+				typ = "[]" + typ
+			}
+			fields = append(fields, GoTypeField{
+				Name:      snakeCaseToCamelCase(field.GetName()),
+				Comments:  findMessageFieldComments(sourceCodeInfo, sourceCodePath, i, j),
+				SnakeName: field.GetName(),
+				Type:      typ,
+			})
+		}
+
+		types = append(types, GoType{
+			Name:     strings.ReplaceAll(message.GetName(), ".", "_"),
+			Comments: findMessageComments(sourceCodeInfo, sourceCodePath, i),
+			Fields:   fields,
+		})
+
+		types = append(types, nestedTypes...)
+	}
+	return types
+}
+
 type GoFile struct {
 	Package string
 	Source  string
@@ -186,18 +213,17 @@ type GoTypeField struct {
 	Type      string
 }
 
-func findMessageComments(info *descriptorpb.SourceCodeInfo, messageIndex int) string {
-	return findComments(info, []int32{4, int32(messageIndex)})
+func findMessageComments(info *descriptorpb.SourceCodeInfo, sourceCodePath []int32, messageIndex int) string {
+	return findComments(info, append(sourceCodePath, int32(messageIndex)))
 }
 
-func findMessageFieldComments(info *descriptorpb.SourceCodeInfo, messageIndex, fieldIndex int) string {
-	return findComments(info, []int32{4, int32(messageIndex), 2, int32(fieldIndex)})
+func findMessageFieldComments(info *descriptorpb.SourceCodeInfo, sourceCodePath []int32, messageIndex, fieldIndex int) string {
+	return findComments(info, append(sourceCodePath, int32(messageIndex), 2, int32(fieldIndex)))
 }
 
 func findComments(info *descriptorpb.SourceCodeInfo, ps []int32) string {
 	for _, loc := range info.GetLocation() {
-		p := loc.GetPath()
-		if slices.Equal(p, ps) {
+		if slices.Equal(loc.GetPath(), ps) {
 			return strings.TrimSuffix(loc.GetLeadingComments()+loc.GetTrailingComments(), "\n")
 		}
 	}
@@ -229,7 +255,12 @@ func fieldType(field *descriptorpb.FieldDescriptorProto, definedTypes map[string
 	case descriptorpb.FieldDescriptorProto_TYPE_GROUP:
 		panic("unimplemented")
 	case descriptorpb.FieldDescriptorProto_TYPE_MESSAGE:
-		goType := definedTypes[field.GetTypeName()]
+		goType, ok := definedTypes[field.GetTypeName()]
+		if !ok {
+			failf("unknown message type %s", field.GetTypeName())
+			return ""
+		}
+
 		if strings.HasPrefix(goType, goPackage+".") {
 			goType = goType[strings.LastIndex(goType, ".")+1:]
 		} else {

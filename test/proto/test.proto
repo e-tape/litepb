@@ -16,6 +16,14 @@ message Test {
 
   test2.Ok ok2 = 3;
   test3.Ok ok3 = 4;
+
+  test3.Ok.Status status = 5;
+
+  // Inner message TEST
+  message Inner {
+    // Inner text
+    string text = 2;
+  }
 }
 
 // Foo message
@@ -28,6 +36,12 @@ message Foo {
   repeated Bar bars = 2;
   // The bar
   Bar bar = 3;
+
+  // Inner message
+  message Inner {
+    // Inner text
+    string text = 2;
+  }
 }
 
 message Bar {

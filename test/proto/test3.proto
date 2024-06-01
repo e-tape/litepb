@@ -4,4 +4,12 @@ package test3;
 
 option go_package = "generated/test3";
 
-message Ok {}
+// The OK
+message Ok {
+  // Status of OK
+  message Status {
+    // Code if OK
+    int32 code = 1;
+    string message = 2;
+  }
+}
