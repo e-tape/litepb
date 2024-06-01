@@ -13,7 +13,8 @@ import (
 )
 
 func logf(format string, args ...any) {
-	_, _ = fmt.Fprintf(os.Stderr, format+"\n", args...)
+	// _, _ = fmt.Fprintf(os.Stderr, format+"\n", args...) // TODO: Enable
+	_, _ = format, args
 }
 
 func failf(format string, args ...any) {
