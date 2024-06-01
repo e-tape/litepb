@@ -4,4 +4,10 @@ package test2;
 
 option go_package = "generated/test";
 
+import "dir/test.proto";
+
 message Ok {}
+
+message Pss {
+  dir.Baz baz = 1;
+}

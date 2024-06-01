@@ -94,7 +94,7 @@ func generate(request *pluginpb.CodeGeneratorRequest) *pluginpb.CodeGeneratorRes
 
 		protoFileName := path.Base(protoFile.GetName())
 		protoFileNameExt := path.Ext(protoFileName)
-		fileName := path.Join(goPackage, strings.TrimSuffix(protoFileName, protoFileNameExt)+".go")
+		fileName := path.Join(goPackage, strings.TrimSuffix(protoFileName, protoFileNameExt)+".pb.go")
 		logf("\tGO FILE: %s", fileName)
 
 		packagePrefix := "." + protoFile.GetPackage() + "."
@@ -339,7 +339,8 @@ func fieldType(
 	case descriptorpb.FieldDescriptorProto_TYPE_STRING:
 		return "string"
 	case descriptorpb.FieldDescriptorProto_TYPE_GROUP:
-		panic("unimplemented")
+		failf("groups are not supported")
+		return ""
 	case descriptorpb.FieldDescriptorProto_TYPE_MESSAGE:
 		goType, ok := definedTypes[field.GetTypeName()]
 		if !ok {
