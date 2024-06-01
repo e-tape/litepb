@@ -90,11 +90,20 @@ func generate(request *pluginpb.CodeGeneratorRequest) *pluginpb.CodeGeneratorRes
 		}
 		logf("\tGO PACKAGE: %s", goPackage)
 
-		fileToImportPath[protoFile.GetName()] = goPackage
+		importPath := goPackage
+		goPackage, goPackageName, ok := strings.Cut(goPackage, ";")
+		if ok {
+			importPath = goPackage
+			goPackage = path.Dir(goPackage) + "/" + goPackageName
+		} else {
+			goPackageName = path.Base(goPackage)
+		}
+
+		fileToImportPath[protoFile.GetName()] = importPath
 
 		protoFileName := path.Base(protoFile.GetName())
 		protoFileNameExt := path.Ext(protoFileName)
-		fileName := path.Join(goPackage, strings.TrimSuffix(protoFileName, protoFileNameExt)+".pb.go")
+		fileName := path.Join(importPath, strings.TrimSuffix(protoFileName, protoFileNameExt)+".pb.go")
 		logf("\tGO FILE: %s", fileName)
 
 		packagePrefix := "." + protoFile.GetPackage() + "."
@@ -119,24 +128,11 @@ func generate(request *pluginpb.CodeGeneratorRequest) *pluginpb.CodeGeneratorRes
 			[]int32{4}, []int32{5},
 		)
 
-		imports := make([]string, 0, len(protoFile.GetDependency()))
-		for _, dependency := range protoFile.GetDependency() {
-			importPath, ok := fileToImportPath[dependency]
-			if !ok {
-				return &pluginpb.CodeGeneratorResponse{
-					Error: ptr(fmt.Sprintf("missing Go dependency %s for %s", dependency, protoFile.GetName())),
-				}
-			}
-			if importPath == goPackage {
-				continue
-			}
-			imports = append(imports, importPath)
-		}
-		slices.Sort(imports)
+		imports := generateImports(fileToImportPath, goPackage, protoFile.GetDependency())
 
 		buf := bytes.NewBuffer(nil)
 		err := goTemplate.Execute(buf, GoFile{
-			Package:   path.Base(goPackage),
+			Package:   goPackageName,
 			Source:    protoFile.GetName(),
 			Imports:   imports,
 			Types:     types,
@@ -158,6 +154,22 @@ func generate(request *pluginpb.CodeGeneratorRequest) *pluginpb.CodeGeneratorRes
 	return &pluginpb.CodeGeneratorResponse{
 		File: codeFiles,
 	}
+}
+
+func generateImports(fileToImportPath map[string]string, goPackage string, dependencies []string) []string {
+	imports := make([]string, 0, len(dependencies))
+	for _, dependency := range dependencies {
+		importPath, ok := fileToImportPath[dependency]
+		if !ok {
+			failf("missing dependency %s for %s", dependency, goPackage)
+		}
+		if importPath == goPackage {
+			continue
+		}
+		imports = append(imports, importPath)
+	}
+	slices.Sort(imports)
+	return imports
 }
 
 func parseDefinedTypes(
