@@ -1,0 +1,7 @@
+syntax = "proto3";
+
+package test3;
+
+option go_package = "generated/test3";
+
+message Ok {}

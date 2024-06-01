@@ -2,7 +2,10 @@ syntax = "proto3";
 
 package test;
 
-option go_package = "test";
+option go_package = "generated/test";
+
+import "test2.proto";
+import "test3.proto";
 
 // Test message
 message Test {
@@ -10,6 +13,9 @@ message Test {
   int32 id = 1;
   // Name
   string name = 2;
+
+  test2.Ok ok2 = 3;
+  test3.Ok ok3 = 4;
 }
 
 // Foo message
@@ -20,6 +26,8 @@ message Foo {
   int64 id = 1; // Deprecated
   // Bars list
   // repeated Bar bars = 2;
+  // The bar
+  Bar bar = 3;
 }
 
 message Bar {

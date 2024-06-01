@@ -3,6 +3,14 @@
 
 package {{ .Package }}
 
+{{ if .Imports }}
+import (
+    {{- range .Imports -}}{{/**/}}
+    "{{ . }}"
+    {{- end }}
+)
+{{ end }}
+
 {{ range .Types -}}
 {{- range (lines .Comments) -}}{{/**/}}
 //{{ . }}

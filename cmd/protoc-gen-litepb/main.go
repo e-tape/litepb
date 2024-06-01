@@ -73,11 +73,14 @@ func run() error {
 
 func generate(request *pluginpb.CodeGeneratorRequest) *pluginpb.CodeGeneratorResponse {
 	codeFiles := make([]*pluginpb.CodeGeneratorResponse_File, 0, len(request.GetProtoFile()))
+	definedTypes := make(map[string]string)     // Proto package + type name => Go package + type name
+	fileToImportPath := make(map[string]string) // Proto file => Go import path
 	for _, protoFile := range request.ProtoFile {
+		logf("FILE START")
 		logf("\tNAME: %s", protoFile.GetName())
 		logf("\tPACKAGE: %s", protoFile.GetPackage())
 		logf("\tSYNTAX: %s", protoFile.GetSyntax())
-		logf("\tEDITION: %s", protoFile.GetEdition())
+		logf("\tDEPENDENCIES: %s", strings.Join(protoFile.GetDependency(), ", "))
 
 		goPackage := protoFile.GetOptions().GetGoPackage()
 		if goPackage == "" {
@@ -87,9 +90,17 @@ func generate(request *pluginpb.CodeGeneratorRequest) *pluginpb.CodeGeneratorRes
 		}
 		logf("\tGO PACKAGE: %s", goPackage)
 
+		fileToImportPath[protoFile.GetName()] = goPackage
+
 		protoFileName := path.Base(protoFile.GetName())
 		protoFileNameExt := path.Ext(protoFileName)
-		fileName := path.Join(path.Dir(goPackage), strings.TrimSuffix(protoFileName, protoFileNameExt)+".go")
+		fileName := path.Join(goPackage, strings.TrimSuffix(protoFileName, protoFileNameExt)+".go")
+		logf("\tGO FILE: %s", fileName)
+
+		packageSuffix := "." + protoFile.GetPackage() + "."
+		for _, message := range protoFile.GetMessageType() {
+			definedTypes[packageSuffix+message.GetName()] = goPackage + "." + message.GetName()
+		}
 
 		types := make([]GoType, 0, len(protoFile.GetMessageType()))
 		for i, message := range protoFile.GetMessageType() {
@@ -99,7 +110,7 @@ func generate(request *pluginpb.CodeGeneratorRequest) *pluginpb.CodeGeneratorRes
 					Name:      snakeCaseToCamelCase(field.GetName()),
 					Comments:  findMessageFieldComments(protoFile.GetSourceCodeInfo(), i, j),
 					SnakeName: field.GetName(),
-					Type:      fieldType(field.GetType()),
+					Type:      fieldType(field, definedTypes, goPackage),
 				})
 			}
 
@@ -111,10 +122,26 @@ func generate(request *pluginpb.CodeGeneratorRequest) *pluginpb.CodeGeneratorRes
 			})
 		}
 
+		imports := make([]string, 0, len(protoFile.GetDependency()))
+		for _, dependency := range protoFile.GetDependency() {
+			importPath, ok := fileToImportPath[dependency]
+			if !ok {
+				return &pluginpb.CodeGeneratorResponse{
+					Error: ptr(fmt.Sprintf("missing Go dependency %s for %s", dependency, protoFile.GetName())),
+				}
+			}
+			if importPath == goPackage {
+				continue
+			}
+			imports = append(imports, importPath)
+		}
+		slices.Sort(imports)
+
 		buf := bytes.NewBuffer(nil)
 		err := goTemplate.Execute(buf, GoFile{
 			Package: path.Base(goPackage),
 			Source:  protoFile.GetName(),
+			Imports: imports,
 			Types:   types,
 		})
 		if err != nil {
@@ -125,7 +152,11 @@ func generate(request *pluginpb.CodeGeneratorRequest) *pluginpb.CodeGeneratorRes
 			Name:    &fileName,
 			Content: ptr(buf.String()),
 		})
+
+		logf("FILE END")
 	}
+	logf("FILE TO IMPORT PATH: %v", fileToImportPath)
+	logf("DEFINED TYPES: %v", definedTypes)
 	return &pluginpb.CodeGeneratorResponse{
 		File: codeFiles,
 	}
@@ -134,6 +165,7 @@ func generate(request *pluginpb.CodeGeneratorRequest) *pluginpb.CodeGeneratorRes
 type GoFile struct {
 	Package string
 	Source  string
+	Imports []string
 	Types   []GoType
 }
 
@@ -168,8 +200,8 @@ func findComments(info *descriptorpb.SourceCodeInfo, ps []int32) string {
 	return ""
 }
 
-func fieldType(typ descriptorpb.FieldDescriptorProto_Type) string {
-	switch typ {
+func fieldType(field *descriptorpb.FieldDescriptorProto, definedTypes map[string]string, goPackage string) string {
+	switch field.GetType() {
 	case descriptorpb.FieldDescriptorProto_TYPE_DOUBLE:
 		return "float64"
 	case descriptorpb.FieldDescriptorProto_TYPE_FLOAT:
@@ -193,7 +225,13 @@ func fieldType(typ descriptorpb.FieldDescriptorProto_Type) string {
 	case descriptorpb.FieldDescriptorProto_TYPE_GROUP:
 		panic("unimplemented")
 	case descriptorpb.FieldDescriptorProto_TYPE_MESSAGE:
-		panic("unimplemented")
+		goType := definedTypes[field.GetTypeName()]
+		if strings.HasPrefix(goType, goPackage+".") {
+			goType = goType[strings.LastIndex(goType, ".")+1:]
+		} else {
+			goType = goType[strings.LastIndex(goType, "/")+1:]
+		}
+		return "*" + goType
 	case descriptorpb.FieldDescriptorProto_TYPE_BYTES:
 		return "[]byte"
 	case descriptorpb.FieldDescriptorProto_TYPE_ENUM:
@@ -207,7 +245,7 @@ func fieldType(typ descriptorpb.FieldDescriptorProto_Type) string {
 	case descriptorpb.FieldDescriptorProto_TYPE_SINT64:
 		return "int64"
 	default:
-		failf("unknown type %d", typ)
+		failf("unknown type %d", field.GetType())
 		return ""
 	}
 }
