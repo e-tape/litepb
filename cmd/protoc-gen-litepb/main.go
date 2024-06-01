@@ -8,6 +8,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"slices"
 	"strings"
 	"text/template"
 	"time"
@@ -20,7 +21,16 @@ import (
 //go:embed templates/go.tmpl
 var goTemplateFile string
 
-var goTemplate = template.Must(template.New("").Parse(goTemplateFile))
+var goTemplate = template.Must(template.New("").Funcs(goTemplateFunc).Parse(goTemplateFile))
+
+var goTemplateFunc = template.FuncMap{
+	"lines": func(text string) []string {
+		if text == "" {
+			return nil
+		}
+		return strings.Split(text, "\n")
+	},
+}
 
 func main() {
 	if err := run(); err != nil {
@@ -82,18 +92,22 @@ func generate(request *pluginpb.CodeGeneratorRequest) *pluginpb.CodeGeneratorRes
 		fileName := path.Join(path.Dir(goPackage), strings.TrimSuffix(protoFileName, protoFileNameExt)+".go")
 
 		types := make([]GoType, 0, len(protoFile.GetMessageType()))
-		for _, message := range protoFile.GetMessageType() {
+		for i, message := range protoFile.GetMessageType() {
 			fields := make([]GoTypeField, 0, len(message.GetField()))
-			for _, field := range message.GetField() {
+			for j, field := range message.GetField() {
 				fields = append(fields, GoTypeField{
-					Name: field.GetName(),
-					Type: fieldType(field.GetType()),
+					Name:      snakeCaseToCamelCase(field.GetName()),
+					Comments:  findMessageFieldComments(protoFile.GetSourceCodeInfo(), i, j),
+					SnakeName: field.GetName(),
+					Type:      fieldType(field.GetType()),
 				})
 			}
 
+			comment := findMessageComments(protoFile.GetSourceCodeInfo(), i)
 			types = append(types, GoType{
-				Name:   message.GetName(),
-				Fields: fields,
+				Name:     message.GetName(),
+				Comments: comment,
+				Fields:   fields,
 			})
 		}
 
@@ -124,13 +138,34 @@ type GoFile struct {
 }
 
 type GoType struct {
-	Name   string
-	Fields []GoTypeField
+	Name     string
+	Comments string
+	Fields   []GoTypeField
 }
 
 type GoTypeField struct {
-	Name string
-	Type string
+	Name      string
+	Comments  string
+	SnakeName string
+	Type      string
+}
+
+func findMessageComments(info *descriptorpb.SourceCodeInfo, messageIndex int) string {
+	return findComments(info, []int32{4, int32(messageIndex)})
+}
+
+func findMessageFieldComments(info *descriptorpb.SourceCodeInfo, messageIndex, fieldIndex int) string {
+	return findComments(info, []int32{4, int32(messageIndex), 2, int32(fieldIndex)})
+}
+
+func findComments(info *descriptorpb.SourceCodeInfo, ps []int32) string {
+	for _, loc := range info.GetLocation() {
+		p := loc.GetPath()
+		if slices.Equal(p, ps) {
+			return strings.TrimSuffix(loc.GetLeadingComments()+loc.GetTrailingComments(), "\n")
+		}
+	}
+	return ""
 }
 
 func fieldType(typ descriptorpb.FieldDescriptorProto_Type) string {

@@ -4,9 +4,15 @@
 package {{ .Package }}
 
 {{ range .Types -}}
+{{- range (lines .Comments) -}}{{/**/}}
+//{{ . }}
+{{- end }}
 type {{ .Name }} struct {
 {{- range .Fields -}}{{/**/}}
-	{{ .Name }} {{ .Type }}
+    {{- range (lines .Comments) -}}{{/**/}}
+    //{{ . }}
+    {{- end }}
+	{{ .Name }} {{ .Type }} `json:"{{ .SnakeName }}"`
 {{- end }}
 }
-{{- end }}
+{{ end }}

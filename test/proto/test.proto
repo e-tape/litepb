@@ -11,3 +11,18 @@ message Test {
   // Name
   string name = 2;
 }
+
+// Foo message
+message Foo {
+  // ID
+  //    Test 123
+  //Ok
+  int64 id = 1; // Deprecated
+  // Bars list
+  // repeated Bar bars = 2;
+}
+
+message Bar {
+  string text = 1;
+  bool done = 2;
+}
