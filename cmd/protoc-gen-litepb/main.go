@@ -100,8 +100,15 @@ func generate(request *pluginpb.CodeGeneratorRequest) *pluginpb.CodeGeneratorRes
 		packagePrefix := "." + protoFile.GetPackage() + "."
 		parseDefinedMessages(nil, protoFile.GetMessageType(), packagePrefix, goPackage, definedTypes)
 
+		mapTypes := make(map[string][2]string) // Message name => [key type, value type]
 		types := generateTypes(
-			protoFile.GetMessageType(), goPackage, definedTypes, protoFile.GetSourceCodeInfo(), []int32{4},
+			protoFile.GetMessageType(),
+			goPackage,
+			packagePrefix,
+			definedTypes,
+			mapTypes,
+			protoFile.GetSourceCodeInfo(),
+			[]int32{4},
 		)
 
 		imports := make([]string, 0, len(protoFile.GetDependency()))
@@ -158,20 +165,28 @@ func parseDefinedMessages(
 }
 
 func generateTypes(
-	messages []*descriptorpb.DescriptorProto, goPackage string, definedTypes map[string]string,
-	sourceCodeInfo *descriptorpb.SourceCodeInfo, sourceCodePath []int32,
+	messages []*descriptorpb.DescriptorProto, goPackage, packagePrefix string, definedTypes map[string]string,
+	mapTypes map[string][2]string, sourceCodeInfo *descriptorpb.SourceCodeInfo, sourceCodePath []int32,
 ) []GoType {
 	types := make([]GoType, 0, len(messages))
 	for i, message := range messages {
+		if message.GetOptions().GetMapEntry() {
+			mapTypes[packagePrefix+message.GetName()] = [2]string{
+				fieldType(message.GetField()[0], definedTypes, mapTypes, goPackage),
+				fieldType(message.GetField()[1], definedTypes, mapTypes, goPackage),
+			}
+			continue
+		}
+
 		nestedTypes := generateTypes(
-			message.GetNestedType(), goPackage, definedTypes, sourceCodeInfo,
+			message.GetNestedType(), goPackage, packagePrefix, definedTypes, mapTypes, sourceCodeInfo,
 			append(sourceCodePath, int32(i), 3),
 		)
 
 		fields := make([]GoTypeField, 0, len(message.GetField()))
 		for j, field := range message.GetField() {
-			typ := fieldType(field, definedTypes, goPackage)
-			if field.GetLabel() == descriptorpb.FieldDescriptorProto_LABEL_REPEATED {
+			typ := fieldType(field, definedTypes, mapTypes, goPackage)
+			if field.GetLabel() == descriptorpb.FieldDescriptorProto_LABEL_REPEATED && !strings.HasPrefix(typ, "map[") {
 				typ = "[]" + typ
 			}
 			fields = append(fields, GoTypeField{
@@ -230,7 +245,12 @@ func findComments(info *descriptorpb.SourceCodeInfo, ps []int32) string {
 	return ""
 }
 
-func fieldType(field *descriptorpb.FieldDescriptorProto, definedTypes map[string]string, goPackage string) string {
+func fieldType(
+	field *descriptorpb.FieldDescriptorProto,
+	definedTypes map[string]string,
+	mapTypes map[string][2]string,
+	goPackage string,
+) string {
 	switch field.GetType() {
 	case descriptorpb.FieldDescriptorProto_TYPE_DOUBLE:
 		return "float64"
@@ -259,6 +279,11 @@ func fieldType(field *descriptorpb.FieldDescriptorProto, definedTypes map[string
 		if !ok {
 			failf("unknown message type %s", field.GetTypeName())
 			return ""
+		}
+
+		var kv [2]string
+		if kv, ok = mapTypes[field.GetTypeName()]; ok {
+			return "map[" + kv[0] + "]" + kv[1]
 		}
 
 		if strings.HasPrefix(goType, goPackage+".") {

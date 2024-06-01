@@ -19,6 +19,8 @@ message Test {
 
   test3.Ok.Status status = 5;
 
+  map<string, Foo> kv = 6;
+
   // Inner message TEST
   message Inner {
     // Inner text
