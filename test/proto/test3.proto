@@ -13,3 +13,11 @@ message Ok {
     string message = 2;
   }
 }
+
+// The Error
+enum Error {
+  // Unknown
+  UNKNOWN = 0;
+  // Some err
+  SOME_ERROR = 1;
+}

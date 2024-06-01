@@ -189,9 +189,25 @@ func generateTypes(
 	enumTypes := make([]GoEnumType, 0, len(enums))
 
 	for i, enum := range enums {
+		values := make([]GoEnumTypeValue, 0, len(enum.GetValue()))
+		for j, value := range enum.GetValue() {
+			values = append(values, GoEnumTypeValue{
+				Name:     value.GetName(),
+				Comments: findEnumValueComments(sourceCodeInfo, enumSourceCodePath, i, j),
+				Number:   value.GetNumber(),
+			})
+		}
+
+		valuesPrefix := enum.GetName()
+		if ix := strings.LastIndex(enum.GetName(), "."); ix >= 0 {
+			valuesPrefix = enum.GetName()[:ix]
+		}
+
 		enumTypes = append(enumTypes, GoEnumType{
-			Name:     strings.ReplaceAll(enum.GetName(), ".", "_"),
-			Comments: findEnumComments(sourceCodeInfo, enumSourceCodePath, i),
+			Name:         strings.ReplaceAll(enum.GetName(), ".", "_"),
+			Comments:     findEnumComments(sourceCodeInfo, enumSourceCodePath, i),
+			ValuesPrefix: strings.ReplaceAll(valuesPrefix, ".", "_"),
+			Values:       values,
 		})
 	}
 
@@ -258,8 +274,16 @@ type GoTypeField struct {
 }
 
 type GoEnumType struct {
+	Name         string
+	Comments     string
+	ValuesPrefix string
+	Values       []GoEnumTypeValue
+}
+
+type GoEnumTypeValue struct {
 	Name     string
 	Comments string
+	Number   int32
 }
 
 func findMessageComments(info *descriptorpb.SourceCodeInfo, sourceCodePath []int32, messageIndex int) string {
@@ -272,6 +296,10 @@ func findMessageFieldComments(info *descriptorpb.SourceCodeInfo, sourceCodePath 
 
 func findEnumComments(info *descriptorpb.SourceCodeInfo, sourceCodePath []int32, enumIndex int) string {
 	return findComments(info, append(sourceCodePath, int32(enumIndex)))
+}
+
+func findEnumValueComments(info *descriptorpb.SourceCodeInfo, sourceCodePath []int32, enumIndex, valueIndex int) string {
+	return findComments(info, append(sourceCodePath, int32(enumIndex), 2, int32(valueIndex)))
 }
 
 func findComments(info *descriptorpb.SourceCodeInfo, ps []int32) string {

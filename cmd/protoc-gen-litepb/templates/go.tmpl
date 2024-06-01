@@ -16,6 +16,16 @@ import (
 //{{ . }}
 {{- end }}
 type {{ .Name }} int32
+
+{{ $enum := . }}
+const (
+{{- range .Values -}}
+    {{- range (lines .Comments) -}}{{/**/}}
+    //{{ . }}
+    {{- end }}
+    {{ $enum.ValuesPrefix }}_{{ .Name }} {{ $enum.Name }} = {{ .Number }}
+{{- end }}
+)
 {{ end }}
 
 {{ range .Types -}}

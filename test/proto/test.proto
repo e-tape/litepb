@@ -7,6 +7,13 @@ option go_package = "generated/test";
 import "test2.proto";
 import "test3.proto";
 
+enum Direction {
+  NORTH = 0;
+  EAST = 1;
+  SOUTH = 2;
+  WEST = 3;
+}
+
 // Test message
 message Test {
   // ID
@@ -25,6 +32,8 @@ message Test {
   message Inner {
     // Inner text
     string text = 2;
+    // Inner error
+    test3.Error error = 3;
   }
 }
 
@@ -43,7 +52,9 @@ message Foo {
 
   // Status of FOO
   enum Status {
+    // Code if OK
     OK = 0;
+    // Code if ERROR
     ERROR = 1;
   }
 
