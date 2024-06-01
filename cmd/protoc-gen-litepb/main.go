@@ -116,7 +116,7 @@ func generate(request *pluginpb.CodeGeneratorRequest) *pluginpb.CodeGeneratorRes
 			definedTypes,
 			mapTypes,
 			protoFile.GetSourceCodeInfo(),
-			[]int32{4},
+			[]int32{4}, []int32{5},
 		)
 
 		imports := make([]string, 0, len(protoFile.GetDependency()))
@@ -183,7 +183,7 @@ func parseDefinedTypes(
 func generateTypes(
 	messages []*descriptorpb.DescriptorProto, enums []*descriptorpb.EnumDescriptorProto,
 	goPackage, packagePrefix string, definedTypes map[string]string, mapTypes map[string][2]string,
-	sourceCodeInfo *descriptorpb.SourceCodeInfo, sourceCodePath []int32,
+	sourceCodeInfo *descriptorpb.SourceCodeInfo, msgSourceCodePath, enumSourceCodePath []int32,
 ) ([]GoType, []GoEnumType) {
 	types := make([]GoType, 0, len(messages))
 	enumTypes := make([]GoEnumType, 0, len(enums))
@@ -191,7 +191,7 @@ func generateTypes(
 	for i, enum := range enums {
 		enumTypes = append(enumTypes, GoEnumType{
 			Name:     strings.ReplaceAll(enum.GetName(), ".", "_"),
-			Comments: findEnumComments(sourceCodeInfo, sourceCodePath, i),
+			Comments: findEnumComments(sourceCodeInfo, enumSourceCodePath, i),
 		})
 	}
 
@@ -206,7 +206,7 @@ func generateTypes(
 
 		nestedTypes, nestedEnumTypes := generateTypes(
 			message.GetNestedType(), message.GetEnumType(), goPackage, packagePrefix, definedTypes, mapTypes, sourceCodeInfo,
-			append(sourceCodePath, int32(i), 3),
+			append(msgSourceCodePath, int32(i), 3), append(msgSourceCodePath, int32(i), 4),
 		)
 
 		fields := make([]GoTypeField, 0, len(message.GetField()))
@@ -217,7 +217,7 @@ func generateTypes(
 			}
 			fields = append(fields, GoTypeField{
 				Name:      snakeCaseToCamelCase(field.GetName()),
-				Comments:  findMessageFieldComments(sourceCodeInfo, sourceCodePath, i, j),
+				Comments:  findMessageFieldComments(sourceCodeInfo, msgSourceCodePath, i, j),
 				SnakeName: field.GetName(),
 				Type:      typ,
 			})
@@ -225,7 +225,7 @@ func generateTypes(
 
 		types = append(types, GoType{
 			Name:     strings.ReplaceAll(message.GetName(), ".", "_"),
-			Comments: findMessageComments(sourceCodeInfo, sourceCodePath, i),
+			Comments: findMessageComments(sourceCodeInfo, msgSourceCodePath, i),
 			Fields:   fields,
 		})
 
@@ -271,7 +271,7 @@ func findMessageFieldComments(info *descriptorpb.SourceCodeInfo, sourceCodePath 
 }
 
 func findEnumComments(info *descriptorpb.SourceCodeInfo, sourceCodePath []int32, enumIndex int) string {
-	return findComments(info, append(sourceCodePath, int32(enumIndex))) // FIXME
+	return findComments(info, append(sourceCodePath, int32(enumIndex)))
 }
 
 func findComments(info *descriptorpb.SourceCodeInfo, ps []int32) string {
