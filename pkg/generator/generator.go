@@ -3,7 +3,6 @@ package generator
 import (
 	"bytes"
 	"cmp"
-	"fmt"
 	"path"
 	"slices"
 	"strings"
@@ -55,13 +54,35 @@ type FileGenerator struct {
 	*Generator
 	packageAliases PackageAliases
 	mapTypes       MapTypes
+	goImport       GoImport
 }
 
-func NewFileGenerator(g *Generator) *FileGenerator {
+func NewFileGenerator(g *Generator, protoFile *descriptorpb.FileDescriptorProto) *FileGenerator {
+	goPackage := protoFile.GetOptions().GetGoPackage()
+	if goPackage == "" {
+		stderr.Failf("missing go_package option in %s", protoFile.GetName())
+	}
+	stderr.Logf("\tGO PACKAGE: %s", goPackage)
+
+	importPath := goPackage
+	goPackage, goPackageName, ok := strings.Cut(goPackage, ";")
+	if ok {
+		importPath = goPackage
+		goPackage = path.Dir(goPackage) + "/" + goPackageName
+	} else {
+		goPackageName = path.Base(goPackage)
+	}
+
+	goImport := GoImport{
+		Path:  importPath,
+		Alias: goPackageName,
+	}
+
 	return &FileGenerator{
 		Generator:      g,
 		packageAliases: make(PackageAliases),
 		mapTypes:       make(MapTypes),
+		goImport:       goImport,
 	}
 }
 
@@ -83,60 +104,37 @@ func (g *Generator) Generate() *pluginpb.CodeGeneratorResponse {
 		stderr.Logf("\tSYNTAX: %s", protoFile.GetSyntax())
 		stderr.Logf("\tDEPENDENCIES: %s", strings.Join(protoFile.GetDependency(), ", "))
 
-		goPackage := protoFile.GetOptions().GetGoPackage()
-		if goPackage == "" {
-			return &pluginpb.CodeGeneratorResponse{
-				Error: common.Ptr(fmt.Sprintf("missing go_package option in %s", protoFile.GetName())),
-			}
-		}
-		stderr.Logf("\tGO PACKAGE: %s", goPackage)
+		fg := NewFileGenerator(g, protoFile)
 
-		fg := NewFileGenerator(g)
-
-		importPath := goPackage
-		goPackage, goPackageName, ok := strings.Cut(goPackage, ";")
-		if ok {
-			importPath = goPackage
-			goPackage = path.Dir(goPackage) + "/" + goPackageName
-		} else {
-			goPackageName = path.Base(goPackage)
-		}
-
-		goImport := GoImport{
-			Path:  importPath,
-			Alias: goPackageName,
-		}
-		g.protoFileToGoImport[protoFile.GetName()] = goImport
-		g.goImportPathToPackageAlias[goImport.Path] = goImport.Alias
+		g.protoFileToGoImport[protoFile.GetName()] = fg.goImport
+		g.goImportPathToPackageAlias[fg.goImport.Path] = fg.goImport.Alias
 
 		protoFileName := path.Base(protoFile.GetName())
 		protoFileNameExt := path.Ext(protoFileName)
-		fileName := path.Join(importPath, strings.TrimSuffix(protoFileName, protoFileNameExt)+".pb.go")
+		fileName := path.Join(fg.goImport.Path, strings.TrimSuffix(protoFileName, protoFileNameExt)+".pb.go")
 		stderr.Logf("\tGO FILE: %s", fileName)
 
 		packagePrefix := "." + protoFile.GetPackage() + "."
-		g.parseDefinedTypes(
+		fg.parseDefinedTypes(
 			nil,
 			protoFile.GetMessageType(),
 			protoFile.GetEnumType(),
 			packagePrefix,
-			importPath,
 		)
 
 		types, enumTypes := fg.generateTypes(
 			protoFile.GetMessageType(),
 			protoFile.GetEnumType(),
-			goImport,
 			packagePrefix,
 			protoFile.GetSourceCodeInfo(),
 			[]int32{4}, []int32{5},
 		)
 
-		imports := fg.generateImports(goImport, protoFile.GetDependency())
+		imports := fg.generateImports(protoFile.GetDependency())
 
 		buf := bytes.NewBuffer(nil)
 		err := goTemplate.Execute(buf, GoFile{
-			Package:   goPackageName,
+			Package:   fg.goImport.Alias,
 			Source:    protoFile.GetName(),
 			Imports:   imports,
 			Types:     types,
@@ -161,7 +159,7 @@ func (g *Generator) Generate() *pluginpb.CodeGeneratorResponse {
 }
 
 func (g *FileGenerator) generateImports(
-	goImport GoImport, dependencies []string,
+	dependencies []string,
 ) []GoImport {
 	imports := make([]GoImport, 0, len(dependencies))
 	for _, dependency := range dependencies {
@@ -169,7 +167,7 @@ func (g *FileGenerator) generateImports(
 		if !ok {
 			stderr.Failf("missing dependency %s for %s", dependency, depGoImport.Path)
 		}
-		if depGoImport.Path == goImport.Path {
+		if depGoImport.Path == g.goImport.Path {
 			continue
 		}
 
@@ -189,29 +187,29 @@ func (g *FileGenerator) generateImports(
 	return imports
 }
 
-func (g *Generator) parseDefinedTypes(
+func (g *FileGenerator) parseDefinedTypes(
 	parentMessage *descriptorpb.DescriptorProto, messages []*descriptorpb.DescriptorProto,
-	enums []*descriptorpb.EnumDescriptorProto, packagePrefix, importPath string,
+	enums []*descriptorpb.EnumDescriptorProto, packagePrefix string,
 ) {
 	for _, message := range messages {
 		if parentMessage != nil {
 			message.Name = common.Ptr(parentMessage.GetName() + "." + message.GetName())
 		}
-		g.definedTypes[packagePrefix+message.GetName()] = importPath + "." + strings.ReplaceAll(message.GetName(), ".", "_")
-		g.parseDefinedTypes(message, message.GetNestedType(), message.GetEnumType(), packagePrefix, importPath)
+		g.definedTypes[packagePrefix+message.GetName()] = g.goImport.Path + "." + strings.ReplaceAll(message.GetName(), ".", "_")
+		g.parseDefinedTypes(message, message.GetNestedType(), message.GetEnumType(), packagePrefix)
 	}
 
 	for _, enum := range enums {
 		if parentMessage != nil {
 			enum.Name = common.Ptr(parentMessage.GetName() + "." + enum.GetName())
 		}
-		g.definedTypes[packagePrefix+enum.GetName()] = importPath + "." + strings.ReplaceAll(enum.GetName(), ".", "_")
+		g.definedTypes[packagePrefix+enum.GetName()] = g.goImport.Path + "." + strings.ReplaceAll(enum.GetName(), ".", "_")
 	}
 }
 
 func (g *FileGenerator) generateTypes(
 	messages []*descriptorpb.DescriptorProto, enums []*descriptorpb.EnumDescriptorProto,
-	goImport GoImport, packagePrefix string,
+	packagePrefix string,
 	sourceCodeInfo *descriptorpb.SourceCodeInfo, msgSourceCodePath, enumSourceCodePath []int32,
 ) ([]GoType, []GoEnumType) {
 	types := make([]GoType, 0, len(messages))
@@ -243,8 +241,8 @@ func (g *FileGenerator) generateTypes(
 	for i, message := range messages {
 		if message.GetOptions().GetMapEntry() {
 			g.mapTypes[packagePrefix+message.GetName()] = [2]string{
-				g.fieldType(message.GetField()[0], goImport),
-				g.fieldType(message.GetField()[1], goImport),
+				g.fieldType(message.GetField()[0]),
+				g.fieldType(message.GetField()[1]),
 			}
 			continue
 		}
@@ -252,7 +250,6 @@ func (g *FileGenerator) generateTypes(
 		nestedTypes, nestedEnumTypes := g.generateTypes(
 			message.GetNestedType(),
 			message.GetEnumType(),
-			goImport,
 			packagePrefix,
 			sourceCodeInfo,
 			append(msgSourceCodePath, int32(i), 3),
@@ -261,7 +258,7 @@ func (g *FileGenerator) generateTypes(
 
 		fields := make([]GoTypeField, 0, len(message.GetField()))
 		for j, field := range message.GetField() {
-			typ := g.fieldType(field, goImport)
+			typ := g.fieldType(field)
 			if field.GetLabel() == descriptorpb.FieldDescriptorProto_LABEL_REPEATED && !strings.HasPrefix(typ, "map[") {
 				typ = "[]" + typ
 			}
@@ -288,7 +285,6 @@ func (g *FileGenerator) generateTypes(
 
 func (g *FileGenerator) fieldType(
 	field *descriptorpb.FieldDescriptorProto,
-	goImport GoImport,
 ) string {
 	switch field.GetType() {
 	case descriptorpb.FieldDescriptorProto_TYPE_DOUBLE:
@@ -318,11 +314,11 @@ func (g *FileGenerator) fieldType(
 		if kv, ok := g.mapTypes[field.GetTypeName()]; ok {
 			return "map[" + kv[0] + "]" + kv[1]
 		}
-		return g.fieldTypeMessageOrEnum(field, goImport)
+		return g.fieldTypeMessageOrEnum(field)
 	case descriptorpb.FieldDescriptorProto_TYPE_BYTES:
 		return "[]byte"
 	case descriptorpb.FieldDescriptorProto_TYPE_ENUM:
-		return g.fieldTypeMessageOrEnum(field, goImport)
+		return g.fieldTypeMessageOrEnum(field)
 	case descriptorpb.FieldDescriptorProto_TYPE_SFIXED32:
 		return "int32"
 	case descriptorpb.FieldDescriptorProto_TYPE_SFIXED64:
@@ -339,7 +335,6 @@ func (g *FileGenerator) fieldType(
 
 func (g *FileGenerator) fieldTypeMessageOrEnum(
 	field *descriptorpb.FieldDescriptorProto,
-	goImport GoImport,
 ) string {
 	goType, ok := g.definedTypes[field.GetTypeName()]
 	if !ok {
@@ -351,7 +346,7 @@ func (g *FileGenerator) fieldTypeMessageOrEnum(
 	typePackage := goType[:ld]
 	typeName := goType[ld+1:]
 
-	if typePackage == goImport.Path {
+	if typePackage == g.goImport.Path {
 		return "*" + typeName
 	}
 
