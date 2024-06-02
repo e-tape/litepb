@@ -17,17 +17,19 @@ import (
 
 // Generator of protobuf bindings
 type Generator struct {
-	request             *pluginpb.CodeGeneratorRequest
-	definedTypes        DefinedTypes
-	protoFileToGoImport ProtoFileToGoImport
+	request                    *pluginpb.CodeGeneratorRequest
+	definedTypes               DefinedTypes
+	protoFileToGoImport        ProtoFileToGoImport
+	goImportPathToPackageAlias GoImportPathToPackageAlias
 }
 
 // NewGenerator creates new generator
 func NewGenerator(request *pluginpb.CodeGeneratorRequest) *Generator {
 	return &Generator{
-		request:             request,
-		definedTypes:        make(DefinedTypes),
-		protoFileToGoImport: make(ProtoFileToGoImport),
+		request:                    request,
+		definedTypes:               make(DefinedTypes),
+		protoFileToGoImport:        make(ProtoFileToGoImport),
+		goImportPathToPackageAlias: make(GoImportPathToPackageAlias),
 	}
 }
 
@@ -42,10 +44,15 @@ type (
 	ProtoFile           = string
 )
 
+type (
+	GoImportPathToPackageAlias map[GoImportPath]PackageAlias
+	GoImportPath               = string
+	PackageAlias               = string
+)
+
 // Generate generates bindings
 func (g *Generator) Generate() *pluginpb.CodeGeneratorResponse {
 	codeFiles := make([]*pluginpb.CodeGeneratorResponse_File, 0, len(g.request.GetProtoFile()))
-	goImportPathToPackageAlias := make(map[string]string) // Go import path => package alias
 	for _, protoFile := range g.request.ProtoFile {
 		stderr.Logf("FILE START")
 		stderr.Logf("\tNAME: %s", protoFile.GetName())
@@ -75,7 +82,7 @@ func (g *Generator) Generate() *pluginpb.CodeGeneratorResponse {
 			Alias: goPackageName,
 		}
 		g.protoFileToGoImport[protoFile.GetName()] = goImport
-		goImportPathToPackageAlias[goImport.Path] = goImport.Alias
+		g.goImportPathToPackageAlias[goImport.Path] = goImport.Alias
 
 		protoFileName := path.Base(protoFile.GetName())
 		protoFileNameExt := path.Ext(protoFileName)
@@ -101,7 +108,6 @@ func (g *Generator) Generate() *pluginpb.CodeGeneratorResponse {
 			packagePrefix,
 			mapTypes,
 			packageAliases,
-			goImportPathToPackageAlias,
 			protoFile.GetSourceCodeInfo(),
 			[]int32{4}, []int32{5},
 		)
@@ -186,7 +192,7 @@ func (g *Generator) parseDefinedTypes(
 func (g *Generator) generateTypes(
 	messages []*descriptorpb.DescriptorProto, enums []*descriptorpb.EnumDescriptorProto,
 	goImport GoImport, packagePrefix string, mapTypes map[string][2]string,
-	packageAliases map[string]string, goImportPathToPackageAlias map[string]string,
+	packageAliases map[string]string,
 	sourceCodeInfo *descriptorpb.SourceCodeInfo, msgSourceCodePath, enumSourceCodePath []int32,
 ) ([]GoType, []GoEnumType) {
 	types := make([]GoType, 0, len(messages))
@@ -218,8 +224,8 @@ func (g *Generator) generateTypes(
 	for i, message := range messages {
 		if message.GetOptions().GetMapEntry() {
 			mapTypes[packagePrefix+message.GetName()] = [2]string{
-				g.fieldType(message.GetField()[0], mapTypes, packageAliases, goImportPathToPackageAlias, goImport),
-				g.fieldType(message.GetField()[1], mapTypes, packageAliases, goImportPathToPackageAlias, goImport),
+				g.fieldType(message.GetField()[0], mapTypes, packageAliases, goImport),
+				g.fieldType(message.GetField()[1], mapTypes, packageAliases, goImport),
 			}
 			continue
 		}
@@ -231,7 +237,6 @@ func (g *Generator) generateTypes(
 			packagePrefix,
 			mapTypes,
 			packageAliases,
-			goImportPathToPackageAlias,
 			sourceCodeInfo,
 			append(msgSourceCodePath, int32(i), 3),
 			append(msgSourceCodePath, int32(i), 4),
@@ -239,7 +244,7 @@ func (g *Generator) generateTypes(
 
 		fields := make([]GoTypeField, 0, len(message.GetField()))
 		for j, field := range message.GetField() {
-			typ := g.fieldType(field, mapTypes, packageAliases, goImportPathToPackageAlias, goImport)
+			typ := g.fieldType(field, mapTypes, packageAliases, goImport)
 			if field.GetLabel() == descriptorpb.FieldDescriptorProto_LABEL_REPEATED && !strings.HasPrefix(typ, "map[") {
 				typ = "[]" + typ
 			}
@@ -268,7 +273,6 @@ func (g *Generator) fieldType(
 	field *descriptorpb.FieldDescriptorProto,
 	mapTypes map[string][2]string,
 	packageAliases map[string]string,
-	goImportPathToPackageAlias map[string]string,
 	goImport GoImport,
 ) string {
 	switch field.GetType() {
@@ -299,11 +303,11 @@ func (g *Generator) fieldType(
 		if kv, ok := mapTypes[field.GetTypeName()]; ok {
 			return "map[" + kv[0] + "]" + kv[1]
 		}
-		return g.fieldTypeMessageOrEnum(field, packageAliases, goImportPathToPackageAlias, goImport)
+		return g.fieldTypeMessageOrEnum(field, packageAliases, goImport)
 	case descriptorpb.FieldDescriptorProto_TYPE_BYTES:
 		return "[]byte"
 	case descriptorpb.FieldDescriptorProto_TYPE_ENUM:
-		return g.fieldTypeMessageOrEnum(field, packageAliases, goImportPathToPackageAlias, goImport)
+		return g.fieldTypeMessageOrEnum(field, packageAliases, goImport)
 	case descriptorpb.FieldDescriptorProto_TYPE_SFIXED32:
 		return "int32"
 	case descriptorpb.FieldDescriptorProto_TYPE_SFIXED64:
@@ -321,7 +325,6 @@ func (g *Generator) fieldType(
 func (g *Generator) fieldTypeMessageOrEnum(
 	field *descriptorpb.FieldDescriptorProto,
 	packageAliases map[string]string,
-	goImportPathToPackageAlias map[string]string,
 	goImport GoImport,
 ) string {
 	goType, ok := g.definedTypes[field.GetTypeName()]
@@ -341,7 +344,7 @@ func (g *Generator) fieldTypeMessageOrEnum(
 	var packageAlias string
 	if packageAlias, ok = packageAliases[typePackage]; !ok {
 		importPath := goType[:strings.LastIndex(goType, ".")]
-		packageAlias = goImportPathToPackageAlias[importPath]
+		packageAlias = g.goImportPathToPackageAlias[importPath]
 
 		aliases := make([]string, 0, len(packageAliases))
 		for _, alias := range packageAliases {
