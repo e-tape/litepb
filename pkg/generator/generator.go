@@ -80,9 +80,14 @@ func NewFileGenerator(g *Generator, protoFile *descriptorpb.FileDescriptorProto)
 		Alias: goPackageName,
 	}
 
+	importAliases := make(ImportAliases, len(additionalImports))
+	for _, additionalImport := range additionalImports {
+		importAliases[additionalImport] = strings.ReplaceAll(additionalImport, "/", "_")
+	}
+
 	return &FileGenerator{
 		Generator:          g,
-		importAliases:      make(ImportAliases),
+		importAliases:      importAliases,
 		mapTypes:           make(MapTypes),
 		goImport:           goImport,
 		protoPackagePrefix: "." + protoFile.GetPackage() + ".",
@@ -159,7 +164,10 @@ func (g *Generator) Generate() *pluginpb.CodeGeneratorResponse {
 }
 
 func (g *FileGenerator) generateImports(dependencies []string) []GoImport {
-	imports := make([]GoImport, 0, len(dependencies))
+	slices.Sort(dependencies)
+	slices.Compact(dependencies)
+
+	imports := make([]GoImport, 0, len(dependencies)+len(additionalImports))
 	for _, dependency := range dependencies {
 		depGoImport, ok := g.protoFileToGoImport[dependency]
 		if !ok {
@@ -179,9 +187,18 @@ func (g *FileGenerator) generateImports(dependencies []string) []GoImport {
 			Alias: importAlias,
 		})
 	}
+
+	for _, additionalImport := range additionalImports {
+		imports = append(imports, GoImport{
+			Path:  additionalImport,
+			Alias: strings.ReplaceAll(additionalImport, "/", "_"),
+		})
+	}
+
 	slices.SortFunc(imports, func(a, b GoImport) int {
 		return cmp.Compare(a.Path, b.Path)
 	})
+
 	return imports
 }
 

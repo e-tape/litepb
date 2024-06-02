@@ -18,6 +18,8 @@ var goTemplate = template.Must(
 
 const mainTemplate = "main"
 
+var additionalImports = []string{"fmt"}
+
 var goTemplateFunc = template.FuncMap{
 	"lines": func(text string) []string {
 		if text == "" {
