@@ -54,16 +54,24 @@ type (
 type FileGenerator struct {
 	*Generator
 	packageAliases PackageAliases
+	mapTypes       MapTypes
 }
 
 func NewFileGenerator(g *Generator) *FileGenerator {
 	return &FileGenerator{
 		Generator:      g,
 		packageAliases: make(PackageAliases),
+		mapTypes:       make(MapTypes),
 	}
 }
 
 type PackageAliases map[GoImportPath]PackageAlias
+
+type (
+	MapTypes      map[MessageName]KeyValueTypes
+	MessageName   = string
+	KeyValueTypes = [2]string
+)
 
 // Generate generates bindings
 func (g *Generator) Generate() *pluginpb.CodeGeneratorResponse {
@@ -115,14 +123,11 @@ func (g *Generator) Generate() *pluginpb.CodeGeneratorResponse {
 			importPath,
 		)
 
-		mapTypes := make(map[string][2]string) // Message name => [key type, value type]
-
 		types, enumTypes := fg.generateTypes(
 			protoFile.GetMessageType(),
 			protoFile.GetEnumType(),
 			goImport,
 			packagePrefix,
-			mapTypes,
 			protoFile.GetSourceCodeInfo(),
 			[]int32{4}, []int32{5},
 		)
@@ -206,7 +211,7 @@ func (g *Generator) parseDefinedTypes(
 
 func (g *FileGenerator) generateTypes(
 	messages []*descriptorpb.DescriptorProto, enums []*descriptorpb.EnumDescriptorProto,
-	goImport GoImport, packagePrefix string, mapTypes map[string][2]string,
+	goImport GoImport, packagePrefix string,
 	sourceCodeInfo *descriptorpb.SourceCodeInfo, msgSourceCodePath, enumSourceCodePath []int32,
 ) ([]GoType, []GoEnumType) {
 	types := make([]GoType, 0, len(messages))
@@ -237,9 +242,9 @@ func (g *FileGenerator) generateTypes(
 
 	for i, message := range messages {
 		if message.GetOptions().GetMapEntry() {
-			mapTypes[packagePrefix+message.GetName()] = [2]string{
-				g.fieldType(message.GetField()[0], mapTypes, goImport),
-				g.fieldType(message.GetField()[1], mapTypes, goImport),
+			g.mapTypes[packagePrefix+message.GetName()] = [2]string{
+				g.fieldType(message.GetField()[0], goImport),
+				g.fieldType(message.GetField()[1], goImport),
 			}
 			continue
 		}
@@ -249,7 +254,6 @@ func (g *FileGenerator) generateTypes(
 			message.GetEnumType(),
 			goImport,
 			packagePrefix,
-			mapTypes,
 			sourceCodeInfo,
 			append(msgSourceCodePath, int32(i), 3),
 			append(msgSourceCodePath, int32(i), 4),
@@ -257,7 +261,7 @@ func (g *FileGenerator) generateTypes(
 
 		fields := make([]GoTypeField, 0, len(message.GetField()))
 		for j, field := range message.GetField() {
-			typ := g.fieldType(field, mapTypes, goImport)
+			typ := g.fieldType(field, goImport)
 			if field.GetLabel() == descriptorpb.FieldDescriptorProto_LABEL_REPEATED && !strings.HasPrefix(typ, "map[") {
 				typ = "[]" + typ
 			}
@@ -284,7 +288,6 @@ func (g *FileGenerator) generateTypes(
 
 func (g *FileGenerator) fieldType(
 	field *descriptorpb.FieldDescriptorProto,
-	mapTypes map[string][2]string,
 	goImport GoImport,
 ) string {
 	switch field.GetType() {
@@ -312,7 +315,7 @@ func (g *FileGenerator) fieldType(
 		stderr.Failf("groups are not supported")
 		return ""
 	case descriptorpb.FieldDescriptorProto_TYPE_MESSAGE:
-		if kv, ok := mapTypes[field.GetTypeName()]; ok {
+		if kv, ok := g.mapTypes[field.GetTypeName()]; ok {
 			return "map[" + kv[0] + "]" + kv[1]
 		}
 		return g.fieldTypeMessageOrEnum(field, goImport)
