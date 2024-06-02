@@ -128,7 +128,7 @@ func (g *Generator) Generate() *pluginpb.CodeGeneratorResponse {
 		imports := fg.generateImports(protoFile.GetDependency())
 
 		buf := bytes.NewBuffer(nil)
-		err := goTemplate.Execute(buf, GoFile{
+		err := goTemplate.ExecuteTemplate(buf, mainTemplate, GoFile{
 			Package:   fg.goImport.Alias,
 			Source:    protoFile.GetName(),
 			Imports:   imports,

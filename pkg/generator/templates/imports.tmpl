@@ -1,0 +1,11 @@
+{{ define "imports" }}
+
+{{ if . }}
+import (
+    {{- range . -}}{{/**/}}
+    {{ .Alias }} "{{ .Path }}"
+    {{- end }}
+)
+{{ end }}
+
+{{ end }}

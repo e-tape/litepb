@@ -1,0 +1,17 @@
+{{ define "types" }}
+
+{{ range . -}}
+{{- range (lines .Comments) -}}{{/**/}}
+//{{ . }}
+{{- end }}
+type {{ .Name }} struct {
+{{- range .Fields -}}{{/**/}}
+    {{- range (lines .Comments) -}}{{/**/}}
+    //{{ . }}
+    {{- end }}
+	{{ .Name }} {{ .Type }} `json:"{{ .SnakeName }}"`
+{{- end }}
+}
+{{ end }}
+
+{{ end }}
