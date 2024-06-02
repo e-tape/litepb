@@ -12,6 +12,21 @@ type {{ .Name }} struct {
 	{{ .Name }} {{ .Type }} `json:"{{ .SnakeName }}"`
 {{- end }}
 }
+
+{{ $type := . }}
+{{- range .Fields -}}{{/**/}}
+func (m *{{ $type.Name }}) Get{{ .Name }}() {{ .Type }} {
+    if m != nil {
+		return m.{{ .Name }}
+	}
+	return {{ .ZeroValue }}
+}
+
+func (m *{{ $type.Name }}) Set{{ .Name }}(value {{ .Type }}) {
+	m.{{ .Name }} = value
+}
+{{ end }}
+
 {{ end }}
 
 {{ end }}

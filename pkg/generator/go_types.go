@@ -24,6 +24,7 @@ type GoTypeField struct {
 	Comments  string
 	SnakeName string
 	Type      string
+	ZeroValue string
 }
 
 type GoEnumType struct {

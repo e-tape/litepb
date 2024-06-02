@@ -265,6 +265,7 @@ func (g *FileGenerator) generateTypes(
 				Comments:  g.findMessageFieldComments(msgSourceCodePath, i, j),
 				SnakeName: field.GetName(),
 				Type:      typ,
+				ZeroValue: g.fieldZeroValue(field),
 			})
 		}
 
@@ -310,7 +311,7 @@ func (g *FileGenerator) fieldType(field *descriptorpb.FieldDescriptorProto) stri
 		if kv, ok := g.mapTypes[field.GetTypeName()]; ok {
 			return "map[" + kv[0] + "]" + kv[1]
 		}
-		return g.fieldTypeMessageOrEnum(field)
+		return "*" + g.fieldTypeMessageOrEnum(field)
 	case descriptorpb.FieldDescriptorProto_TYPE_BYTES:
 		return "[]byte"
 	case descriptorpb.FieldDescriptorProto_TYPE_ENUM:
@@ -341,7 +342,7 @@ func (g *FileGenerator) fieldTypeMessageOrEnum(field *descriptorpb.FieldDescript
 	typeName := goType[ld+1:]
 
 	if typePackage == g.goImport.Path {
-		return "*" + typeName
+		return typeName
 	}
 
 	var importAlias string
@@ -368,5 +369,35 @@ func (g *FileGenerator) fieldTypeMessageOrEnum(field *descriptorpb.FieldDescript
 		g.importAliases[typePackage] = importAlias
 	}
 
-	return "*" + importAlias + "." + typeName
+	return importAlias + "." + typeName
+}
+
+func (g *FileGenerator) fieldZeroValue(field *descriptorpb.FieldDescriptorProto) string {
+	if field.GetLabel() == descriptorpb.FieldDescriptorProto_LABEL_REPEATED {
+		return "nil"
+	}
+
+	switch field.GetType() {
+	case descriptorpb.FieldDescriptorProto_TYPE_DOUBLE, descriptorpb.FieldDescriptorProto_TYPE_FLOAT,
+		descriptorpb.FieldDescriptorProto_TYPE_INT64, descriptorpb.FieldDescriptorProto_TYPE_UINT64,
+		descriptorpb.FieldDescriptorProto_TYPE_INT32, descriptorpb.FieldDescriptorProto_TYPE_UINT32,
+		descriptorpb.FieldDescriptorProto_TYPE_FIXED64, descriptorpb.FieldDescriptorProto_TYPE_FIXED32,
+		descriptorpb.FieldDescriptorProto_TYPE_SFIXED32, descriptorpb.FieldDescriptorProto_TYPE_SFIXED64,
+		descriptorpb.FieldDescriptorProto_TYPE_SINT32, descriptorpb.FieldDescriptorProto_TYPE_SINT64:
+		return "0"
+	case descriptorpb.FieldDescriptorProto_TYPE_BOOL:
+		return "false"
+	case descriptorpb.FieldDescriptorProto_TYPE_STRING:
+		return `""`
+	case descriptorpb.FieldDescriptorProto_TYPE_GROUP:
+		stderr.Failf("groups are not supported")
+		return ""
+	case descriptorpb.FieldDescriptorProto_TYPE_MESSAGE, descriptorpb.FieldDescriptorProto_TYPE_BYTES:
+		return "nil"
+	case descriptorpb.FieldDescriptorProto_TYPE_ENUM:
+		return "0"
+	default:
+		stderr.Failf("unknown type %d", field.GetType())
+		return ""
+	}
 }
