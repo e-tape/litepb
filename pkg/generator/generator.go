@@ -56,6 +56,7 @@ type FileGenerator struct {
 	mapTypes       MapTypes
 	goImport       GoImport
 	packagePrefix  string
+	sourceCodeInfo *descriptorpb.SourceCodeInfo
 }
 
 func NewFileGenerator(g *Generator, protoFile *descriptorpb.FileDescriptorProto) *FileGenerator {
@@ -85,6 +86,7 @@ func NewFileGenerator(g *Generator, protoFile *descriptorpb.FileDescriptorProto)
 		mapTypes:       make(MapTypes),
 		goImport:       goImport,
 		packagePrefix:  "." + protoFile.GetPackage() + ".",
+		sourceCodeInfo: protoFile.GetSourceCodeInfo(),
 	}
 }
 
@@ -120,7 +122,6 @@ func (g *Generator) Generate() *pluginpb.CodeGeneratorResponse {
 		types, enumTypes := fg.generateTypes(
 			protoFile.GetMessageType(),
 			protoFile.GetEnumType(),
-			protoFile.GetSourceCodeInfo(),
 			[]int32{4}, []int32{5},
 		)
 
@@ -208,7 +209,7 @@ func (g *FileGenerator) defineTypes(
 
 func (g *FileGenerator) generateTypes(
 	messages []*descriptorpb.DescriptorProto, enums []*descriptorpb.EnumDescriptorProto,
-	sourceCodeInfo *descriptorpb.SourceCodeInfo, msgSourceCodePath, enumSourceCodePath []int32,
+	msgSourceCodePath, enumSourceCodePath []int32,
 ) ([]GoType, []GoEnumType) {
 	types := make([]GoType, 0, len(messages))
 	enumTypes := make([]GoEnumType, 0, len(enums))
@@ -218,7 +219,7 @@ func (g *FileGenerator) generateTypes(
 		for j, value := range enum.GetValue() {
 			values = append(values, GoEnumTypeValue{
 				Name:     value.GetName(),
-				Comments: findEnumValueComments(sourceCodeInfo, enumSourceCodePath, i, j),
+				Comments: g.findEnumValueComments(enumSourceCodePath, i, j),
 				Number:   value.GetNumber(),
 			})
 		}
@@ -230,7 +231,7 @@ func (g *FileGenerator) generateTypes(
 
 		enumTypes = append(enumTypes, GoEnumType{
 			Name:         strings.ReplaceAll(enum.GetName(), ".", "_"),
-			Comments:     findEnumComments(sourceCodeInfo, enumSourceCodePath, i),
+			Comments:     g.findEnumComments(enumSourceCodePath, i),
 			ValuesPrefix: strings.ReplaceAll(valuesPrefix, ".", "_"),
 			Values:       values,
 		})
@@ -248,7 +249,6 @@ func (g *FileGenerator) generateTypes(
 		nestedTypes, nestedEnumTypes := g.generateTypes(
 			message.GetNestedType(),
 			message.GetEnumType(),
-			sourceCodeInfo,
 			append(msgSourceCodePath, int32(i), 3),
 			append(msgSourceCodePath, int32(i), 4),
 		)
@@ -261,7 +261,7 @@ func (g *FileGenerator) generateTypes(
 			}
 			fields = append(fields, GoTypeField{
 				Name:      common.SnakeCaseToPascalCase(field.GetName()),
-				Comments:  findMessageFieldComments(sourceCodeInfo, msgSourceCodePath, i, j),
+				Comments:  g.findMessageFieldComments(msgSourceCodePath, i, j),
 				SnakeName: field.GetName(),
 				Type:      typ,
 			})
@@ -269,7 +269,7 @@ func (g *FileGenerator) generateTypes(
 
 		types = append(types, GoType{
 			Name:     strings.ReplaceAll(message.GetName(), ".", "_"),
-			Comments: findMessageComments(sourceCodeInfo, msgSourceCodePath, i),
+			Comments: g.findMessageComments(msgSourceCodePath, i),
 			Fields:   fields,
 		})
 
