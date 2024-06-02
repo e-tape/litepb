@@ -5,4 +5,4 @@ test-compile: build-protoc-gen-litepb
 	protoc --plugin ./bin/protoc-gen-litepb --litepb_out ./test/ --proto_path=./test/proto/ ./test/proto/test.proto
 
 build-protoc-gen-litepb:
-	go build -o ./bin/protoc-gen-litepb ./cmd/protoc-gen-litepb
+	go build -tags debug -o ./bin/protoc-gen-litepb ./cmd/protoc-gen-litepb
