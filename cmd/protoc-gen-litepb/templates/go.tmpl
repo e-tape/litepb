@@ -6,7 +6,7 @@ package {{ .Package }}
 {{ if .Imports }}
 import (
     {{- range .Imports -}}{{/**/}}
-    "{{ . }}"
+    {{ .Alias }} "{{ .Path }}"
     {{- end }}
 )
 {{ end }}

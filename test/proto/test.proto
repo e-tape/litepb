@@ -6,6 +6,11 @@ option go_package = "generated/test";
 
 import "test2.proto";
 import "test3.proto";
+import "dir/test.proto";
+import "dir/dir/test.proto";
+
+import "common/c1.proto";
+import "common/c2.proto";
 
 enum Direction {
   NORTH = 0;
@@ -27,6 +32,12 @@ message Test {
   test3.Ok.Status status = 5;
 
   map<string, Foo> kv = 6;
+
+  dir.Baz baz = 7;
+  dir.dir.Baz3 baz3 = 8;
+
+  common.C1 c1 = 9;
+  common.C2 c2 = 10;
 
   // Inner message TEST
   message Inner {
