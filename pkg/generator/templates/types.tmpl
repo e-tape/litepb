@@ -13,6 +13,19 @@ type {{ .Name }} struct {
 {{- end }}
 }
 
+func (m *{{ .Name }}) Reset() {
+    *m = {{ .Name }}{}
+}
+
+func (m *{{ .Name }}) ProtoMessage() {}
+
+func (m *{{ .Name }}) String() string {
+    if m == nil {
+        return "<nil>"
+    }
+    return fmt.Sprintf("%+v", m){{/* TODO: Implement proper string */}}
+}
+
 {{ $type := . }}
 {{- range .Fields -}}{{/**/}}
 func (m *{{ $type.Name }}) Get{{ .Name }}() {{ .Type }} {
