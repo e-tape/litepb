@@ -158,9 +158,7 @@ func (g *Generator) Generate() *pluginpb.CodeGeneratorResponse {
 	}
 }
 
-func (g *FileGenerator) generateImports(
-	dependencies []string,
-) []GoImport {
+func (g *FileGenerator) generateImports(dependencies []string) []GoImport {
 	imports := make([]GoImport, 0, len(dependencies))
 	for _, dependency := range dependencies {
 		depGoImport, ok := g.protoFileToGoImport[dependency]
@@ -188,14 +186,15 @@ func (g *FileGenerator) generateImports(
 }
 
 func (g *FileGenerator) defineTypes(
-	parentMessage *descriptorpb.DescriptorProto, messages []*descriptorpb.DescriptorProto,
-	enums []*descriptorpb.EnumDescriptorProto,
+	parentMessage *descriptorpb.DescriptorProto,
+	messages []*descriptorpb.DescriptorProto, enums []*descriptorpb.EnumDescriptorProto,
 ) {
 	for _, message := range messages {
 		if parentMessage != nil {
 			message.Name = common.Ptr(parentMessage.GetName() + "." + message.GetName())
 		}
-		g.definedTypes[g.packagePrefix+message.GetName()] = g.goImport.Path + "." + strings.ReplaceAll(message.GetName(), ".", "_")
+		g.definedTypes[g.packagePrefix+message.GetName()] = g.goImport.Path + "." +
+			strings.ReplaceAll(message.GetName(), ".", "_")
 		g.defineTypes(message, message.GetNestedType(), message.GetEnumType())
 	}
 
@@ -203,7 +202,8 @@ func (g *FileGenerator) defineTypes(
 		if parentMessage != nil {
 			enum.Name = common.Ptr(parentMessage.GetName() + "." + enum.GetName())
 		}
-		g.definedTypes[g.packagePrefix+enum.GetName()] = g.goImport.Path + "." + strings.ReplaceAll(enum.GetName(), ".", "_")
+		g.definedTypes[g.packagePrefix+enum.GetName()] = g.goImport.Path + "." +
+			strings.ReplaceAll(enum.GetName(), ".", "_")
 	}
 }
 
@@ -256,7 +256,8 @@ func (g *FileGenerator) generateTypes(
 		fields := make([]GoTypeField, 0, len(message.GetField()))
 		for j, field := range message.GetField() {
 			typ := g.fieldType(field)
-			if field.GetLabel() == descriptorpb.FieldDescriptorProto_LABEL_REPEATED && !strings.HasPrefix(typ, "map[") {
+			if field.GetLabel() == descriptorpb.FieldDescriptorProto_LABEL_REPEATED &&
+				!strings.HasPrefix(typ, "map[") {
 				typ = "[]" + typ
 			}
 			fields = append(fields, GoTypeField{
@@ -280,9 +281,7 @@ func (g *FileGenerator) generateTypes(
 	return types, enumTypes
 }
 
-func (g *FileGenerator) fieldType(
-	field *descriptorpb.FieldDescriptorProto,
-) string {
+func (g *FileGenerator) fieldType(field *descriptorpb.FieldDescriptorProto) string {
 	switch field.GetType() {
 	case descriptorpb.FieldDescriptorProto_TYPE_DOUBLE:
 		return "float64"
@@ -330,9 +329,7 @@ func (g *FileGenerator) fieldType(
 	}
 }
 
-func (g *FileGenerator) fieldTypeMessageOrEnum(
-	field *descriptorpb.FieldDescriptorProto,
-) string {
+func (g *FileGenerator) fieldTypeMessageOrEnum(field *descriptorpb.FieldDescriptorProto) string {
 	goType, ok := g.definedTypes[field.GetTypeName()]
 	if !ok {
 		stderr.Failf("unknown type %s", field.GetTypeName())
