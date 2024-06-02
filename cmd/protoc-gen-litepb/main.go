@@ -139,7 +139,7 @@ func generate(request *pluginpb.CodeGeneratorRequest) *pluginpb.CodeGeneratorRes
 			[]int32{4}, []int32{5},
 		)
 
-		imports := generateImports(protoFileToGoImport, packageAliases, goPackage, protoFile.GetDependency())
+		imports := generateImports(protoFileToGoImport, packageAliases, goImport, protoFile.GetDependency())
 
 		buf := bytes.NewBuffer(nil)
 		err := goTemplate.Execute(buf, GoFile{
@@ -168,25 +168,25 @@ func generate(request *pluginpb.CodeGeneratorRequest) *pluginpb.CodeGeneratorRes
 }
 
 func generateImports(
-	protoFileToGoImport map[string]GoImport, packageAliases map[string]string, goPackage string, dependencies []string,
+	protoFileToGoImport map[string]GoImport, packageAliases map[string]string, goImport GoImport, dependencies []string,
 ) []GoImport {
 	imports := make([]GoImport, 0, len(dependencies))
 	for _, dependency := range dependencies {
-		goImport, ok := protoFileToGoImport[dependency]
+		depGoImport, ok := protoFileToGoImport[dependency]
 		if !ok {
-			failf("missing dependency %s for %s", dependency, goPackage)
+			failf("missing dependency %s for %s", dependency, depGoImport.Path)
 		}
-		if goImport.Path == goPackage {
+		if depGoImport.Path == goImport.Path {
 			continue
 		}
 
-		packageAlias, ok := packageAliases[goImport.Path]
+		packageAlias, ok := packageAliases[depGoImport.Path]
 		if !ok {
 			packageAlias = "_"
 		}
 
 		imports = append(imports, GoImport{
-			Path:  goImport.Path,
+			Path:  depGoImport.Path,
 			Alias: packageAlias,
 		})
 	}
