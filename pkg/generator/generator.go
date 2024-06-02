@@ -16,19 +16,19 @@ import (
 
 // Generator of protobuf bindings
 type Generator struct {
-	request                    *pluginpb.CodeGeneratorRequest
-	definedTypes               DefinedTypes
-	protoFileToGoImport        ProtoFileToGoImport
-	goImportPathToPackageAlias GoImportPathToPackageAlias
+	request             *pluginpb.CodeGeneratorRequest
+	definedTypes        DefinedTypes
+	protoFileToGoImport ProtoFileToGoImport
+	goImportPathToAlias GoImportPathToAlias
 }
 
 // NewGenerator creates new generator
 func NewGenerator(request *pluginpb.CodeGeneratorRequest) *Generator {
 	return &Generator{
-		request:                    request,
-		definedTypes:               make(DefinedTypes),
-		protoFileToGoImport:        make(ProtoFileToGoImport),
-		goImportPathToPackageAlias: make(GoImportPathToPackageAlias),
+		request:             request,
+		definedTypes:        make(DefinedTypes),
+		protoFileToGoImport: make(ProtoFileToGoImport),
+		goImportPathToAlias: make(GoImportPathToAlias),
 	}
 }
 
@@ -44,19 +44,19 @@ type (
 )
 
 type (
-	GoImportPathToPackageAlias map[GoImportPath]PackageAlias
-	GoImportPath               = string
-	PackageAlias               = string
+	GoImportPathToAlias map[GoImportPath]GoImportAlias
+	GoImportPath        = string
+	GoImportAlias       = string
 )
 
 // FileGenerator of protobuf bindings for single file
 type FileGenerator struct {
 	*Generator
-	packageAliases PackageAliases
-	mapTypes       MapTypes
-	goImport       GoImport
-	packagePrefix  string
-	sourceCodeInfo *descriptorpb.SourceCodeInfo
+	importAliases      ImportAliases
+	mapTypes           MapTypes
+	goImport           GoImport
+	protoPackagePrefix string
+	sourceCodeInfo     *descriptorpb.SourceCodeInfo
 }
 
 func NewFileGenerator(g *Generator, protoFile *descriptorpb.FileDescriptorProto) *FileGenerator {
@@ -81,16 +81,16 @@ func NewFileGenerator(g *Generator, protoFile *descriptorpb.FileDescriptorProto)
 	}
 
 	return &FileGenerator{
-		Generator:      g,
-		packageAliases: make(PackageAliases),
-		mapTypes:       make(MapTypes),
-		goImport:       goImport,
-		packagePrefix:  "." + protoFile.GetPackage() + ".",
-		sourceCodeInfo: protoFile.GetSourceCodeInfo(),
+		Generator:          g,
+		importAliases:      make(ImportAliases),
+		mapTypes:           make(MapTypes),
+		goImport:           goImport,
+		protoPackagePrefix: "." + protoFile.GetPackage() + ".",
+		sourceCodeInfo:     protoFile.GetSourceCodeInfo(),
 	}
 }
 
-type PackageAliases map[GoImportPath]PackageAlias
+type ImportAliases map[GoImportPath]GoImportAlias
 
 type (
 	MapTypes      map[MessageName]KeyValueTypes
@@ -111,7 +111,7 @@ func (g *Generator) Generate() *pluginpb.CodeGeneratorResponse {
 		fg := NewFileGenerator(g, protoFile)
 
 		g.protoFileToGoImport[protoFile.GetName()] = fg.goImport
-		g.goImportPathToPackageAlias[fg.goImport.Path] = fg.goImport.Alias
+		g.goImportPathToAlias[fg.goImport.Path] = fg.goImport.Alias
 
 		fg.defineTypes(
 			nil,
@@ -169,14 +169,14 @@ func (g *FileGenerator) generateImports(dependencies []string) []GoImport {
 			continue
 		}
 
-		packageAlias, ok := g.packageAliases[depGoImport.Path]
+		importAlias, ok := g.importAliases[depGoImport.Path]
 		if !ok {
-			packageAlias = "_"
+			importAlias = "_"
 		}
 
 		imports = append(imports, GoImport{
 			Path:  depGoImport.Path,
-			Alias: packageAlias,
+			Alias: importAlias,
 		})
 	}
 	slices.SortFunc(imports, func(a, b GoImport) int {
@@ -193,7 +193,7 @@ func (g *FileGenerator) defineTypes(
 		if parentMessage != nil {
 			message.Name = common.Ptr(parentMessage.GetName() + "." + message.GetName())
 		}
-		g.definedTypes[g.packagePrefix+message.GetName()] = g.goImport.Path + "." +
+		g.definedTypes[g.protoPackagePrefix+message.GetName()] = g.goImport.Path + "." +
 			strings.ReplaceAll(message.GetName(), ".", "_")
 		g.defineTypes(message, message.GetNestedType(), message.GetEnumType())
 	}
@@ -202,7 +202,7 @@ func (g *FileGenerator) defineTypes(
 		if parentMessage != nil {
 			enum.Name = common.Ptr(parentMessage.GetName() + "." + enum.GetName())
 		}
-		g.definedTypes[g.packagePrefix+enum.GetName()] = g.goImport.Path + "." +
+		g.definedTypes[g.protoPackagePrefix+enum.GetName()] = g.goImport.Path + "." +
 			strings.ReplaceAll(enum.GetName(), ".", "_")
 	}
 }
@@ -239,7 +239,7 @@ func (g *FileGenerator) generateTypes(
 
 	for i, message := range messages {
 		if message.GetOptions().GetMapEntry() {
-			g.mapTypes[g.packagePrefix+message.GetName()] = [2]string{
+			g.mapTypes[g.protoPackagePrefix+message.GetName()] = [2]string{
 				g.fieldType(message.GetField()[0]),
 				g.fieldType(message.GetField()[1]),
 			}
@@ -344,26 +344,26 @@ func (g *FileGenerator) fieldTypeMessageOrEnum(field *descriptorpb.FieldDescript
 		return "*" + typeName
 	}
 
-	var packageAlias string
-	if packageAlias, ok = g.packageAliases[typePackage]; !ok {
+	var importAlias string
+	if importAlias, ok = g.importAliases[typePackage]; !ok {
 		importPath := goType[:strings.LastIndex(goType, ".")]
-		packageAlias = g.goImportPathToPackageAlias[importPath]
+		importAlias = g.goImportPathToAlias[importPath]
 
-		aliases := make([]string, 0, len(g.packageAliases))
-		for _, alias := range g.packageAliases {
+		aliases := make([]string, 0, len(g.importAliases))
+		for _, alias := range g.importAliases {
 			aliases = append(aliases, alias)
 		}
 
-		for slices.Contains(aliases, packageAlias) {
+		for slices.Contains(aliases, importAlias) {
 			if importPath == "" || importPath == "." {
 				panic("unreachable")
 			}
-			packageAlias = path.Base(importPath) + "_" + packageAlias
+			importAlias = path.Base(importPath) + "_" + importAlias
 			importPath = path.Dir(importPath)
 		}
 
-		g.packageAliases[typePackage] = packageAlias
+		g.importAliases[typePackage] = importAlias
 	}
 
-	return "*" + packageAlias + "." + typeName
+	return "*" + importAlias + "." + typeName
 }
