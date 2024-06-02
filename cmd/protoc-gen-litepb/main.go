@@ -39,7 +39,7 @@ func run() error {
 	response := generator.NewGenerator(request).Generate()
 	stderr.Logf("GENERATED IN: %s", time.Since(start))
 
-	// generator.GoFmt(response) // TODO: Enable
+	generator.GoFmt(response)
 
 	out, err := proto.Marshal(response)
 	if err != nil {
