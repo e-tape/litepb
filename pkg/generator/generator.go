@@ -354,6 +354,9 @@ func (g *FileGenerator) fieldTypeMessageOrEnum(field *descriptorpb.FieldDescript
 			aliases = append(aliases, alias)
 		}
 
+		if slices.Contains(aliases, importAlias) {
+			importPath = path.Dir(importPath)
+		}
 		for slices.Contains(aliases, importAlias) {
 			if importPath == "" || importPath == "." {
 				panic("unreachable")
