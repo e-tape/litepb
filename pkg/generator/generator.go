@@ -17,15 +17,17 @@ import (
 
 // Generator of protobuf bindings
 type Generator struct {
-	request      *pluginpb.CodeGeneratorRequest
-	definedTypes DefinedTypes
+	request             *pluginpb.CodeGeneratorRequest
+	definedTypes        DefinedTypes
+	protoFileToGoImport ProtoFileToGoImport
 }
 
 // NewGenerator creates new generator
 func NewGenerator(request *pluginpb.CodeGeneratorRequest) *Generator {
 	return &Generator{
-		request:      request,
-		definedTypes: make(DefinedTypes),
+		request:             request,
+		definedTypes:        make(DefinedTypes),
+		protoFileToGoImport: make(ProtoFileToGoImport),
 	}
 }
 
@@ -35,10 +37,14 @@ type (
 	GoFullType    = string // Go package + type name
 )
 
+type (
+	ProtoFileToGoImport map[ProtoFile]GoImport
+	ProtoFile           = string
+)
+
 // Generate generates bindings
 func (g *Generator) Generate() *pluginpb.CodeGeneratorResponse {
 	codeFiles := make([]*pluginpb.CodeGeneratorResponse_File, 0, len(g.request.GetProtoFile()))
-	protoFileToGoImport := make(map[string]GoImport)      // Proto file => Go import
 	goImportPathToPackageAlias := make(map[string]string) // Go import path => package alias
 	for _, protoFile := range g.request.ProtoFile {
 		stderr.Logf("FILE START")
@@ -68,7 +74,7 @@ func (g *Generator) Generate() *pluginpb.CodeGeneratorResponse {
 			Path:  importPath,
 			Alias: goPackageName,
 		}
-		protoFileToGoImport[protoFile.GetName()] = goImport
+		g.protoFileToGoImport[protoFile.GetName()] = goImport
 		goImportPathToPackageAlias[goImport.Path] = goImport.Alias
 
 		protoFileName := path.Base(protoFile.GetName())
@@ -100,7 +106,7 @@ func (g *Generator) Generate() *pluginpb.CodeGeneratorResponse {
 			[]int32{4}, []int32{5},
 		)
 
-		imports := generateImports(protoFileToGoImport, packageAliases, goImport, protoFile.GetDependency())
+		imports := g.generateImports(packageAliases, goImport, protoFile.GetDependency())
 
 		buf := bytes.NewBuffer(nil)
 		err := goTemplate.Execute(buf, GoFile{
@@ -121,19 +127,19 @@ func (g *Generator) Generate() *pluginpb.CodeGeneratorResponse {
 
 		stderr.Logf("FILE END")
 	}
-	stderr.Logf("FILE TO IMPORT PATH: %v", protoFileToGoImport)
+	stderr.Logf("FILE TO IMPORT PATH: %v", g.protoFileToGoImport)
 	stderr.Logf("DEFINED TYPES: %v", g.definedTypes)
 	return &pluginpb.CodeGeneratorResponse{
 		File: codeFiles,
 	}
 }
 
-func generateImports(
-	protoFileToGoImport map[string]GoImport, packageAliases map[string]string, goImport GoImport, dependencies []string,
+func (g *Generator) generateImports(
+	packageAliases map[string]string, goImport GoImport, dependencies []string,
 ) []GoImport {
 	imports := make([]GoImport, 0, len(dependencies))
 	for _, dependency := range dependencies {
-		depGoImport, ok := protoFileToGoImport[dependency]
+		depGoImport, ok := g.protoFileToGoImport[dependency]
 		if !ok {
 			stderr.Failf("missing dependency %s for %s", dependency, depGoImport.Path)
 		}
