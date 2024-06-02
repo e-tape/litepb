@@ -55,6 +55,7 @@ type FileGenerator struct {
 	packageAliases PackageAliases
 	mapTypes       MapTypes
 	goImport       GoImport
+	packagePrefix  string
 }
 
 func NewFileGenerator(g *Generator, protoFile *descriptorpb.FileDescriptorProto) *FileGenerator {
@@ -83,6 +84,7 @@ func NewFileGenerator(g *Generator, protoFile *descriptorpb.FileDescriptorProto)
 		packageAliases: make(PackageAliases),
 		mapTypes:       make(MapTypes),
 		goImport:       goImport,
+		packagePrefix:  "." + protoFile.GetPackage() + ".",
 	}
 }
 
@@ -109,23 +111,15 @@ func (g *Generator) Generate() *pluginpb.CodeGeneratorResponse {
 		g.protoFileToGoImport[protoFile.GetName()] = fg.goImport
 		g.goImportPathToPackageAlias[fg.goImport.Path] = fg.goImport.Alias
 
-		protoFileName := path.Base(protoFile.GetName())
-		protoFileNameExt := path.Ext(protoFileName)
-		fileName := path.Join(fg.goImport.Path, strings.TrimSuffix(protoFileName, protoFileNameExt)+".pb.go")
-		stderr.Logf("\tGO FILE: %s", fileName)
-
-		packagePrefix := "." + protoFile.GetPackage() + "."
-		fg.parseDefinedTypes(
+		fg.defineTypes(
 			nil,
 			protoFile.GetMessageType(),
 			protoFile.GetEnumType(),
-			packagePrefix,
 		)
 
 		types, enumTypes := fg.generateTypes(
 			protoFile.GetMessageType(),
 			protoFile.GetEnumType(),
-			packagePrefix,
 			protoFile.GetSourceCodeInfo(),
 			[]int32{4}, []int32{5},
 		)
@@ -143,6 +137,11 @@ func (g *Generator) Generate() *pluginpb.CodeGeneratorResponse {
 		if err != nil {
 			stderr.Failf("execute template: %s", err)
 		}
+
+		protoFileName := path.Base(protoFile.GetName())
+		protoFileNameExt := path.Ext(protoFileName)
+		fileName := path.Join(fg.goImport.Path, strings.TrimSuffix(protoFileName, protoFileNameExt)+".pb.go")
+		stderr.Logf("\tGO FILE: %s", fileName)
 
 		codeFiles = append(codeFiles, &pluginpb.CodeGeneratorResponse_File{
 			Name:    &fileName,
@@ -187,29 +186,28 @@ func (g *FileGenerator) generateImports(
 	return imports
 }
 
-func (g *FileGenerator) parseDefinedTypes(
+func (g *FileGenerator) defineTypes(
 	parentMessage *descriptorpb.DescriptorProto, messages []*descriptorpb.DescriptorProto,
-	enums []*descriptorpb.EnumDescriptorProto, packagePrefix string,
+	enums []*descriptorpb.EnumDescriptorProto,
 ) {
 	for _, message := range messages {
 		if parentMessage != nil {
 			message.Name = common.Ptr(parentMessage.GetName() + "." + message.GetName())
 		}
-		g.definedTypes[packagePrefix+message.GetName()] = g.goImport.Path + "." + strings.ReplaceAll(message.GetName(), ".", "_")
-		g.parseDefinedTypes(message, message.GetNestedType(), message.GetEnumType(), packagePrefix)
+		g.definedTypes[g.packagePrefix+message.GetName()] = g.goImport.Path + "." + strings.ReplaceAll(message.GetName(), ".", "_")
+		g.defineTypes(message, message.GetNestedType(), message.GetEnumType())
 	}
 
 	for _, enum := range enums {
 		if parentMessage != nil {
 			enum.Name = common.Ptr(parentMessage.GetName() + "." + enum.GetName())
 		}
-		g.definedTypes[packagePrefix+enum.GetName()] = g.goImport.Path + "." + strings.ReplaceAll(enum.GetName(), ".", "_")
+		g.definedTypes[g.packagePrefix+enum.GetName()] = g.goImport.Path + "." + strings.ReplaceAll(enum.GetName(), ".", "_")
 	}
 }
 
 func (g *FileGenerator) generateTypes(
 	messages []*descriptorpb.DescriptorProto, enums []*descriptorpb.EnumDescriptorProto,
-	packagePrefix string,
 	sourceCodeInfo *descriptorpb.SourceCodeInfo, msgSourceCodePath, enumSourceCodePath []int32,
 ) ([]GoType, []GoEnumType) {
 	types := make([]GoType, 0, len(messages))
@@ -240,7 +238,7 @@ func (g *FileGenerator) generateTypes(
 
 	for i, message := range messages {
 		if message.GetOptions().GetMapEntry() {
-			g.mapTypes[packagePrefix+message.GetName()] = [2]string{
+			g.mapTypes[g.packagePrefix+message.GetName()] = [2]string{
 				g.fieldType(message.GetField()[0]),
 				g.fieldType(message.GetField()[1]),
 			}
@@ -250,7 +248,6 @@ func (g *FileGenerator) generateTypes(
 		nestedTypes, nestedEnumTypes := g.generateTypes(
 			message.GetNestedType(),
 			message.GetEnumType(),
-			packagePrefix,
 			sourceCodeInfo,
 			append(msgSourceCodePath, int32(i), 3),
 			append(msgSourceCodePath, int32(i), 4),
