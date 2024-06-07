@@ -1,0 +1,29 @@
+{{- define "messages" -}}
+    {{ range . -}}
+        {{- /*gotype: github.com/e-tape/litepb/pkg/plugin.Message*/ -}}
+
+        type (
+        {{ template "message_interface_get" . }}
+        {{ template "message_interface_set" . }}
+        {{ template "message_interface" . }}
+        {{ template "message_struct" . }}
+        {{ template "oneof_types" . }}
+        )
+        var (
+        {{ template "message_pool" . }}
+        {{- template "oneof_pools" . }}
+        )
+
+        {{ template "message_new" . }}
+        {{ template "oneof_new" . }}
+        {{ template "message_convert" . }}
+
+        {{ template "message_string" . }}
+        {{ template "message_reset" . }}
+        {{ template "message_proto_message" . }}
+
+        {{ template "message_methods_get" . }}
+        {{ template "message_methods_set" . }}
+        {{ template "oneof_methods" . }}
+    {{ end -}}
+{{- end -}}

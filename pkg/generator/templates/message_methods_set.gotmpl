@@ -1,0 +1,35 @@
+{{- define "message_methods_set" -}}
+    {{- /*gotype: github.com/e-tape/litepb/pkg/plugin.Message*/ -}}
+    {{- $msg := . -}}
+    {{ range .GetProperties -}}
+        {{ with .GetField -}}
+            func (a *{{ $msg.GetName }}) Set{{ .GetName }}(
+            {{- if or (.GetType.GetRepeated) (is_map .GetType) }}values{{ else }}value{{ end }} {{ template "field_type_name" dict
+            "type" .GetType
+            "format" "<repeat><path><i_name_get>"
+            -}}
+            ) {{ template "message_interface_name" dict "msg" $msg }} {
+            {{ template "field_set" . }}
+            }
+        {{ end -}}
+        {{ with .GetOneof -}}
+            {{- $oneof := . -}}
+            func (a *{{ $msg.GetName }}) Set{{ .GetName }}(value {{ template "oneof_type_name" dict
+            "msg" $msg
+            "oneof" .
+            }}) {{ template "message_interface_name" dict "msg" $msg }} {
+            if a.{{ .GetName }} != nil { a.{{ .GetName }}.Reset() } // TODO rathil is it work for interface????
+            a.{{ .GetName }} = value
+            return a
+            }
+            {{ range .GetFields -}}
+                func (a *{{ $msg.GetName }}) Set{{ .GetName }}(value {{ template "field_type_name" dict
+                "type" .GetType
+                "format" "<path><i_name_get>"
+                -}}) {{ template "message_interface_name" dict "msg" $msg }} {
+                return a.Set{{ $oneof.GetName }}(New{{ template "oneof_type_name" dict "msg" $msg "field" . }}().Set{{ .GetName }}(value))
+                }
+            {{ end -}}
+        {{ end -}}
+    {{ end -}}
+{{- end -}}

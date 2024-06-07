@@ -1,0 +1,19 @@
+{{- define "oneof_types" -}}
+    {{- /*gotype: github.com/e-tape/litepb/pkg/plugin.Message*/ -}}
+    {{- $msg := . -}}
+    {{ range .GetProperties -}}
+        {{ with .GetOneof -}}
+            {{ template "oneof_type_name" dict "msg" $msg "oneof" . }} interface {
+            oneof{{ template "oneof_type_name" dict "msg" $msg "field" . }}()
+            }
+            {{ range .GetFields -}}
+                {{ template "oneof_type_name" dict "msg" $msg "field" . }} struct {
+                {{ range (lines .GetComments) -}}
+                    //{{ . }}
+                {{ end -}}
+                {{ .GetName }} {{ template "field_type_name" dict "type" .GetType "format" "<pointer><path><name>" }} {{ template "field_tags" . }}
+                }
+            {{ end -}}
+        {{ end -}}
+    {{ end -}}
+{{- end -}}

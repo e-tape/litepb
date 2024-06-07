@@ -1,0 +1,30 @@
+{{- define "field_type_name" -}}
+    {{- /*gotype: github.com/e-tape/litepb/pkg/plugin.Message_Field_Type*/ -}}
+    {{- $type := . -}}
+    {{- $type = index . "type" -}}
+    {{- $format := index . "format" -}}
+    {{- if is_map $type -}}
+        map[{{ template "field_type_name" dict "type" $type.GetMap.GetKey "format" $format }}]
+        {{- template "field_type_name" dict "type" $type.GetMap.GetValue "format" $format }}
+    {{- else -}}
+        {{- $name := $type.GetReflect.GetName -}}
+        {{- $iName := $name -}}
+        {{- if is_msg $type -}}{{- $iName = print "I" $type.GetReflect.GetName -}}{{- end -}}
+        {{- $iNameGet := $name -}}
+        {{- if is_msg $type -}}{{- $iNameGet = print "I" $type.GetReflect.GetName "Get" -}}{{- end -}}
+        {{- $pointer := "" -}}
+        {{- if is_msg $type -}}{{- $pointer = "*" -}}{{- end -}}
+        {{- $repeat := "" -}}
+        {{- if $type.GetRepeated -}}{{- $repeat = "[]" -}}{{- end -}}
+        {{- $path := "" -}}
+        {{- if not (eq $type.GetReflect.GetPath "") -}}{{- $path = print $type.GetReflect.GetPath "." -}}{{- end -}}
+        {{- replace $format
+        "<pointer>" $pointer
+        "<repeat>" $repeat
+        "<path>" $path
+        "<name>" $name
+        "<i_name>" $iName
+        "<i_name_get>" $iNameGet
+        -}}
+    {{- end -}}
+{{- end -}}

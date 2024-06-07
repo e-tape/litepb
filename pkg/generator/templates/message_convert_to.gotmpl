@@ -1,0 +1,10 @@
+{{- define "message_convert_to" -}}
+    {{- with index . "msg" -}}
+        {{- /*gotype: github.com/e-tape/litepb/pkg/plugin.Message*/ -}}
+        ConvertTo{{ .GetName }}
+    {{- end -}}
+    {{- with index . "type" -}}
+        {{- /*gotype: github.com/e-tape/litepb/pkg/plugin.Message_Field_Type*/ -}}
+        {{- template "field_type_name" dict "type" . "format" "<path>" }}ConvertTo{{ template "field_type_name" dict "type" . "format" "<name>" -}}
+    {{- end -}}
+{{- end -}}

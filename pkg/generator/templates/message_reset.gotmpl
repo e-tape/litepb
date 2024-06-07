@@ -1,0 +1,24 @@
+{{- define "message_reset" -}}
+    {{- /*gotype: github.com/e-tape/litepb/pkg/plugin.Message*/ -}}
+    func (a *{{ .GetName }}) Reset() {
+    {{- if gt (len .GetProperties) 0}}
+        if a == nil { return }
+        {{- range .GetProperties -}}
+            {{- with .GetField -}}
+                {{ if or (and (.GetType.GetRepeated) (is_msg .GetType)) (and (is_map .GetType) (is_msg .GetType.GetMap.GetValue)) }}
+                    for _, value := range a.{{ .GetName }} {
+                    value.Reset() // TODO rathil back to pool ????
+                    }
+                {{- else if is_msg .GetType }}
+                    a.{{ .GetName }}.Reset() // TODO rathil back to pool ????
+                {{- end -}}
+            {{- end }}
+            {{- with .GetOneof -}}
+                // TODO rathil Reset for oneof
+            {{- end }}
+        {{- end }}
+        {{ template "message_return_in_pool" . }}
+        *a = {{ .GetName }}{}
+    {{- end }}
+    }
+{{ end }}

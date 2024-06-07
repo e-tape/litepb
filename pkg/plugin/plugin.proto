@@ -1,0 +1,121 @@
+syntax = "proto3";
+
+package plugin;
+
+option go_package = "github.com/e-tape/litepb/pkg/plugin";
+
+message Plugin {
+  repeated File files = 1;
+  repeated Source sources = 2;
+}
+
+message Source {
+  string name = 1;
+  bytes content = 2;
+}
+
+message File {
+  Package package = 1;
+  string name = 2;
+  string source = 3;
+  repeated Dependence imports = 4;
+  repeated Enum enums = 5;
+  repeated Message messages = 6;
+  bytes options = 7;
+}
+
+message Package {
+  Dependence dependence = 1;
+  string name = 2;
+}
+
+message Dependence {
+  string path = 1;
+  string alias = 2;
+}
+
+message Enum {
+  string name = 1;
+  string comments = 2;
+  string values_prefix = 3;
+  repeated Value values = 4;
+  bytes options = 5;
+
+  message Value  {
+    int32 number = 1;
+    string name = 2;
+    string comments = 3;
+    bytes options = 4;
+  }
+}
+
+message Message {
+  string name = 1;
+  string comments = 2;
+  repeated Property properties = 3;
+  bytes options = 4;
+  bool with_mem_pool = 5;
+
+  message Property {
+    oneof type {
+      Field field = 1;
+      OneOf oneof = 2;
+    }
+  }
+
+  message Field {
+    int32 number = 1;
+    string name = 2;
+    string comments = 3;
+    Type type = 4;
+    string zero_value = 5;
+    bytes options = 6;
+    map<string, string> tags = 7;
+    bool append_for_repeated = 8;// TODO ???
+
+    message Type {
+      Proto in_proto = 1;
+      Reflect reflect = 2;
+      bool repeated = 3;
+      Map map = 4;
+
+      enum Proto {
+        ERROR = 0;
+        DOUBLE = 1;
+        FLOAT = 2;
+        INT64 = 3;
+        UINT64 = 4;
+        INT32 = 5;
+        FIXED64 = 6;
+        FIXED32 = 7;
+        BOOL = 8;
+        STRING = 9;
+        GROUP = 10;
+        MESSAGE_OR_MAP = 11;
+        BYTES = 12;
+        UINT32 = 13;
+        ENUM = 14;
+        SFIXED32 = 15;
+        SFIXED64 = 16;
+        SINT32 = 17;
+        SINT64 = 18;
+      }
+      message Reflect {
+        string path = 1;
+        string name = 2;
+      }
+      message Map {
+        Type Key = 1;
+        Type Value = 2;
+      }
+    }
+  }
+  message OneOf {
+    string name = 1;
+    string comments = 2;
+    bytes options = 3;
+    repeated Field fields = 4;
+    map<string, string> tags = 5;
+    bool with_mem_pool = 6;
+  }
+}

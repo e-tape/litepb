@@ -1,0 +1,13 @@
+{{- define "oneof_tags" -}}
+    {{- /*gotype: github.com/e-tape/litepb/pkg/plugin.Message_OneOf*/ -}}
+    {{- $separator := "" -}}
+    `
+    {{- range $key, $value :=  .GetTags -}}
+        {{- $separator -}}{{- $key -}}
+        {{- $separator = "," -}}
+        {{- if not (eq $value "") -}}
+            :"{{- $value -}}"
+        {{- end -}}
+    {{- end -}}
+    `
+{{- end -}}

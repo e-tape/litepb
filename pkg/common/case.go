@@ -8,6 +8,7 @@ import (
 
 // SnakeCaseToPascalCase converts snake_case to PascalCase
 func SnakeCaseToPascalCase(text string) string {
+	// TODO rathil refactoring or add trim "_"
 	if text == "" {
 		return ""
 	}

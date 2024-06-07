@@ -1,0 +1,7 @@
+{{- define "message_string" -}}
+    {{- /*gotype: github.com/e-tape/litepb/pkg/plugin.Message*/ -}}
+    func (a *{{ .GetName }}) String() string {
+        if a == nil { return "<nil>" }
+        return fmt.Sprintf("%+v", a){{/* TODO: Implement proper string */}}
+    }
+{{ end }}

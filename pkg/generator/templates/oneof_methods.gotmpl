@@ -1,0 +1,25 @@
+{{- define "oneof_methods" -}}
+    {{- /*gotype: github.com/e-tape/litepb/pkg/plugin.Message*/ -}}
+    {{- $msg := . -}}
+    {{ range .GetProperties -}}
+        {{ with .GetOneof -}}
+            {{- $oneof := . -}}
+            {{ range .GetFields }}
+                func (*{{ template "oneof_type_name" dict "msg" $msg "field" . }})oneof{{ template "oneof_type_name" dict "msg" $msg "field" $oneof }}(){}
+                func (a *{{ template "oneof_type_name" dict "msg" $msg "field" . }}) Get{{ .GetName }}() {{ template "field_type_name" dict
+                "type" .GetType
+                "format" "<path><i_name_get>"
+                -}} {
+                if a == nil { return {{ .GetZeroValue }} }
+                return a.{{ .GetName }}
+                }
+                func (a *{{ template "oneof_type_name" dict "msg" $msg "field" . }}) Set{{ .GetName }}(value {{ template "field_type_name" dict
+                "type" .GetType
+                "format" "<path><i_name_get>"
+                -}}) {{ template "oneof_type_name" dict "msg" $msg "oneof" $oneof }} {
+                {{ template "field_set" . }}
+                }
+            {{ end }}
+        {{ end -}}
+    {{ end -}}
+{{- end -}}

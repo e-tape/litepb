@@ -1,0 +1,16 @@
+syntax = "proto2";
+
+package test;
+
+option go_package = "generated/test";
+
+import "google/protobuf/descriptor.proto";
+
+extend google.protobuf.MessageOptions {
+  optional int32 field_number_slice_len = 3001;
+}
+extend google.protobuf.FieldOptions {
+  optional int32 array_fixed_size = 3001;
+  optional string type = 3002;
+  optional int32 num = 3003;
+}

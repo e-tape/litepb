@@ -1,0 +1,39 @@
+{{- define "message_methods_get" -}}
+    {{- /*gotype: github.com/e-tape/litepb/pkg/plugin.Message*/ -}}
+    {{- $msg := . -}}
+    {{ range .GetProperties -}}
+        {{ with .GetField -}}
+            func (a *{{ $msg.GetName }}) Get{{ .GetName }}() {{ template "field_type_name" dict
+            "type" .GetType
+            "format" "<repeat><path><i_name>"
+            }} {
+            if a == nil { return {{ .GetZeroValue }} }
+            {{ if or (is_map .GetType) (and (is_msg .GetType) (.GetType.GetRepeated)) -}}
+                result := make({{ template "field_type_name" dict "type" .GetType "format" "<repeat><path><i_name>" }}, len(a.{{ .GetName }}))
+                for index, value := range a.{{ .GetName }} {
+                result[index] = value
+                }
+                return result
+            {{ else -}}
+                return a.{{ .GetName }}
+            {{ end -}}
+            }
+        {{ end -}}
+        {{ with .GetOneof -}}
+            {{- $oneof := . -}}
+            func (a *{{ $msg.GetName }}) Get{{ .GetName }}() {{ template "oneof_type_name" dict "msg" $msg "oneof" . }} {
+            if a == nil { return nil }
+            return a.{{ .GetName }}
+            }
+            {{ range .GetFields -}}
+                func (a *{{ $msg.GetName }}) Get{{ .GetName }}() {{ template "field_type_name" dict "type" .GetType "format" "<path><i_name_get>" }} {
+                if a == nil { return {{ .GetZeroValue }}}
+                if value, ok := a.{{ $oneof.GetName }}.(*{{ template "oneof_type_name" dict "msg" $msg "field" . }}); ok {
+                return value.{{ .GetName }}
+                }
+                return {{ .GetZeroValue }}
+                }
+            {{ end -}}
+        {{ end -}}
+    {{ end -}}
+{{- end -}}

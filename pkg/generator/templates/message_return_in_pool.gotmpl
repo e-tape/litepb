@@ -1,0 +1,6 @@
+{{- define "message_return_in_pool" -}}
+    {{- /*gotype: github.com/e-tape/litepb/pkg/plugin.Message*/ -}}
+    {{- if .GetWithMemPool -}}
+        pool{{.GetName}}.Put(a)
+    {{- end -}}
+{{- end -}}

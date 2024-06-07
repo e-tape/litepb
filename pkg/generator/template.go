@@ -3,28 +3,24 @@ package generator
 import (
 	"embed"
 	_ "embed"
-	"strings"
 	"text/template"
 )
 
-//go:embed templates/*.tmpl
-var goTemplateFiles embed.FS
+const mainTemplate = "file"
 
-var goTemplate = template.Must(
-	template.New("").
-		Funcs(goTemplateFunc).
-		ParseFS(goTemplateFiles, "templates/*.tmpl"),
+var (
+	//go:embed templates/*.gotmpl
+	goTemplateFiles embed.FS
+	goTemplate      = template.Must(
+		template.New("").
+			Funcs(template.FuncMap{
+				"arr":     arr,
+				"dict":    dict,
+				"lines":   lines,
+				"replace": replace,
+				"is_msg":  isMsg,
+				"is_map":  isMap,
+			}).
+			ParseFS(goTemplateFiles, "templates/*.gotmpl"),
+	)
 )
-
-const mainTemplate = "main"
-
-var additionalImports = []string{"fmt"}
-
-var goTemplateFunc = template.FuncMap{
-	"lines": func(text string) []string {
-		if text == "" {
-			return nil
-		}
-		return strings.Split(text, "\n")
-	},
-}

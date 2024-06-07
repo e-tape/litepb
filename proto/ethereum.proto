@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package proto;
+
+option go_package = "github.com/e-tape/litepb/proto";
+
+import "options.proto";
+
+// Implementation of ethereum common.Address transfer
+message Address {
+  option (slice_packed_number) = 25000;
+  // Value of common.Address
+  repeated bytes value = 1 [(proto.array_fixed_size) = 20];
+  repeated bytes value1 = 2 [(proto.array_fixed_size) = 20];
+}
+
+// Implementation of ethereum common.Hash transfer
+message Hash {
+  // value of common.Hash
+  bytes value = 1 [(proto.array_fixed_size) = 32];
+}

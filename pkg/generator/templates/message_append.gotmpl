@@ -1,0 +1,10 @@
+{{- define "message_append" -}}
+    {{- /*gotype: github.com/e-tape/litepb/pkg/plugin.Message_Field_Type*/ -}}
+    func New{{ .GetName }}() *{{ .GetName }} {
+    {{- if .GetWithMemPool -}}
+        return pool{{ .GetName }}.Get().(*{{ .GetName }})
+    {{- else -}}
+        return {{ template "message_constructor" . }}
+    {{- end -}}
+    }
+{{- end -}}

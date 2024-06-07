@@ -2,8 +2,8 @@ package main
 
 import (
 	_ "embed"
-	"io"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 	"time"
@@ -22,13 +22,10 @@ func main() {
 }
 
 func run() error {
-	in, err := io.ReadAll(os.Stdin)
+	in, err := os.ReadFile(`bin/1.bin`)
 	if err != nil {
 		return err
 	}
-
-	// TODO rathil del
-	_ = os.WriteFile(`bin/1.bin`, in, 0666)
 
 	request := &pluginpb.CodeGeneratorRequest{}
 	if err = proto.Unmarshal(in, request); err != nil {
@@ -41,6 +38,18 @@ func run() error {
 	start := time.Now()
 	response := generator.NewGenerator(request).Generate()
 	stderr.Logf("GENERATED IN: %s", time.Since(start))
+
+	for _, f := range response.File {
+		err = os.MkdirAll(`test/`+path.Dir(f.GetName()), 0766)
+		if err != nil {
+			panic(err)
+		}
+		err = os.WriteFile(`test/`+f.GetName(), []byte(f.GetContent()), 0666)
+		if err != nil {
+			panic(err)
+		}
+	}
+	return nil
 
 	generator.GoFmt(response)
 

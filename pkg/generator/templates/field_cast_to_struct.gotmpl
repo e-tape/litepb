@@ -1,0 +1,11 @@
+{{- define "field_cast_to_struct" -}}
+    {{- /*gotype: github.com/e-tape/litepb/pkg/plugin.Message_Field*/ -}}
+    {{- $type := .GetType -}}
+    {{- if is_map .GetType -}}
+        {{- $type = .GetType.GetMap.GetValue -}}
+    {{- end }}
+    set, ok := value.({{ template "field_type_name" dict "type" $type "format" "<pointer><path><name>" }})
+    if !ok {
+    set = {{ template "message_convert_to" dict "type" $type }}(value)
+    }
+{{- end -}}

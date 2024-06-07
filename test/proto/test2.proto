@@ -1,13 +1,15 @@
 syntax = "proto3";
 
-package test2;
+package test;
 
 option go_package = "generated/test";
 
 import "dir/test.proto";
+import "dir1/test_dir.proto";
 
 message Ok {}
 
 message Pss {
   dir.Baz baz = 1;
+  dir1.Dir1 dir1 = 2;
 }

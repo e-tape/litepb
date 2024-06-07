@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package proto;
+
+option go_package = "github.com/e-tape/litepb/proto";
+
+// Implementation of time.Time transfer.
+// You can use the standard type https://github.com/protocolbuffers/protobuf/blob/main/src/google/protobuf/timestamp.proto
+message Time {
+  // Seconds of time.Time
+  int64 seconds = 1;
+  // Nanoseconds of time.Time
+  int32 nanos = 2;
+}
