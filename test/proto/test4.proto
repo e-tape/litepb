@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package ANOTHER.nAmE.test4;
 
-option go_package = "generated/test";
+option go_package = "test/generated/test";
 
 // T4 comments
 //   - list1

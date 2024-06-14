@@ -1,7 +1,8 @@
 {{- define "message_pool" -}}
     {{- /*gotype: github.com/e-tape/litepb/pkg/plugin.Message*/ -}}
     {{- if .GetWithMemPool -}}
-        {{ template "pool_type_name" dict "msg" . }} = &sync.Pool{
+        {{ import "sync" -}}
+        {{ template "pool_name_message" . }} = &sync.Pool{
         New: func() any { return {{ template "message_constructor" . }} },
         }
     {{ end -}}

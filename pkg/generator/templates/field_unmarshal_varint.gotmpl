@@ -1,0 +1,52 @@
+{{- define "field_unmarshal_varint" -}}
+    {{- $c := . -}}
+    {{- with .field -}}
+        {{- /*gotype: github.com/e-tape/litepb/pkg/plugin.Message_Field*/ -}}
+        {{- $param := kv
+        "type" .GetType
+        "valueName" "value"
+        "valueCreate" true
+        "endName" (printf "end%d" .GetNumber)
+        "errorUnexpectedEnd" (render "error_unexpected_end_of_field_value" (printf "%s.%s" $c.msg.GetName .GetName))
+        -}}
+        {{ if eq .GetType.GetInProto.String "UINT64" -}}
+            case 0:
+            {{ template "field_unmarshal_uint64" $param }}
+        {{ end -}}
+        {{ if eq .GetType.GetInProto.String "INT64" -}}
+            case 0:
+            {{ template "field_unmarshal_int64" $param }}
+        {{ end -}}
+        {{ if eq .GetType.GetInProto.String "SINT64" -}}
+            case 0:
+            {{ template "field_unmarshal_sint64" $param }}
+        {{ end -}}
+        {{ if eq .GetType.GetInProto.String "UINT32" -}}
+            case 0:
+            {{ template "field_unmarshal_uint32" $param }}
+        {{ end -}}
+        {{ if eq .GetType.GetInProto.String "INT32" -}}
+            case 0:
+            {{ template "field_unmarshal_int32" $param }}
+        {{ end -}}
+        {{ if eq .GetType.GetInProto.String "SINT32" -}}
+            case 0:
+            {{ template "field_unmarshal_sint32" $param }}
+        {{ end -}}
+        {{ if eq .GetType.GetInProto.String "BOOL" -}}
+            case 0:
+            {{ template "field_unmarshal_bool" $param }}
+        {{ end -}}
+        {{ if eq .GetType.GetInProto.String "ENUM" -}}
+            case 0:
+            {{ template "field_unmarshal_enum" $param }}
+        {{ end -}}
+        {{- if get_result $param -}}
+            {{ if .GetType.GetRepeated -}}
+                a.{{ .GetName }} = append(a.{{ .GetName }}, {{ get_result $param }})
+            {{ else -}}
+                a.{{ .GetName }} = {{ get_result $param }}
+            {{ end -}}
+        {{- end -}}
+    {{- end -}}
+{{- end -}}

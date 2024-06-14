@@ -1,10 +1,24 @@
 {{- define "message_convert_to" -}}
-    {{- with index . "msg" -}}
-        {{- /*gotype: github.com/e-tape/litepb/pkg/plugin.Message*/ -}}
-        ConvertTo{{ .GetName }}
-    {{- end -}}
-    {{- with index . "type" -}}
-        {{- /*gotype: github.com/e-tape/litepb/pkg/plugin.Message_Field_Type*/ -}}
-        {{- template "field_type_name" dict "type" . "format" "<path>" }}ConvertTo{{ template "field_type_name" dict "type" . "format" "<name>" -}}
-    {{- end -}}
+    {{- /*gotype: github.com/e-tape/litepb/pkg/plugin.Message*/ -}}
+    {{- $msg := . -}}
+    func {{ template "func_name_message_convert_to" . }}(value {{ template "message_interface_name" kv "msg" . "get" true }}) *{{ .GetName }} {
+    if a, ok := value.(*{{ .GetName }}); ok { return a }
+    a := {{ template "func_name_message_new" . }}()
+    {{ range .GetProperties -}}
+        {{ with .GetField -}}
+            {{ if or (and (is_msg .GetType) (.GetType.GetRepeated)) (and (is_map .GetType) (is_msg .GetType.GetMap.GetValue)) -}}
+                {
+                values := value.Get{{ .GetName }}()
+                {{ template "field_set_repeated_or_map" . }}
+                }
+            {{ else -}}
+                a.Set{{ .GetName }}(value.Get{{ .GetName }}())
+            {{ end -}}
+        {{ end -}}
+        {{ with .GetOneof -}}
+            a.Set{{ .GetName }}(value.Get{{ .GetName }}())
+        {{ end -}}
+    {{ end -}}
+    return a
+    }
 {{- end -}}

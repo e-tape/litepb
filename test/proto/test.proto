@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package test;
 
-option go_package = "generated/test";
+option go_package = "test/generated/test";
 
 //import "options.proto";
 import "test2.proto";
@@ -22,6 +22,10 @@ enum Direction {
   WEST = 3;
 }
 
+message R1 {
+  uint64 u64 = 1;
+}
+
 // Test message
 message Test {
   // ID
@@ -34,8 +38,8 @@ message Test {
 
   test3.Ok.Status status = 5;
 
-  map<string, Foo> kv = 6;
-  map<string, int64> kv_int = 7;
+  map<int32, Foo> kv = 6;
+  map<string, sint64> kv_int = 7;
 
   dir.Baz baz = 8;
   dir.dir.Baz3 baz3 = 9;
@@ -54,6 +58,24 @@ message Test {
   test3.Error error = 30;
   MsgForQOneof for_oneof = 31;
   test.MsgForQOneof for_oneof_global = 32;
+
+  repeated dir1.Dir1 r_dir1 = 39;
+  repeated uint64 r_uint64 = 40;
+  repeated uint32 r_uint32 = 41;
+  repeated int32 r_int32 = 42;
+  repeated int64 r_int64 = 43;
+  int64 int64 = 44;
+  int32 int32 = 45;
+  uint64 uint64 = 46;
+  uint32 uint32 = 47;
+  sint32 sint32 = 48;
+  sint64 sint64 = 49;
+  repeated sint32 r_sint32 = 50;
+  repeated sint64 r_sint64 = 51;
+  repeated bool r_bool = 52;
+  bool bool = 53;
+  Direction direction_enum = 54;
+  repeated Direction r_direction_enum = 55;
 
 
   // ForOneof - msg for oneof

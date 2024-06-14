@@ -27,6 +27,8 @@ func run() error {
 		return err
 	}
 
+	_ = os.WriteFile(`bin/1.bin`, in, 0666)
+
 	request := &pluginpb.CodeGeneratorRequest{}
 	if err = proto.Unmarshal(in, request); err != nil {
 		return err

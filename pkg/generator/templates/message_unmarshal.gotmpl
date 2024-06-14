@@ -1,0 +1,41 @@
+{{- define "message_unmarshal" -}}
+    {{- /*gotype: github.com/e-tape/litepb/pkg/plugin.Message*/ -}}
+    {{- $msg := . -}}
+    func (a *{{ .GetName }}){{ template "func_name_message_unmarshal" }}(data []byte) error {
+    {{ if gt (len .GetProperties) 0 -}}
+        var index int
+        for len(data) > index {
+        fieldNum := int32(data[index] & 127)
+        if data[index] < 128 { goto end }
+        {{ range arr 7 14 21 -}}
+            index++
+            if len(data) > index {
+            fieldNum |= int32(data[index]&127) << {{ . }}
+            if data[index] < 128 { goto end }
+            }
+        {{ end -}}
+        return {{ template "error_unexpected_end_of_field_number" }}
+        end:
+        index++
+        switch fieldNum >> 3 {
+        {{ range .GetProperties -}}
+            {{ with .GetField -}}
+                case {{ .GetNumber }}:
+                switch fieldNum & 7 {
+                {{- template "field_unmarshal_varint" kv "msg" $msg "field" . -}}
+                {{- template "field_unmarshal_len" kv "msg" $msg "field" . -}}
+                default:
+                return {{ template "error_incorrect_wire_type" kv "msg" $msg "field" . "fieldNum" "fieldNum" }}
+                }
+            {{ end -}}
+            {{ with .GetOneof -}}
+                {{- $oneof := . -}}
+                // TODO
+            {{ end -}}
+        {{ end -}}
+        }
+        }
+    {{ end -}}
+    return nil
+    }
+{{- end -}}

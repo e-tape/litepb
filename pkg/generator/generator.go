@@ -1,12 +1,10 @@
 package generator
 
 import (
-	"bytes"
 	"path"
 	"regexp"
 	"strings"
 
-	"github.com/e-tape/litepb/pkg/common"
 	"github.com/e-tape/litepb/pkg/plugin"
 	"google.golang.org/protobuf/types/pluginpb"
 
@@ -68,21 +66,20 @@ func (a *Generator) Generate() *pluginpb.CodeGeneratorResponse {
 
 		// run plugin
 
-		buf := bytes.NewBuffer(nil)
-		err := goTemplate.ExecuteTemplate(buf, mainTemplate, fg.proto)
+		content, err := tmpl.Execute(fg.proto)
 		if err != nil {
 			stderr.Failf("generate go file for proto [%s]: %s", protoFile.GetName(), err)
 		}
 
 		filePath := path.Join(
-			fg.proto.GetPackage().GetDependence().GetPath(),
+			fg.proto.GetPackage().GetDependency().GetPath(),
 			fg.proto.GetName(),
 		)
 		stderr.Logf("\tGO FILE: %s", filePath)
 
 		codeFiles = append(codeFiles, &pluginpb.CodeGeneratorResponse_File{
 			Name:    &filePath,
-			Content: common.Ptr(buf.String()),
+			Content: &content,
 		})
 
 		stderr.Logf("FILE END")

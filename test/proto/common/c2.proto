@@ -2,6 +2,6 @@ syntax = "proto3";
 
 package common;
 
-option go_package = "generated/test/inside/common";
+option go_package = "test/generated/test/inside/common";
 
 message C2{}

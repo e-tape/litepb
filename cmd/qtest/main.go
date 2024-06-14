@@ -40,11 +40,11 @@ func run() error {
 	stderr.Logf("GENERATED IN: %s", time.Since(start))
 
 	for _, f := range response.File {
-		err = os.MkdirAll(`test/`+path.Dir(f.GetName()), 0766)
+		err = os.MkdirAll(path.Dir(f.GetName()), 0766)
 		if err != nil {
 			panic(err)
 		}
-		err = os.WriteFile(`test/`+f.GetName(), []byte(f.GetContent()), 0666)
+		err = os.WriteFile(f.GetName(), []byte(f.GetContent()), 0666)
 		if err != nil {
 			panic(err)
 		}

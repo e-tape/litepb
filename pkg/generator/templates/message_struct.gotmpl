@@ -10,13 +10,13 @@
             {{ range (lines .GetComments) -}}
                 //{{ . }}
             {{ end -}}
-            {{ .GetName }} {{ template "field_type_name" dict "type" .GetType "format" "<repeat><pointer><path><name>" }} {{ template "field_tags" . }}
+            {{ .GetName }} {{ template "field_type_name" kv "type" .GetType "format" "<repeat><pointer><path><name>" }} {{ template "field_tags" . }}
         {{ end -}}
         {{ with .GetOneof -}}
             {{ range (lines .GetComments) -}}
                 //{{ . }}
             {{ end -}}
-            {{ .GetName }} {{ template "oneof_type_name" dict "msg" $msg "oneof" . }} {{ template "oneof_tags" . }}
+            {{ .GetName }} {{ template "oneof_type_name" kv "msg" $msg "oneof" . }} {{ template "oneof_tags" . }}
         {{ end -}}
     {{ end -}}
     }

@@ -3,13 +3,13 @@
     {{- $msg := . -}}
     {{ range .GetProperties -}}
         {{ with .GetField -}}
-            func (a *{{ $msg.GetName }}) Get{{ .GetName }}() {{ template "field_type_name" dict
+            func (a *{{ $msg.GetName }}) Get{{ .GetName }}() {{ template "field_type_name" kv
             "type" .GetType
             "format" "<repeat><path><i_name>"
             }} {
             if a == nil { return {{ .GetZeroValue }} }
-            {{ if or (is_map .GetType) (and (is_msg .GetType) (.GetType.GetRepeated)) -}}
-                result := make({{ template "field_type_name" dict "type" .GetType "format" "<repeat><path><i_name>" }}, len(a.{{ .GetName }}))
+            {{ if or (and (is_map .GetType) (is_msg .GetType.GetMap.GetValue)) (and (is_msg .GetType) (.GetType.GetRepeated)) -}}
+                result := make({{ template "field_type_name" kv "type" .GetType "format" "<repeat><path><i_name>" }}, len(a.{{ .GetName }}))
                 for index, value := range a.{{ .GetName }} {
                 result[index] = value
                 }
@@ -21,14 +21,14 @@
         {{ end -}}
         {{ with .GetOneof -}}
             {{- $oneof := . -}}
-            func (a *{{ $msg.GetName }}) Get{{ .GetName }}() {{ template "oneof_type_name" dict "msg" $msg "oneof" . }} {
+            func (a *{{ $msg.GetName }}) Get{{ .GetName }}() {{ template "oneof_type_name" kv "msg" $msg "oneof" . }} {
             if a == nil { return nil }
             return a.{{ .GetName }}
             }
             {{ range .GetFields -}}
-                func (a *{{ $msg.GetName }}) Get{{ .GetName }}() {{ template "field_type_name" dict "type" .GetType "format" "<path><i_name_get>" }} {
+                func (a *{{ $msg.GetName }}) Get{{ .GetName }}() {{ template "field_type_name" kv "type" .GetType "format" "<path><i_name_get>" }} {
                 if a == nil { return {{ .GetZeroValue }}}
-                if value, ok := a.{{ $oneof.GetName }}.(*{{ template "oneof_type_name" dict "msg" $msg "field" . }}); ok {
+                if value, ok := a.{{ $oneof.GetName }}.(*{{ template "oneof_type_name" kv "msg" $msg "field" . }}); ok {
                 return value.{{ .GetName }}
                 }
                 return {{ .GetZeroValue }}

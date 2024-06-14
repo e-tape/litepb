@@ -1,7 +1,6 @@
 package generator
 
 import (
-	"cmp"
 	"path"
 	"slices"
 	"strings"
@@ -31,7 +30,7 @@ func (a *Generator) newFile(protoFile *descriptorpb.FileDescriptorProto) *genera
 		Generator: a,
 		proto: &plugin.File{
 			Package: &plugin.Package{
-				Dependence: &plugin.Dependence{
+				Dependency: &plugin.Dependency{
 					Path:  packagePath,
 					Alias: alias,
 				},
@@ -48,34 +47,15 @@ func (a *Generator) newFile(protoFile *descriptorpb.FileDescriptorProto) *genera
 	}
 }
 
-func (a *generatorFile) generateImports(dependencies []string) []*plugin.Dependence {
-	result := make([]*plugin.Dependence, 0, len(dependencies))
+func (a *generatorFile) generateImports(dependencies []string) []*plugin.Dependency {
+	result := make([]*plugin.Dependency, 0, len(dependencies))
 	for _, dependency := range dependencies {
-		if a.allFiles[dependency].proto.GetPackage().GetDependence().GetAlias() == a.proto.GetPackage().GetDependence().GetAlias() {
+		if a.allFiles[dependency].proto.GetPackage().GetDependency().GetAlias() == a.proto.GetPackage().GetDependency().GetAlias() {
 			continue
 		}
-		result = append(result, a.allFiles[dependency].proto.GetPackage().GetDependence())
+		result = append(result, a.allFiles[dependency].proto.GetPackage().GetDependency())
 	}
-	result = append(result, &plugin.Dependence{
-		Path: "fmt",
-	})
-	for _, message := range a.proto.Messages {
-		if message.GetWithMemPool() {
-			result = append(result, &plugin.Dependence{
-				Path: "sync",
-			})
-			break
-		}
-	}
-	slices.SortFunc(result, func(a, b *plugin.Dependence) int {
-		return cmp.Compare(a.Alias, b.Alias)
-	})
-	return slices.CompactFunc(result, func(a, b *plugin.Dependence) bool {
-		if a.Alias == "" && b.Alias == "" {
-			return a.Path == b.Path
-		}
-		return a.Alias == b.Alias
-	})
+	return result
 }
 
 func (a *generatorFile) generatePackage(packages []string, item string) string {
@@ -97,14 +77,14 @@ func (a *generatorFile) collectTypes(
 	for _, enum := range enums {
 		a.allTypes[a.generatePackage(packages, enum.GetName())] = Type{
 			Name:  a.generateTypeName(names, enum.GetName()),
-			Alias: a.proto.Package.Dependence.Alias,
+			Alias: a.proto.Package.Dependency.Alias,
 		}
 	}
 
 	for _, message := range messages {
 		a.allTypes[a.generatePackage(packages, message.GetName())] = Type{
 			Name:  a.generateTypeName(names, message.GetName()),
-			Alias: a.proto.Package.Dependence.Alias,
+			Alias: a.proto.Package.Dependency.Alias,
 		}
 		a.collectTypes(
 			message.GetEnumType(),
@@ -307,7 +287,7 @@ func (a *generatorFile) generateReflect(
 		return nil
 	case descriptorpb.FieldDescriptorProto_TYPE_MESSAGE,
 		descriptorpb.FieldDescriptorProto_TYPE_ENUM:
-		return a.allTypes[field.GetTypeName()].reflect(a.proto.Package.Dependence.Alias)
+		return a.allTypes[field.GetTypeName()].reflect(a.proto.Package.Dependency.Alias)
 	case descriptorpb.FieldDescriptorProto_TYPE_BYTES:
 		return &plugin.Message_Field_Type_Reflect{Name: "[]byte"}
 	default:

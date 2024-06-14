@@ -1,4 +1,4 @@
-package test
+package main
 
 import (
 	"fmt"
@@ -226,5 +226,24 @@ func BenchmarkResetNil(b *testing.B) {
 	var r *R = nil
 	for i := 0; i < b.N; i++ {
 		r.Reset()
+	}
+}
+
+type Ii interface {
+	Q()
+}
+type Q0 struct {
+	i Ii
+}
+type Q1 struct{}
+type Q2 struct{}
+
+func (a *Q1) Q() {}
+func (a *Q2) Q() {}
+
+func TestCastType(t *testing.T) {
+	q := &Q0{}
+	if q.i != nil {
+		q.i.Q()
 	}
 }

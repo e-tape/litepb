@@ -1,0 +1,4 @@
+{{- define "error_incorrect_wire_type_kv" -}}
+    {{- import "fmt" -}}
+    fmt.Errorf("litepb: incorrect wire type [%d] for {{ .mapName }} map field {{ .fieldName }}", {{ .fieldNum }} & 7)
+{{- end -}}

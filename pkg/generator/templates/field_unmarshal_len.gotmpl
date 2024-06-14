@@ -1,0 +1,40 @@
+{{- define "field_unmarshal_len" -}}
+    {{- $c := . -}}
+    {{- with .field -}}
+        {{- /*gotype: github.com/e-tape/litepb/pkg/plugin.Message_Field*/ -}}
+        {{- $param := kv
+        "field" .
+        "type" .GetType
+        "number" .GetNumber
+        "valueName" "value"
+        "valueCreate" true
+        "endName" (printf "end%d" .GetNumber)
+        "fieldName" (printf "%s.%s" $c.msg.GetName .GetName)
+        "errorUnexpectedEndLength" (render "error_unexpected_end_of_field_length" (printf "%s.%s" $c.msg.GetName .GetName))
+        "errorUnexpectedEndValue" (render "error_unexpected_end_of_field_value" (printf "%s.%s" $c.msg.GetName .GetName))
+        -}}
+        {{ if eq .GetType.GetInProto.String "STRING" -}}
+            case 2:
+            {{ template "field_unmarshal_string" $param }}
+        {{ end -}}
+        {{ if eq .GetType.GetInProto.String "BYTES" -}}
+            case 2:
+            {{ template "field_unmarshal_bytes" $param }}
+        {{ end -}}
+        {{ if and (eq .GetType.GetInProto.String "MESSAGE_OR_MAP") (not (is_map .GetType)) -}}
+            case 2:
+            {{ template "field_unmarshal_message" $param }}
+        {{ end -}}
+        {{ if and (eq .GetType.GetInProto.String "MESSAGE_OR_MAP") (is_map .GetType) -}}
+            case 2:
+            {{ template "field_unmarshal_map" $param }}
+        {{ end -}}
+        {{- if get_result $param -}}
+            {{ if .GetType.GetRepeated -}}
+                a.{{ .GetName }} = append(a.{{ .GetName }}, {{ get_result $param }})
+            {{ else -}}
+                a.{{ .GetName }} = {{ get_result $param }}
+            {{ end -}}
+        {{- end -}}
+    {{- end -}}
+{{- end -}}

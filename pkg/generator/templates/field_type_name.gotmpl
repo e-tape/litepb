@@ -4,8 +4,8 @@
     {{- $type = index . "type" -}}
     {{- $format := index . "format" -}}
     {{- if is_map $type -}}
-        map[{{ template "field_type_name" dict "type" $type.GetMap.GetKey "format" $format }}]
-        {{- template "field_type_name" dict "type" $type.GetMap.GetValue "format" $format }}
+        map[{{ template "field_type_name" kv "type" $type.GetMap.GetKey "format" $format }}]
+        {{- template "field_type_name" kv "type" $type.GetMap.GetValue "format" $format }}
     {{- else -}}
         {{- $name := $type.GetReflect.GetName -}}
         {{- $iName := $name -}}

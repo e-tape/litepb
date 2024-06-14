@@ -3,15 +3,18 @@
     {{- $msg := . -}}
     {{ range .GetProperties -}}
         {{ with .GetOneof -}}
-            {{ template "oneof_type_name" dict "msg" $msg "oneof" . }} interface {
-            oneof{{ template "oneof_type_name" dict "msg" $msg "field" . }}()
+            {{ template "oneof_type_name" kv "msg" $msg "oneof" . }} interface {
+            {{ template "func_name_oneof_return_to_pool" }}()
+            oneof{{ template "oneof_type_name" kv "msg" $msg "field" . }}()
+            marshalTo([]byte) (int, error)
+            size() int
             }
             {{ range .GetFields -}}
-                {{ template "oneof_type_name" dict "msg" $msg "field" . }} struct {
+                {{ template "oneof_type_name" kv "msg" $msg "field" . }} struct {
                 {{ range (lines .GetComments) -}}
                     //{{ . }}
                 {{ end -}}
-                {{ .GetName }} {{ template "field_type_name" dict "type" .GetType "format" "<pointer><path><name>" }} {{ template "field_tags" . }}
+                {{ .GetName }} {{ template "field_type_name" kv "type" .GetType "format" "<pointer><path><name>" }} {{ template "field_tags" . }}
                 }
             {{ end -}}
         {{ end -}}

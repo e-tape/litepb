@@ -1,23 +1,16 @@
 {{- define "field_set" -}}
     {{- /*gotype: github.com/e-tape/litepb/pkg/plugin.Message_Field*/ -}}
-    if a == nil { panic("uninitialized object") }
+    if a == nil { panic("uninitialized object") } // TODO rathil del???
     {{ if or (and (is_msg .GetType) (.GetType.GetRepeated)) (and (is_map .GetType) (is_msg .GetType.GetMap.GetValue)) -}}
-        for _, value := range a.{{ .GetName }} {
-        value.Reset() // TODO rathil back to pool!!!
+        for _, v := range a.{{ .GetName }} {
+        v.{{ template "func_name_message_return_to_pool" }}()
         }
-        a.{{ .GetName }} = make({{ template "field_type_name" dict "type" .GetType "format" "<repeat><pointer><path><name>" }}, len(values))
-        for index, value := range values {
-        {{- template "field_cast_to_struct" . }}
-        a.{{ .GetName }}[index] = set
-        }
+        {{ template "field_set_repeated_or_map" . }}
     {{ else if is_msg .GetType -}}
-        a.{{ .GetName }}.Reset() // TODO rathil back to pool!!!
-        {{- template "field_cast_to_struct" . }}
-        a.{{ .GetName }} = set
+        a.{{ .GetName }}.{{ template "func_name_message_return_to_pool" }}()
+        a.{{ .GetName }} = {{ template "type_convert_to" .GetType }}(value)
     {{ else -}}
         a.{{ .GetName }} = {{- if or (.GetType.GetRepeated) (is_map .GetType) }}values{{ else }}value{{ end }}
     {{ end -}}
     return a
 {{- end -}}
-
-

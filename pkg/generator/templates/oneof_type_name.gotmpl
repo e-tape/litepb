@@ -1,7 +1,7 @@
 {{- define "oneof_type_name" -}}
-    {{- if index . "oneof" -}}
-        {{ template "message_interface_name" dict "msg" (index . "msg") }}Oneof{{ (index . "oneof").GetName }}
-    {{- else if index . "field" -}}
-        {{ (index . "msg").GetName }}Oneof{{ (index . "field").GetName }}
+    {{- if .oneof -}}
+        {{ template "message_interface_name" kv "msg" .msg }}Oneof{{ .oneof.GetName }}
+    {{- else if .field -}}
+        {{ .msg.GetName }}Oneof{{ .field.GetName }}
     {{- end -}}
 {{- end -}}

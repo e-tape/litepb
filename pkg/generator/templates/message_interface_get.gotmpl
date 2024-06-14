@@ -1,15 +1,15 @@
 {{- define "message_interface_get" -}}
     {{- /*gotype: github.com/e-tape/litepb/pkg/plugin.Message*/ -}}
     {{- $msg := . -}}
-    {{ template "message_interface_name" dict "msg" . "get" true }} interface {
+    {{ template "message_interface_name" kv "msg" . "get" true }} interface {
     {{ range .GetProperties -}}
         {{ with .GetField -}}
-            Get{{ .GetName }}() {{ template "field_type_name" dict "type" .GetType "format" "<repeat><path><i_name>" }}
+            Get{{ .GetName }}() {{ template "field_type_name" kv "type" .GetType "format" "<repeat><path><i_name>" }}
         {{ end -}}
         {{ with .GetOneof -}}
-            Get{{ .GetName }}() {{ template "oneof_type_name" dict "msg" $msg "oneof" . }}
+            Get{{ .GetName }}() {{ template "oneof_type_name" kv "msg" $msg "oneof" . }}
             {{ range .GetFields -}}
-                Get{{ .GetName }}() {{ template "field_type_name" dict "type" .GetType "format" "<path><i_name_get>" }}
+                Get{{ .GetName }}() {{ template "field_type_name" kv "type" .GetType "format" "<path><i_name_get>" }}
             {{ end -}}
         {{ end -}}
     {{ end -}}

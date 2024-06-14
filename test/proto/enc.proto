@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package test;
+
+option go_package = "test/generated/test";
+
+message R1 {
+  uint64 uint64 = 4;
+  uint32 uint32 = 200;
+  int64 int64 = 201;
+  int32 int32 = 202;
+  sint64 sint64 = 203;
+  sint32 sint32 = 204;
+  repeated sint64 r_sint64 = 205;
+  repeated sint32 r_sint32 = 206;
+  string string = 207;
+  repeated string r_string = 208;
+  map<fixed32, string> map = 209;
+  map<sint32, R1> smap = 210;
+}

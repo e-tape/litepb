@@ -9,21 +9,25 @@
         {{ template "message_struct" . }}
         {{ template "oneof_types" . }}
         )
+
         var (
         {{ template "message_pool" . }}
         {{- template "oneof_pools" . }}
         )
 
         {{ template "message_new" . }}
+        {{ template "message_convert_to" . }}
         {{ template "oneof_new" . }}
-        {{ template "message_convert" . }}
 
         {{ template "message_string" . }}
+        {{ template "message_return_to_pool" . }}
         {{ template "message_reset" . }}
         {{ template "message_proto_message" . }}
 
         {{ template "message_methods_get" . }}
         {{ template "message_methods_set" . }}
         {{ template "oneof_methods" . }}
+        {{ template "message_marshal" . }}
+        {{ template "message_unmarshal" . }}
     {{ end -}}
 {{- end -}}

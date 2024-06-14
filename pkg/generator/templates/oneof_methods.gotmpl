@@ -5,18 +5,33 @@
         {{ with .GetOneof -}}
             {{- $oneof := . -}}
             {{ range .GetFields }}
-                func (*{{ template "oneof_type_name" dict "msg" $msg "field" . }})oneof{{ template "oneof_type_name" dict "msg" $msg "field" $oneof }}(){}
-                func (a *{{ template "oneof_type_name" dict "msg" $msg "field" . }}) Get{{ .GetName }}() {{ template "field_type_name" dict
+                func (a *{{ template "oneof_type_name" kv "msg" $msg "field" . }}){{ template "func_name_oneof_return_to_pool" }}(){
+                {{ if is_msg .GetType -}}
+                    if a.{{ .GetName }} != nil { a.{{ .GetName }}.{{ template "func_name_oneof_return_to_pool" }}() }
+                {{ end -}}
+                *a = {{ template "oneof_type_name" kv "msg" $msg "field" . }}{}
+                {{ if $oneof.GetWithMemPool -}}
+                    {{ template "pool_name_oneof" kv "msg" $msg "oneof" . }}.Put(a)
+                {{ end -}}
+                }
+                func (*{{ template "oneof_type_name" kv "msg" $msg "field" . }})oneof{{ template "oneof_type_name" kv "msg" $msg "field" $oneof }}(){}
+                func (a *{{ template "oneof_type_name" kv "msg" $msg "field" . }})marshalTo([]byte) (int, error) { return 0, nil } // TODO rathil marshalTo
+                func (a *{{ template "oneof_type_name" kv "msg" $msg "field" . }})size() int {
+                if a == nil { return 0 }
+                if a.{{ .GetName }} == {{ .GetZeroValue }} { return 0 }
+                return 0 // TODO rathil size
+                }
+                func (a *{{ template "oneof_type_name" kv "msg" $msg "field" . }}) Get{{ .GetName }}() {{ template "field_type_name" kv
                 "type" .GetType
                 "format" "<path><i_name_get>"
                 -}} {
                 if a == nil { return {{ .GetZeroValue }} }
                 return a.{{ .GetName }}
                 }
-                func (a *{{ template "oneof_type_name" dict "msg" $msg "field" . }}) Set{{ .GetName }}(value {{ template "field_type_name" dict
+                func (a *{{ template "oneof_type_name" kv "msg" $msg "field" . }}) Set{{ .GetName }}(value {{ template "field_type_name" kv
                 "type" .GetType
                 "format" "<path><i_name_get>"
-                -}}) {{ template "oneof_type_name" dict "msg" $msg "oneof" $oneof }} {
+                -}}) {{ template "oneof_type_name" kv "msg" $msg "oneof" $oneof }} {
                 {{ template "field_set" . }}
                 }
             {{ end }}

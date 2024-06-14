@@ -1,7 +1,0 @@
-{{- define "message_convert" -}}
-    {{- /*gotype: github.com/e-tape/litepb/pkg/plugin.Message*/ -}}
-    func {{ template "message_convert_to" dict "msg" . }}(value {{ template "message_interface_name" dict "msg" . "get" true }}) *{{ .GetName }} {
-    // TODO rathil implement it
-    return nil
-    }
-{{- end -}}

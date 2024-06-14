@@ -1,12 +1,13 @@
 {{- define "message_interface_name" -}}
-    {{- /*gotype: github.com/e-tape/litepb/pkg/plugin.Message*/ -}}
-    {{- $msg := . -}}
-    {{- $msg = index . "msg" -}}
-    {{- if index . "get" -}}
-        I{{ $msg.GetName }}Get
-    {{- else if index . "set" -}}
-        I{{ $msg.GetName }}Set
-    {{- else -}}
-        I{{ $msg.GetName }}
-    {{- end -}}
+    {{- $c := . -}}
+    {{ with .msg -}}
+        {{- /*gotype: github.com/e-tape/litepb/pkg/plugin.Message*/ -}}
+        {{- if $c.get -}}
+            I{{ .GetName }}Get
+        {{- else if $c.set -}}
+            I{{ .GetName }}Set
+        {{- else -}}
+            I{{ .GetName }}
+        {{- end -}}
+    {{ end -}}
 {{- end -}}

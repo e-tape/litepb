@@ -5,7 +5,10 @@
 
     package {{ .GetPackage.GetName }}
 
-    {{ template "imports" .GetImports }}
-    {{ template "enums" .GetEnums }}
-    {{ template "messages" .GetMessages }}
+    {{ $enums := render "enums" .GetEnums -}}
+    {{ $messages := render "messages" .GetMessages -}}
+
+    {{ template "imports" .GetImports | sort }}
+    {{ $enums }}
+    {{ $messages }}
 {{- end -}}

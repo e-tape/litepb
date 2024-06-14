@@ -1,7 +1,0 @@
-{{- define "pool_type_name" -}}
-    {{- if index . "oneof" -}}
-        pool{{ (index . "msg").GetName }}Oneof{{ (index . "oneof").GetName }}
-    {{- else -}}
-        pool{{ (index . "msg").GetName }}
-    {{- end -}}
-{{- end -}}

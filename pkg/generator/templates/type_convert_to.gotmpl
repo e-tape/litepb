@@ -1,0 +1,4 @@
+{{- define "type_convert_to" -}}
+    {{- /*gotype: github.com/e-tape/litepb/pkg/plugin.Message_Field_Type*/ -}}
+    {{- template "field_type_name" kv "type" . "format" "<path>" }}{{ template "func_name_message_convert_to" .GetReflect }}
+{{- end -}}
