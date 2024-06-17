@@ -2,7 +2,6 @@
     {{- /*gotype: github.com/e-tape/litepb/pkg/plugin.Message*/ -}}
     func (a *{{ .GetName }}) String() string {
         if a == nil { return "<nil>" }
-        {{ import "fmt" -}}
-        return fmt.Sprintf("%+v", a){{/* TODO: Implement proper string */}}
+        return {{ import "fmt" -}}.Sprintf("%+v", a){{/* TODO: Implement proper string */}}
     }
 {{- end -}}

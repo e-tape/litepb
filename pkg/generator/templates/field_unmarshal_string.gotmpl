@@ -11,6 +11,5 @@
     }}
     index += {{ $valueLength }}
     if len(data) < index { return {{ .errorUnexpectedEndValue }} }
-    // TODO move to template for override
     {{- set_result . (printf "%[1]s(&data[index-%[2]s], %[2]s)" (render "convert_bytes_to_string" "") $valueLength) -}}
 {{- end -}}

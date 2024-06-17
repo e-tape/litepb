@@ -7,10 +7,10 @@ option go_package = "test/generated/test";
 import "google/protobuf/descriptor.proto";
 
 extend google.protobuf.MessageOptions {
-  optional int32 field_number_slice_len = 3001;
+  optional int32 field_number_slice_len = 15999;
 }
 extend google.protobuf.FieldOptions {
-  optional int32 array_fixed_size = 3001;
-  optional string type = 3002;
-  optional int32 num = 3003;
+  optional int32 array_fixed_size = 15999;
+  optional string type = 15998;
+  optional int32 num = 15997;
 }

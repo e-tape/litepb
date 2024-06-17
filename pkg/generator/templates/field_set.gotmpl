@@ -2,9 +2,7 @@
     {{- /*gotype: github.com/e-tape/litepb/pkg/plugin.Message_Field*/ -}}
     if a == nil { panic("uninitialized object") } // TODO rathil del???
     {{ if or (and (is_msg .GetType) (.GetType.GetRepeated)) (and (is_map .GetType) (is_msg .GetType.GetMap.GetValue)) -}}
-        for _, v := range a.{{ .GetName }} {
-        v.{{ template "func_name_message_return_to_pool" }}()
-        }
+        for _, v := range a.{{ .GetName }} { v.{{ template "func_name_message_return_to_pool" }}() }
         {{ template "field_set_repeated_or_map" . }}
     {{ else if is_msg .GetType -}}
         a.{{ .GetName }}.{{ template "func_name_message_return_to_pool" }}()

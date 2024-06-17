@@ -10,10 +10,11 @@
         {{ template "oneof_types" . }}
         )
 
-        var (
-        {{ template "message_pool" . }}
-        {{- template "oneof_pools" . }}
-        )
+        {{ with print ( render "message_pool" . ) ( render "oneof_pools" . ) -}}
+            var (
+            {{ . }}
+            )
+        {{ end -}}
 
         {{ template "message_new" . }}
         {{ template "message_convert_to" . }}

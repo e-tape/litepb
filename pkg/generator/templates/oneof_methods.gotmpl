@@ -6,6 +6,7 @@
             {{- $oneof := . -}}
             {{ range .GetFields }}
                 func (a *{{ template "oneof_type_name" kv "msg" $msg "field" . }}){{ template "func_name_oneof_return_to_pool" }}(){
+                if a == nil { return } // TODO rathil del???
                 {{ if is_msg .GetType -}}
                     if a.{{ .GetName }} != nil { a.{{ .GetName }}.{{ template "func_name_oneof_return_to_pool" }}() }
                 {{ end -}}

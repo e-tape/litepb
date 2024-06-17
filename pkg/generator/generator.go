@@ -25,6 +25,8 @@ func NewGenerator(request *pluginpb.CodeGeneratorRequest) *Generator {
 // Generate generates bindings
 func (a *Generator) Generate() *pluginpb.CodeGeneratorResponse {
 	codeFiles := make([]*pluginpb.CodeGeneratorResponse_File, 0, len(a.request.GetProtoFile()))
+
+	pluginData := &plugin.Plugin{}
 	for _, protoFile := range a.request.ProtoFile {
 		stderr.Logf("FILE START")
 		stderr.Logf("\tNAME: %s", protoFile.GetName())
@@ -64,16 +66,31 @@ func (a *Generator) Generate() *pluginpb.CodeGeneratorResponse {
 
 		fg.proto.Imports = fg.generateImports(protoFile.GetDependency())
 
-		// run plugin
+		pluginData.Files = append(pluginData.Files, fg.proto)
+	}
 
-		content, err := tmpl.Execute(fg.proto)
+	// ENCODE plugin
+	// TODO rathil run plugin
+	// DECODE plugin
+
+	//pluginData.Templates = append(pluginData.Templates, &plugin.Template{
+	//	Name: "templates/func_name_message_new.gotmpl",
+	//	Content: []byte(`
+	//{{- define "func_name_message_new" -}}
+	//   SuperNew{{ .GetName }}
+	//{{- end -}}
+	//`),
+	//})
+
+	for _, file := range pluginData.Files {
+		content, err := tmpl.Execute(TemplateFs(pluginData.Templates), file)
 		if err != nil {
-			stderr.Failf("generate go file for proto [%s]: %s", protoFile.GetName(), err)
+			stderr.Failf("generate go file for proto [%s]: %s", file.GetName(), err)
 		}
 
 		filePath := path.Join(
-			fg.proto.GetPackage().GetDependency().GetPath(),
-			fg.proto.GetName(),
+			file.GetPackage().GetDependency().GetPath(),
+			file.GetName(),
 		)
 		stderr.Logf("\tGO FILE: %s", filePath)
 
@@ -84,6 +101,7 @@ func (a *Generator) Generate() *pluginpb.CodeGeneratorResponse {
 
 		stderr.Logf("FILE END")
 	}
+
 	//stderr.Logf("FILE TO IMPORT PATH: %v", a.protoFileToGoImport)
 	definedTypes := make([]string, 0, len(a.allTypes))
 	for _, t := range a.allTypes {

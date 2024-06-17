@@ -8,7 +8,7 @@
             index++
         {{ end -}}
         if len(data) > index {
-        {{ $c.valueName }} |= {{ $c.valueTypeName }}(data[index]&127) {{ if gt . 0 }} << {{ . }}{{ end }}
+        {{ $c.valueName }} |= {{ $c.valueTypeName }}(data[index]&127) {{- if gt . 0 }} << {{ . }}{{ end }}
         if data[index] < 128 { goto {{ $c.endName }} }
         }
     {{ end -}}

@@ -1,4 +1,3 @@
 {{- define "error_unexpected_end_of_field_number" -}}
-    {{- import "fmt" -}}
-    fmt.Errorf("litepb: unexpected end of field number")
+    {{- import "fmt" -}}.Errorf("litepb: unexpected end of field number")
 {{- end -}}

@@ -5,8 +5,7 @@
         {{ with .GetOneof -}}
             {{ if .GetWithMemPool -}}
                 {{ range .GetFields -}}
-                    {{ import "sync" -}}
-                    {{ template "pool_name_oneof" kv "msg" $msg "oneof" . }} = &sync.Pool{
+                    {{ template "pool_name_oneof" kv "msg" $msg "oneof" . }} = &{{ import "sync" -}}.Pool{
                     New: func() any { return &{{ template "oneof_type_name" kv "msg" $msg "field" . }}{} },
                     }
                 {{ end -}}

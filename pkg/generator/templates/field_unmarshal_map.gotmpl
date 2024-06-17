@@ -2,7 +2,7 @@
     {{- /* for micro acceleration, we can not initiate the valueLength variable, but just skip the message length */ -}}
     {{- $c := . -}}
     {{- $valueLength := (printf "%sLength" .valueName) -}}
-    {{- template "field_unmarshal_int" kv
+    {{ template "field_unmarshal_int" kv
     "type" .type
     "endName" .endName
     "errorUnexpectedEnd" .errorUnexpectedEndLength
@@ -10,7 +10,7 @@
     "valueCreate" true
     "valueTypeName" "int"
     "rangeItems" (arr 0 7 14 21 28)
-    -}}
+    }}
     if len(data) < index + {{ $valueLength }} { return {{ .errorUnexpectedEndValue }} }
 
     if a.{{ .field.GetName }} == nil { // TODO rathil or cap(a.{{ .field.GetName }}) == 0 ???
@@ -31,7 +31,7 @@
     "rangeItems" (arr 0 7 14 21)
     }}
     switch kvNum >> 3 {
-    {{- $paramKey := kv
+    {{ $paramKey := kv
     "type" .type.GetMap.GetKey
     "valueName" "mapKey"
     "valueCreate" false
@@ -41,7 +41,7 @@
     "errorUnexpectedEndValue" (render "error_unexpected_end_of_field_value_kv" $c.fieldName)
     "errorUnexpectedEnd" (render "error_unexpected_end_of_field_value_kv" $c.fieldName)
     -}}
-    {{- $paramValue := kv
+    {{ $paramValue := kv
     "type" .type.GetMap.GetValue
     "valueName" "mapValue"
     "valueCreate" false
@@ -50,7 +50,7 @@
     "errorUnexpectedEndLength" (render "error_unexpected_end_of_field_length_kv" $c.fieldName)
     "errorUnexpectedEndValue" (render "error_unexpected_end_of_field_value_kv" $c.fieldName)
     "errorUnexpectedEnd" (render "error_unexpected_end_of_field_value_kv" $c.fieldName)
-    }}
+    -}}
     case 1:
     switch kvNum & 7 {
     {{ template "field_unmarshal_map_nested" $paramKey -}}

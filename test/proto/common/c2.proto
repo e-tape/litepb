@@ -4,4 +4,7 @@ package common;
 
 option go_package = "test/generated/test/inside/common";
 
-message C2{}
+message C2{
+  int32 i1 = 1;
+  int32 i2 = 2;
+}

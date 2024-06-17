@@ -3,7 +3,6 @@ package generator
 import (
 	"bytes"
 	"cmp"
-	_ "embed"
 	"slices"
 	"strings"
 
@@ -12,11 +11,15 @@ import (
 
 func addImport(path string, alias ...string) string {
 	for _, imp := range tmpl.proto.Imports {
-		if imp.GetPath() == path {
-			return ""
+		if imp.Path == path {
+			if imp.Alias != "" {
+				return imp.Alias
+			}
+			parts := strings.Split(imp.Path, "/")
+			return parts[len(parts)-1]
 		}
 	}
-	impAlias := ""
+	var impAlias string
 	if len(alias) > 0 {
 		impAlias = alias[0]
 	}
@@ -24,7 +27,11 @@ func addImport(path string, alias ...string) string {
 		Path:  path,
 		Alias: impAlias,
 	})
-	return ""
+	if impAlias != "" {
+		return impAlias
+	}
+	parts := strings.Split(path, "/")
+	return parts[len(parts)-1]
 }
 
 func arr(values ...any) []any {
