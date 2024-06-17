@@ -7,12 +7,12 @@ import "google/protobuf/descriptor.proto";
 option go_package = "github.com/e-tape/litepb/proto";
 
 extend google.protobuf.MessageOptions {
-  // Transforming a slice into a fixed-length array Default: 16380
-  optional int32 slice_packed_number = 3001;
+  // Transforming a slice into a fixed-length array Default: 15999
+  optional int32 slice_packed_number = 15999;
 }
 extend google.protobuf.FieldOptions {
   // Transforming a slice into a fixed-length array
-  optional int32 array_fixed_size = 3001;
-  // Change the declared type in the protobuff to your personal type
-  optional string type = 3002;
+  optional int32 array_fixed_size = 15999;
+  // Change the declared type in the protobuf to your personal type
+  optional string type = 15998;
 }

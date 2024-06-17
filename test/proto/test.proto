@@ -4,7 +4,6 @@ package test;
 
 option go_package = "test/generated/test";
 
-//import "options.proto";
 import "test2.proto";
 import "test3.proto";
 import "dir/test.proto";
