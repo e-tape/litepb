@@ -5,7 +5,6 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/e-tape/litepb/pkg/common"
 	"github.com/e-tape/litepb/pkg/plugin"
 	"github.com/e-tape/litepb/pkg/stderr"
 	"golang.org/x/text/cases"
@@ -47,16 +46,16 @@ func (a *Generator) newFile(protoFile *descriptorpb.FileDescriptorProto) *genera
 	}
 }
 
-func (a *generatorFile) generateImports(dependencies []string) []*plugin.Dependency {
-	result := make([]*plugin.Dependency, 0, len(dependencies))
-	for _, dependency := range dependencies {
-		if a.allFiles[dependency].proto.GetPackage().GetDependency().GetAlias() == a.proto.GetPackage().GetDependency().GetAlias() {
-			continue
-		}
-		result = append(result, a.allFiles[dependency].proto.GetPackage().GetDependency())
-	}
-	return result
-}
+//func (a *generatorFile) generateImports(dependencies []string) []*plugin.Dependency {
+//	result := make([]*plugin.Dependency, 0, len(dependencies))
+//	for _, dependency := range dependencies {
+//		if a.allFiles[dependency].proto.GetPackage().GetDependency().GetAlias() == a.proto.GetPackage().GetDependency().GetAlias() {
+//			continue
+//		}
+//		result = append(result, a.allFiles[dependency].proto.GetPackage().GetDependency())
+//	}
+//	return result
+//}
 
 func (a *generatorFile) generatePackage(packages []string, item string) string {
 	return a.generateJoin(packages, item, ".")
@@ -75,16 +74,16 @@ func (a *generatorFile) collectTypes(
 	names []string,
 ) {
 	for _, enum := range enums {
-		a.allTypes[a.generatePackage(packages, enum.GetName())] = Type{
-			Name:  a.generateTypeName(names, enum.GetName()),
-			Alias: a.proto.Package.Dependency.Alias,
+		a.allTypes[a.generatePackage(packages, enum.GetName())] = &plugin.Message_Field_Type_Reflect{
+			Name:       a.generateTypeName(names, enum.GetName()),
+			Dependency: a.proto.Package.Dependency,
 		}
 	}
 
 	for _, message := range messages {
-		a.allTypes[a.generatePackage(packages, message.GetName())] = Type{
-			Name:  a.generateTypeName(names, message.GetName()),
-			Alias: a.proto.Package.Dependency.Alias,
+		a.allTypes[a.generatePackage(packages, message.GetName())] = &plugin.Message_Field_Type_Reflect{
+			Name:       a.generateTypeName(names, message.GetName()),
+			Dependency: a.proto.Package.Dependency,
 		}
 		a.collectTypes(
 			message.GetEnumType(),
@@ -168,39 +167,39 @@ func (a *generatorFile) generateMessages(
 	packages []string,
 	messageSourceCodePath []int32,
 	names []string,
-) []*plugin.Message {
-	result := make([]*plugin.Message, 0, len(messages))
+) {
 	for messageIndex, message := range messages {
 		if message.GetOptions().GetMapEntry() {
 			continue
 		}
 
-		result = append(result, a.generateMessages(
-			message.GetNestedType(),
-			append(packages, message.GetName()),
-			append(messageSourceCodePath, int32(messageIndex), 3),
-			append(names, message.GetName()),
-		)...)
+		msg := &plugin.Message{
+			Name:        a.generateTypeName(names, message.GetName()),
+			Comments:    a.findMessageComments(messageSourceCodePath, messageIndex),
+			Properties:  make([]*plugin.Message_Property, 0, len(message.GetField())),
+			Options:     message.GetOptions().ProtoReflect().GetUnknown(),
+			WithMemPool: len(message.GetField()) > 0, // TODO rathil add option to disable
+		}
+		a.messages = append(a.messages, msg)
 
 		oneOfs := make([]*plugin.Message_OneOf, 0, len(message.GetOneofDecl()))
-		for _, oneof := range message.GetOneofDecl() {
-			oneOfs = append(oneOfs, &plugin.Message_OneOf{
-				Name:     a.generateOneofName(oneof.GetName()),
-				Comments: "", // TODO rathil implement
-				Options:  oneof.GetOptions().ProtoReflect().GetUnknown(),
-				Fields:   make([]*plugin.Message_Field, 0, 1),
-				Tags: map[string]string{
-					"json": oneof.GetName(),
-				},
-				WithMemPool: true,
-			})
-		}
-		properties := make([]*plugin.Message_Property, 0, len(message.GetField()))
+		//for _, oneof := range message.GetOneofDecl() {
+		//	oneOfs = append(oneOfs, &plugin.Message_OneOf{
+		//		Name:     a.generateOneofName(oneof.GetName()),
+		//		Comments: "", // TODO rathil implement
+		//		Options:  oneof.GetOptions().ProtoReflect().GetUnknown(),
+		//		Fields:   make([]*plugin.Message_Field, 0, 1),
+		//		Tags: map[string]string{
+		//			"json": oneof.GetName(),
+		//		},
+		//		WithMemPool: true,
+		//	})
+		//}
 		for fieldIndex, field := range message.GetField() {
 			mapField, mapOk := a.mapTypes[field.GetTypeName()]
 			msgField := &plugin.Message_Field{
 				Number:   field.GetNumber(),
-				Name:     common.SnakeCaseToPascalCase(field.GetName()),
+				Name:     a.generateFieldName(msg, field.GetName()),
 				Comments: a.findMessageFieldComments(messageSourceCodePath, messageIndex, fieldIndex),
 				Type: &plugin.Message_Field_Type{
 					InProto:  plugin.Message_Field_Type_Proto(field.GetType()),
@@ -216,6 +215,19 @@ func (a *generatorFile) generateMessages(
 			}
 			property := &plugin.Message_Property{}
 			if field.OneofIndex != nil {
+				if len(oneOfs) <= int(field.GetOneofIndex()) {
+					oneof := message.GetOneofDecl()[field.GetOneofIndex()]
+					oneOfs = append(oneOfs, &plugin.Message_OneOf{
+						Name:     a.generateFieldName(msg, oneof.GetName()),
+						Comments: "", // TODO rathil implement
+						Options:  oneof.GetOptions().ProtoReflect().GetUnknown(),
+						Fields:   make([]*plugin.Message_Field, 0, 1),
+						Tags: map[string]string{
+							"json": oneof.GetName(),
+						},
+						WithMemPool: true,
+					})
+				}
 				oneOfs[field.GetOneofIndex()].Fields = append(oneOfs[field.GetOneofIndex()].Fields, msgField)
 				if len(oneOfs[field.GetOneofIndex()].Fields) > 1 {
 					continue
@@ -228,28 +240,52 @@ func (a *generatorFile) generateMessages(
 					Field: msgField,
 				}
 			}
-			properties = append(properties, property)
+			msg.Properties = append(msg.Properties, property)
 		}
-
-		result = append(result, &plugin.Message{
-			Name:        a.generateTypeName(names, message.GetName()),
-			Comments:    a.findMessageComments(messageSourceCodePath, messageIndex),
-			Properties:  properties,
-			Options:     message.GetOptions().ProtoReflect().GetUnknown(),
-			WithMemPool: len(message.GetField()) > 0, // TODO rathil add option to disable
-		})
+		a.generateMessages(
+			message.GetNestedType(),
+			append(packages, message.GetName()),
+			append(messageSourceCodePath, int32(messageIndex), 3),
+			append(names, message.GetName()),
+		)
 	}
-	return result
 }
 
-func (a *generatorFile) generateOneofName(name string) string {
-	return strings.ReplaceAll(
-		cases.Title(language.English).
-			String(
-				strings.ReplaceAll(name, "_", " "),
-			),
+func (a *generatorFile) generateFieldName(msg *plugin.Message, name string) string {
+	pName := strings.TrimLeft(name, "_")
+	prefix := strings.TrimSuffix(name, pName)
+	pName = strings.ReplaceAll(
+		cases.Title(language.English).String(
+			strings.ReplaceAll(pName, "_", " "),
+		),
 		" ", "",
 	)
+	pName = prefix + pName
+	pName, ok := strings.CutPrefix(pName, "__")
+	if ok {
+		pName = "X" + pName
+	}
+	pName, ok = strings.CutPrefix(pName, "_")
+	if ok {
+		pName = "X" + pName
+	}
+	switch pName {
+	case "String":
+		pName += "_"
+	}
+	for _, p := range msg.Properties {
+		switch pt := p.Type.(type) {
+		case *plugin.Message_Property_Field:
+			if pt.Field.GetName() == pName {
+				pName += "_"
+			}
+		case *plugin.Message_Property_Oneof:
+			if pt.Oneof.GetName() == pName {
+				pName += "_"
+			}
+		}
+	}
+	return pName
 }
 
 func (a *generatorFile) generateReflect(
@@ -287,7 +323,7 @@ func (a *generatorFile) generateReflect(
 		return nil
 	case descriptorpb.FieldDescriptorProto_TYPE_MESSAGE,
 		descriptorpb.FieldDescriptorProto_TYPE_ENUM:
-		return a.allTypes[field.GetTypeName()].reflect(a.proto.Package.Dependency.Alias)
+		return a.allTypes[field.GetTypeName()] //.reflect(a.proto.Package.Dependency.Alias)
 	case descriptorpb.FieldDescriptorProto_TYPE_BYTES:
 		return &plugin.Message_Field_Type_Reflect{Name: "[]byte"}
 	default:

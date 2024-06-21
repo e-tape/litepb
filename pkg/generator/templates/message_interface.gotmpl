@@ -1,7 +1,9 @@
 {{- define "message_interface" -}}
-    {{- /*gotype: github.com/e-tape/litepb/pkg/plugin.Message*/ -}}
-    {{ template "message_interface_name" kv "msg" . }} interface {
-    {{ template "message_interface_name" kv "msg" . "get" true }}
-    {{ template "message_interface_name" kv "msg" . "set" true }}
-    }
+    {{ if is_generate "INTERFACE" -}}
+        {{- /*gotype: github.com/e-tape/litepb/pkg/plugin.Message*/ -}}
+        {{ template "message_interface_name" kv "msg" . }} interface {
+        {{ template "message_interface_name" kv "msg" . "get" true }}
+        {{ template "message_interface_name" kv "msg" . "set" true }}
+        }
+    {{ end -}}
 {{- end -}}

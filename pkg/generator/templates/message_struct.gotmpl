@@ -1,23 +1,27 @@
 {{- define "message_struct" -}}
-    {{- /*gotype: github.com/e-tape/litepb/pkg/plugin.Message*/ -}}
-    {{- $msg := . -}}
-    {{ range (lines .GetComments) -}}
-        //{{ . }}
-    {{ end -}}
-    {{ .GetName }} struct {
-    {{- range .GetProperties -}}
-        {{ with .GetField -}}
-            {{ range (lines .GetComments) -}}
-                //{{ . }}
-            {{ end -}}
-            {{ .GetName }} {{ template "field_type_name" kv "type" .GetType "format" "<repeat><pointer><path><name>" }} {{ template "field_tags" . }}
+    {{ if is_generate "STRUCT" -}}
+        {{- /*gotype: github.com/e-tape/litepb/pkg/plugin.Message*/ -}}
+        {{- $msg := . -}}
+        {{ range (lines .GetComments) -}}
+            //{{ . }}
         {{ end -}}
-        {{ with .GetOneof -}}
-            {{ range (lines .GetComments) -}}
-                //{{ . }}
+        {{ .GetName }} struct {
+        {{- range .GetProperties -}}
+            {{ with .GetField -}}
+                {{ range (lines .GetComments) -}}
+                    //{{ . }}
+                {{ end -}}
+                {{ .GetName }} {{ template "field_type_name" kv "type" .GetType }} {{ template "field_tags" . }}
             {{ end -}}
-            {{ .GetName }} {{ template "oneof_type_name" kv "msg" $msg "oneof" . }} {{ template "oneof_tags" . }}
+            {{ with .GetOneof -}}
+                {{ range (lines .GetComments) -}}
+                    //{{ . }}
+                {{ end -}}
+                {{ .GetName }} {{ template "oneof_type_name" kv "msg" $msg "oneof" . }} {{ template "oneof_tags" . }}
+            {{ end -}}
         {{ end -}}
+        }
+        List{{ .GetName }} []*{{ .GetName }}
+        Map{{ .GetName }}[K comparable] map[K]*{{ .GetName }}
     {{ end -}}
-    }
 {{- end -}}

@@ -1,8 +1,10 @@
 {{- define "message_pool" -}}
-    {{- /*gotype: github.com/e-tape/litepb/pkg/plugin.Message*/ -}}
-    {{- if .GetWithMemPool -}}
-        {{ template "pool_name_message" . }} = &{{ import "sync" }}.Pool{
-        New: func() any { return {{ template "message_constructor" . }} },
-        }
+    {{ if is_generate "POOL" -}}
+        {{- /*gotype: github.com/e-tape/litepb/pkg/plugin.Message*/ -}}
+        {{- if .GetWithMemPool -}}
+            {{ template "pool_name_message" . }} = &{{ import "sync" }}.Pool{
+            New: func() any { return {{ template "message_constructor" . }} },
+            }
+        {{ end -}}
     {{ end -}}
 {{- end -}}

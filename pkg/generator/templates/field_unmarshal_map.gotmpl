@@ -14,11 +14,11 @@
     if len(data) < index + {{ $valueLength }} { return {{ .errorUnexpectedEndValue }} }
 
     if a.{{ .field.GetName }} == nil { // TODO rathil or cap(a.{{ .field.GetName }}) == 0 ???
-    a.{{ .field.GetName }} = make({{ template "field_type_name" kv "type" .type "format" "<pointer><path><name>" }}, 1)
+    a.{{ .field.GetName }} = make({{ template "field_type_name" kv "type" .type }}, 1)
     }
 
-    var mapKey {{ template "field_type_name" kv "type" .type.GetMap.GetKey "format" "<name>" }}
-    var mapValue {{ template "field_type_name" kv "type" .type.GetMap.GetValue "format" "<pointer><path><name>" }}
+    var mapKey {{ template "field_type_name" kv "type" .type.GetMap.GetKey }}
+    var mapValue {{ template "field_type_name" kv "type" .type.GetMap.GetValue }}
 
     for kv := 0; kv < 2; kv++ {
     {{ template "field_unmarshal_int" kv

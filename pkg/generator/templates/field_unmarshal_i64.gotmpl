@@ -1,0 +1,18 @@
+{{- define "field_unmarshal_i64" -}}
+    {{- $c := . -}}
+    {{- with .field -}}
+        {{- /*gotype: github.com/e-tape/litepb/pkg/plugin.Message_Field*/ -}}
+        {{ if eq .GetType.GetInProto.String "FIXED64" -}}
+            case 1:
+            {{ template "field_unmarshal_fixed64" $c }}
+        {{ end -}}
+        {{ if eq .GetType.GetInProto.String "SFIXED64" -}}
+            case 1:
+            {{ template "field_unmarshal_sfixed64" $c }}
+        {{ end -}}
+        {{ if eq .GetType.GetInProto.String "DOUBLE" -}}
+            case 1:
+            {{ template "field_unmarshal_double" $c }}
+        {{ end -}}
+    {{- end -}}
+{{- end -}}

@@ -5,10 +5,7 @@
 
     package {{ .GetPackage.GetName }}
 
-    {{ $enums := render "enums" .GetEnums -}}
-    {{ $messages := render "messages" .GetMessages -}}
-
+    {{ $source := render "file_entities" . -}}
     {{ template "imports" .GetImports | sort }}
-    {{ $enums }}
-    {{ $messages }}
+    {{ $source }}
 {{- end -}}

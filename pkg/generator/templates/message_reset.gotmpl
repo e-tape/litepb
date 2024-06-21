@@ -1,23 +1,30 @@
 {{- define "message_reset" -}}
-    {{- /*gotype: github.com/e-tape/litepb/pkg/plugin.Message*/ -}}
-    func (a *{{ .GetName }}) Reset() {
-    {{- if gt (len .GetProperties) 0}}
-        if a == nil { return }
-        {{- range .GetProperties -}}
-            {{- with .GetField -}}
-                {{ if or (and (.GetType.GetRepeated) (is_msg .GetType)) (and (is_map .GetType) (is_msg .GetType.GetMap.GetValue)) }}
-                    for _, value := range a.{{ .GetName }} {
-                    value.{{ template "func_name_message_return_to_pool" }}()
-                    }
-                {{- else if is_msg .GetType }}
-                    a.{{ .GetName }}.{{ template "func_name_message_return_to_pool" }}()
-                {{- end -}}
-            {{- end }}
-            {{- with .GetOneof -}}
-                // TODO rathil Reset for oneof
-            {{- end }}
+    {{ if is_generate "RESET" -}}
+        {{- /*gotype: github.com/e-tape/litepb/pkg/plugin.Message*/ -}}
+        func (a *{{ .GetName }}) Reset() {
+        {{- if gt (len .GetProperties) 0}}
+            if a == nil { return }
+            a.reset()
         {{- end }}
-        *a = {{ .GetName }}{}
-    {{- end }}
-    }
-{{ end }}
+        }
+        func (a *{{ .GetName }}) reset() {
+        {{- if gt (len .GetProperties) 0}}
+            {{- range .GetProperties -}}
+                {{- with .GetField -}}
+                    {{ if or (and (.GetType.GetRepeated) (is_msg .GetType)) (and (is_map .GetType) (is_msg .GetType.GetMap.GetValue)) }}
+                        if len(a.{{ .GetName }}) > 0 {
+                        a.{{ .GetName }}.{{ template "func_name_message_return_to_pool" }}()
+                        }
+                    {{- else if is_msg .GetType }}
+                        a.{{ .GetName }}.{{ template "func_name_message_return_to_pool" }}()
+                    {{- end -}}
+                {{- end }}
+                {{- with .GetOneof -}}
+                    // TODO rathil Reset for oneof
+                {{- end }}
+            {{- end }}
+            *a = {{ .GetName }}{}
+        {{- end }}
+        }
+    {{ end -}}
+{{- end -}}

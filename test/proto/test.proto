@@ -76,6 +76,14 @@ message Test {
   Direction direction_enum = 54;
   repeated Direction r_direction_enum = 55;
 
+  fixed32 fixed32 = 300;
+  sfixed32 sfixed32 = 301;
+  float float = 303;
+
+  fixed64 fixed64 = 400;
+  sfixed64 sfixed64 = 401;
+  double double = 403;
+
 
   // ForOneof - msg for oneof
   message MsgForQOneof {

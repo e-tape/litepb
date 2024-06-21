@@ -39,28 +39,18 @@ func run() error {
 	response := generator.NewGenerator(request).Generate()
 	stderr.Logf("GENERATED IN: %s", time.Since(start))
 
+	//generator.GoFmt(response)
+
 	for _, f := range response.File {
-		err = os.MkdirAll(path.Dir(f.GetName()), 0766)
+		p := path.Join("test/bench/proto/qtest/", f.GetName())
+		err = os.MkdirAll(path.Dir(p), 0766)
 		if err != nil {
 			panic(err)
 		}
-		err = os.WriteFile(f.GetName(), []byte(f.GetContent()), 0666)
+		err = os.WriteFile(p, []byte(f.GetContent()), 0666)
 		if err != nil {
 			panic(err)
 		}
 	}
-	return nil
-
-	generator.GoFmt(response)
-
-	out, err := proto.Marshal(response)
-	if err != nil {
-		return err
-	}
-
-	if _, err = os.Stdout.Write(out); err != nil {
-		return err
-	}
-
 	return nil
 }

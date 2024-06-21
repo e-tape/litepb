@@ -1,12 +1,28 @@
 {{- define "message_return_to_pool" -}}
-    {{- /*gotype: github.com/e-tape/litepb/pkg/plugin.Message*/ -}}
-    func (a *{{ .GetName }}){{ template "func_name_message_return_to_pool" }}() {
-    {{ if gt (len .GetProperties) 0 -}}
-        if a == nil { return }
-        a.Reset()
-        {{ if .GetWithMemPool -}}
-            {{ template "pool_name_message" . }}.Put(a)
+    {{ if is_generate "RETURN_TO_POOL" -}}
+        {{- /*gotype: github.com/e-tape/litepb/pkg/plugin.Message*/ -}}
+        func (a *{{ .GetName }}){{ template "func_name_message_return_to_pool" }}() {
+        {{ if gt (len .GetProperties) 0 -}}
+            if a == nil { return }
+            a.reset()
+            {{ if .GetWithMemPool -}}
+                {{ template "pool_name_message" . }}.Put(a)
+            {{ end -}}
         {{ end -}}
+        }
+        func (a List{{ .GetName }}){{ template "func_name_message_return_to_pool" }}() {
+        {{ if .GetWithMemPool -}}
+            for _, item := range a {
+            item.{{ template "func_name_message_return_to_pool" }}()
+            }
+        {{ end -}}
+        }
+        func (a Map{{ .GetName }}[K]){{ template "func_name_message_return_to_pool" }}() {
+        {{ if .GetWithMemPool -}}
+            for _, item := range a {
+            item.{{ template "func_name_message_return_to_pool" }}()
+            }
+        {{ end -}}
+        }
     {{ end -}}
-    }
 {{- end -}}

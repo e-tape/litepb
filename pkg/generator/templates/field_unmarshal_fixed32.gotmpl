@@ -1,0 +1,8 @@
+{{- define "field_unmarshal_fixed32" -}}
+    if len(data) < index + 4 {
+    return {{ .errorUnexpectedEnd }}
+    }
+    {{ .valueName }} {{ if .valueCreate }}:{{ end }}= {{ import "encoding/binary" "encoding_binary" }}.LittleEndian.Uint32(data[index : index+4])
+    index += 4
+    {{- set_result . .valueName -}}
+{{- end -}}

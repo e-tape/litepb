@@ -16,7 +16,7 @@ func NewGenerator(request *pluginpb.CodeGeneratorRequest) *Generator {
 	return &Generator{
 		request:    request,
 		allFiles:   make(map[Path]*generatorFile),
-		allTypes:   make(map[Package]Type),
+		allTypes:   make(map[Package]*plugin.Message_Field_Type_Reflect),
 		mapTypes:   make(map[Package]*plugin.Message_Field_Type_Map),
 		aliasRegex: regexp.MustCompile(`(?mi)[^a-z0-9]`),
 	}
@@ -57,16 +57,57 @@ func (a *Generator) Generate() *pluginpb.CodeGeneratorResponse {
 			nil,
 		)
 
-		fg.proto.Messages = fg.generateMessages(
+		fg.generateMessages(
 			protoFile.GetMessageType(),
 			[]string{"", protoFile.GetPackage()},
 			[]int32{4},
 			nil,
 		)
+		fg.proto.Messages = fg.messages
 
-		fg.proto.Imports = fg.generateImports(protoFile.GetDependency())
+		// TODO rathil del!!!
+		//for _, msg := range fg.proto.Messages {
+		//	msg.WithMemPool = false
+		//}
 
-		pluginData.Files = append(pluginData.Files, fg.proto)
+		//fg.proto.Imports = fg.generateImports(protoFile.GetDependency())
+
+		fg.proto.Generates = []plugin.File_Generate{
+			plugin.File_STRUCT,
+			plugin.File_INTERFACE,
+			plugin.File_POOL,
+			plugin.File_ENUM,
+			plugin.File_NEW,
+			plugin.File_RETURN_TO_POOL,
+			plugin.File_PROTO_MESSAGE,
+			plugin.File_CONVERT_TO,
+			plugin.File_STRING,
+			plugin.File_RESET,
+			plugin.File_CLONE,
+			plugin.File_GETTER,
+			plugin.File_SETTER,
+			plugin.File_SIZE,
+		}
+
+		marshal := *fg.proto // TODO rathil refactoring to litepb clone
+		marshal.Name = strings.ToLower(strings.TrimSuffix(
+			path.Base(protoFile.GetName()),
+			path.Ext(protoFile.GetName()),
+		)) + "_marshal.lpb.go"
+		marshal.Generates = []plugin.File_Generate{
+			plugin.File_MARSHAL,
+		}
+
+		unmarshal := *fg.proto // TODO rathil refactoring to litepb clone
+		unmarshal.Name = strings.ToLower(strings.TrimSuffix(
+			path.Base(protoFile.GetName()),
+			path.Ext(protoFile.GetName()),
+		)) + "_unmarshal.lpb.go"
+		unmarshal.Generates = []plugin.File_Generate{
+			plugin.File_UNMARSHAL,
+		}
+
+		pluginData.Files = append(pluginData.Files, fg.proto, &marshal, &unmarshal)
 	}
 
 	// ENCODE plugin

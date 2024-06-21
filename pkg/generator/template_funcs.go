@@ -10,6 +10,9 @@ import (
 )
 
 func addImport(path string, alias ...string) string {
+	if path == "" || path == tmpl.proto.GetPackage().GetDependency().GetPath() {
+		return ""
+	}
 	for _, imp := range tmpl.proto.Imports {
 		if imp.Path == path {
 			if imp.Alias != "" {
@@ -22,6 +25,11 @@ func addImport(path string, alias ...string) string {
 	var impAlias string
 	if len(alias) > 0 {
 		impAlias = alias[0]
+	} else {
+		impAlias = strings.ReplaceAll(path, "/", "_")
+	}
+	if path == impAlias {
+		impAlias = ""
 	}
 	tmpl.proto.Imports = append(tmpl.proto.Imports, &plugin.Dependency{
 		Path:  path,
@@ -30,8 +38,7 @@ func addImport(path string, alias ...string) string {
 	if impAlias != "" {
 		return impAlias
 	}
-	parts := strings.Split(path, "/")
-	return parts[len(parts)-1]
+	return path
 }
 
 func arr(values ...any) []any {
@@ -52,6 +59,15 @@ func isMsg(fieldType *plugin.Message_Field_Type) bool {
 
 func isMap(fieldType *plugin.Message_Field_Type) bool {
 	return fieldType.GetInProto() == plugin.Message_Field_Type_MESSAGE_OR_MAP && fieldType.GetMap() != nil
+}
+
+func isGenerate(generate string) bool {
+	for _, f := range tmpl.proto.GetGenerates() {
+		if f.String() == generate {
+			return true
+		}
+	}
+	return false
 }
 
 func lines(text string) []string {

@@ -1,7 +1,9 @@
 {{- define "message_string" -}}
-    {{- /*gotype: github.com/e-tape/litepb/pkg/plugin.Message*/ -}}
-    func (a *{{ .GetName }}) String() string {
+    {{ if is_generate "STRING" -}}
+        {{- /*gotype: github.com/e-tape/litepb/pkg/plugin.Message*/ -}}
+        func (a *{{ .GetName }}) String() string {
         if a == nil { return "<nil>" }
         return {{ import "fmt" -}}.Sprintf("%+v", a){{/* TODO: Implement proper string */}}
-    }
+        }
+    {{ end -}}
 {{- end -}}

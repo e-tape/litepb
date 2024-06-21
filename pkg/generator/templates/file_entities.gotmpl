@@ -1,15 +1,24 @@
-{{- define "messages" -}}
-    {{ range . -}}
-        {{- /*gotype: github.com/e-tape/litepb/pkg/plugin.Message*/ -}}
+{{- define "file_entities" -}}
+    {{- /*gotype: github.com/e-tape/litepb/pkg/plugin.File*/ -}}
+    {{ template "enums" .GetEnums -}}
 
+    {{ $types := "" -}}
+    {{ range .GetMessages -}}
+        {{ $types = print
+        $types
+        (render "message_interface_get" .)
+        (render "message_interface_set" .)
+        (render "message_interface" .)
+        (render "message_struct" .)
+        (render "oneof_types" .)
+        -}}
+    {{ end -}}
+    {{ with $types }}
         type (
-        {{ template "message_interface_get" . }}
-        {{ template "message_interface_set" . }}
-        {{ template "message_interface" . }}
-        {{ template "message_struct" . }}
-        {{ template "oneof_types" . }}
+        {{ . }}
         )
-
+    {{ end -}}
+    {{ range .GetMessages -}}
         {{ with print ( render "message_pool" . ) ( render "oneof_pools" . ) -}}
             var (
             {{ . }}
@@ -27,8 +36,8 @@
 
         {{ template "message_methods_get" . }}
         {{ template "message_methods_set" . }}
-        {{ template "oneof_methods" . }}
         {{ template "message_marshal" . }}
         {{ template "message_unmarshal" . }}
+        {{ template "oneof_methods" . }}
     {{ end -}}
 {{- end -}}

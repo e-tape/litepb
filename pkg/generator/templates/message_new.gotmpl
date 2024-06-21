@@ -1,10 +1,12 @@
 {{- define "message_new" -}}
-    {{- /*gotype: github.com/e-tape/litepb/pkg/plugin.Message*/ -}}
-    func {{ template "func_name_message_new" . }}() *{{ .GetName }} {
-    {{- if .GetWithMemPool -}}
-        return pool{{ .GetName }}.Get().(*{{ .GetName }})
-    {{- else -}}
-        return {{ template "message_constructor" . }}
-    {{- end -}}
-    }
+    {{ if is_generate "NEW" -}}
+        {{- /*gotype: github.com/e-tape/litepb/pkg/plugin.Message*/ -}}
+        func {{ template "func_name_message_new" . }}() *{{ .GetName }} {
+        {{- if .GetWithMemPool -}}
+            return pool{{ .GetName }}.Get().(*{{ .GetName }})
+        {{- else -}}
+            return {{ template "message_constructor" . }}
+        {{- end -}}
+        }
+    {{ end -}}
 {{- end -}}

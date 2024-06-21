@@ -1,4 +1,6 @@
 {{- define "message_proto_message" -}}
-    {{- /*gotype: github.com/e-tape/litepb/pkg/plugin.Message*/ -}}
-    func (a *{{ .GetName }}) ProtoMessage() {}
+    {{ if is_generate "PROTO_MESSAGE" -}}
+        {{- /*gotype: github.com/e-tape/litepb/pkg/plugin.Message*/ -}}
+        func (a *{{ .GetName }}) ProtoMessage() {}
+    {{ end -}}
 {{- end -}}

@@ -1,6 +1,6 @@
 {{- define "field_set_repeated_or_map" -}}
     {{- /*gotype: github.com/e-tape/litepb/pkg/plugin.Message_Field*/ -}}
-    a.{{ .GetName }} = make({{ template "field_type_name" kv "type" .GetType "format" "<repeat><pointer><path><name>" }}, len(values))
+    a.{{ .GetName }} = make({{ template "field_type_name" kv "type" .GetType }}, len(values))
     for i, v := range values {
     {{ if is_map .GetType -}}
         a.{{ .GetName }}[i] = {{ template "type_convert_to" .GetType.GetMap.GetValue }}(v)

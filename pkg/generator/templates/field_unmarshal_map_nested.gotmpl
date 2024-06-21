@@ -50,5 +50,29 @@
             case 2:
             {{ template "field_unmarshal_message" $c }}
         {{ end -}}
+        {{ if eq .GetInProto.String "FIXED64" -}}
+            case 1:
+            {{ template "field_unmarshal_fixed64" $c }}
+        {{ end -}}
+        {{ if eq .GetInProto.String "SFIXED64" -}}
+            case 1:
+            {{ template "field_unmarshal_sfixed64" $c }}
+        {{ end -}}
+        {{ if eq .GetInProto.String "DOUBLE" -}}
+            case 1:
+            {{ template "field_unmarshal_double" $c }}
+        {{ end -}}
+        {{ if eq .GetInProto.String "FIXED32" -}}
+            case 5:
+            {{ template "field_unmarshal_fixed32" $c }}
+        {{ end -}}
+        {{ if eq .GetInProto.String "SFIXED32" -}}
+            case 5:
+            {{ template "field_unmarshal_sfixed32" $c }}
+        {{ end -}}
+        {{ if eq .GetInProto.String "FLOAT" -}}
+            case 5:
+            {{ template "field_unmarshal_float" $c }}
+        {{ end -}}
     {{ end -}}
 {{- end -}}

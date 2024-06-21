@@ -1,20 +1,22 @@
 {{- define "message_interface_set" -}}
-    {{- /*gotype: github.com/e-tape/litepb/pkg/plugin.Message*/ -}}
-    {{- $msg := . -}}
-    {{ template "message_interface_name" kv "msg" . "set" true }} interface {
-    {{ range .GetProperties -}}
-        {{ with .GetField -}}
-            Set{{ .GetName }}({{ template "field_type_name" kv
-            "type" .GetType
-            "format" "<repeat><path><i_name_get>"
-            }}) {{ template "message_interface_name" kv "msg" $msg }}
-        {{ end -}}
-        {{ with .GetOneof -}}
-            Set{{ .GetName }}({{ template "oneof_type_name" kv "msg" $msg "oneof" . }}) {{ template "message_interface_name" kv "msg" $msg }}
-            {{ range .GetFields -}}
-                Set{{ .GetName }}({{ template "field_type_name" kv "type" .GetType "format" "<path><i_name_get>" }}) {{ template "message_interface_name" kv "msg" $msg }}
+    {{ if is_generate "INTERFACE" -}}
+        {{- /*gotype: github.com/e-tape/litepb/pkg/plugin.Message*/ -}}
+        {{- $msg := . -}}
+        {{ template "message_interface_name" kv "msg" . "set" true }} interface {
+        {{ range .GetProperties -}}
+            {{ with .GetField -}}
+                Set{{ .GetName }}({{ template "field_type_name" kv
+                "type" .GetType
+                "i_name_get" true
+                }}) {{ template "message_interface_name" kv "msg" $msg }}
+            {{ end -}}
+            {{ with .GetOneof -}}
+                Set{{ .GetName }}({{ template "oneof_type_name" kv "msg" $msg "oneof" . }}) {{ template "message_interface_name" kv "msg" $msg }}
+                {{ range .GetFields -}}
+                    Set{{ .GetName }}({{ template "field_type_name" kv "type" .GetType "i_name_get" true }}) {{ template "message_interface_name" kv "msg" $msg }}
+                {{ end -}}
             {{ end -}}
         {{ end -}}
+        }
     {{ end -}}
-    }
 {{- end -}}

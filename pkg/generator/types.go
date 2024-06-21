@@ -13,30 +13,31 @@ type (
 	Generator struct {
 		request    *pluginpb.CodeGeneratorRequest
 		allFiles   map[Path]*generatorFile
-		allTypes   map[Package]Type
+		allTypes   map[Package]*plugin.Message_Field_Type_Reflect
 		mapTypes   map[Package]*plugin.Message_Field_Type_Map
 		aliasRegex *regexp.Regexp
 	}
 	Path    = string
 	Package = string
-	Type    struct {
-		Name  string
-		Alias string
-	}
+	//Type    struct {
+	//	Name       string
+	//	Dependency *plugin.Dependency
+	//}
 	// generatorFile of protobuf bindings for single file
 	generatorFile struct {
 		*Generator
 		proto          *plugin.File
+		messages       []*plugin.Message
 		sourceCodeInfo *descriptorpb.SourceCodeInfo
 	}
 )
 
-func (a Type) reflect(alias string) *plugin.Message_Field_Type_Reflect {
-	reflect := &plugin.Message_Field_Type_Reflect{
-		Name: a.Name,
-	}
-	if a.Alias != alias {
-		reflect.Path = a.Alias
-	}
-	return reflect
-}
+//func (a Type) reflect(alias string) *plugin.Message_Field_Type_Reflect {
+//	reflect := &plugin.Message_Field_Type_Reflect{
+//		Name: a.Name,
+//	}
+//	if a.Alias != alias {
+//		reflect.Path = a.Alias
+//	}
+//	return reflect
+//}

@@ -1,17 +1,19 @@
 {{- define "oneof_new" -}}
-    {{- /*gotype: github.com/e-tape/litepb/pkg/plugin.Message*/ -}}
-    {{- $msg := . -}}
-    {{ range .GetProperties -}}
-        {{ with .GetOneof -}}
-            {{- $oneof := . -}}
-            {{ range .GetFields -}}
-                func {{ template "func_name_oneof_new" kv "msg" $msg "field" . }}() *{{ template "oneof_type_name" kv "msg" $msg "field" . }} {
-                {{ if $oneof.GetWithMemPool -}}
-                    return {{ template "pool_name_oneof" kv "msg" $msg "oneof" . }}.Get().(*{{ template "oneof_type_name" kv "msg" $msg "field" . }})
-                {{ else -}}
-                    return &{{ template "oneof_type_name" kv "msg" $msg "field" . }}{}
+    {{ if is_generate "NEW" -}}
+        {{- /*gotype: github.com/e-tape/litepb/pkg/plugin.Message*/ -}}
+        {{- $msg := . -}}
+        {{ range .GetProperties -}}
+            {{ with .GetOneof -}}
+                {{- $oneof := . -}}
+                {{ range .GetFields -}}
+                    func {{ template "func_name_oneof_new" kv "msg" $msg "field" . }}() *{{ template "oneof_type_name" kv "msg" $msg "field" . }} {
+                    {{ if $oneof.GetWithMemPool -}}
+                        return {{ template "pool_name_oneof" kv "msg" $msg "oneof" . }}.Get().(*{{ template "oneof_type_name" kv "msg" $msg "field" . }})
+                    {{ else -}}
+                        return &{{ template "oneof_type_name" kv "msg" $msg "field" . }}{}
+                    {{ end -}}
+                    }
                 {{ end -}}
-                }
             {{ end -}}
         {{ end -}}
     {{ end -}}

@@ -28,6 +28,27 @@ message File {
   repeated Enum enums = 5;
   repeated Message messages = 6;
   bytes options = 7;
+  repeated Generate generates = 8;
+
+  enum Generate {
+    STRUCT = 0;
+    INTERFACE = 1;
+    POOL = 2;
+    ENUM = 3;
+
+    NEW = 10;
+    RETURN_TO_POOL = 11;
+    CONVERT_TO = 12;
+    PROTO_MESSAGE = 13;
+    STRING = 14;
+    RESET = 15;
+    CLONE = 16;
+    GETTER = 17;
+    SETTER = 18;
+    MARSHAL = 19;
+    UNMARSHAL = 20;
+    SIZE = 21;
+  }
 }
 
 message Package {
@@ -107,8 +128,8 @@ message Message {
         SINT64 = 18;
       }
       message Reflect {
-        string path = 1;
-        string name = 2;
+        string name = 1;
+        Dependency dependency = 2;
       }
       message Map {
         Type Key = 1;
