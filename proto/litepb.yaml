@@ -1,0 +1,5 @@
+source_relative: true
+mem_pool_message_all: 1
+mem_pool_list_all: 1
+mem_pool_map_all: 1
+mem_pool_oneof_all: 1

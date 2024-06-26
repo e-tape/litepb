@@ -1,0 +1,9 @@
+{{- define "field_set_map" -}}
+    {{- /*gotype: github.com/e-tape/litepb/proto.Message_Field*/ -}}
+    a.{{ .GetName }} = {{- template "field_type_path" .GetType -}}
+    {{ template "func_name_map_new" .GetType.GetMap.GetValue.GetReflect -}}
+    [{{ template "field_type_name" kv "type" .GetType.GetMap.GetKey }}](len(values))
+    for i, v := range values {
+    a.{{ .GetName }}[i] = {{ template "type_convert_to" .GetType.GetMap.GetValue }}(v)
+    }
+{{- end -}}

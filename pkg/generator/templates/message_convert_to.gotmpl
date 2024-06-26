@@ -1,16 +1,21 @@
 {{- define "message_convert_to" -}}
     {{ if is_generate "CONVERT_TO" -}}
-        {{- /*gotype: github.com/e-tape/litepb/pkg/plugin.Message*/ -}}
+        {{- /*gotype: github.com/e-tape/litepb/proto.Message*/ -}}
         {{- $msg := . -}}
         func {{ template "func_name_message_convert_to" . }}(value {{ template "message_interface_name" kv "msg" . "get" true }}) *{{ .GetName }} {
         if a, ok := value.(*{{ .GetName }}); ok { return a }
         a := {{ template "func_name_message_new" . }}()
         {{ range .GetProperties -}}
             {{ with .GetField -}}
-                {{ if or (and (is_msg .GetType) (.GetType.GetRepeated)) (and (is_map .GetType) (is_msg .GetType.GetMap.GetValue)) -}}
+                {{ if and (is_msg .GetType) (.GetType.GetRepeated) -}}
                     {
                     values := value.Get{{ .GetName }}()
-                    {{ template "field_set_repeated_or_map" . }}
+                    {{ template "field_set_list" . }}
+                    }
+                {{ else if and (is_map .GetType) (is_msg .GetType.GetMap.GetValue) -}}
+                    {
+                    values := value.Get{{ .GetName }}()
+                    {{ template "field_set_map" . }}
                     }
                 {{ else -}}
                     a.Set{{ .GetName }}(value.Get{{ .GetName }}())

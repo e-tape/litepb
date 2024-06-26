@@ -1,5 +1,5 @@
 {{- define "file_entities" -}}
-    {{- /*gotype: github.com/e-tape/litepb/pkg/plugin.File*/ -}}
+    {{- /*gotype: github.com/e-tape/litepb/proto.File*/ -}}
     {{ template "enums" .GetEnums -}}
 
     {{ $types := "" -}}
@@ -10,6 +10,8 @@
         (render "message_interface_set" .)
         (render "message_interface" .)
         (render "message_struct" .)
+        (render "message_list" .)
+        (render "message_map" .)
         (render "oneof_types" .)
         -}}
     {{ end -}}
@@ -19,19 +21,23 @@
         )
     {{ end -}}
     {{ range .GetMessages -}}
-        {{ with print ( render "message_pool" . ) ( render "oneof_pools" . ) -}}
+        {{ with print (render "message_pool" .) (render "list_pool" .) (render "map_pool" .) (render "oneof_pools" .) -}}
             var (
             {{ . }}
             )
         {{ end -}}
 
         {{ template "message_new" . }}
+        {{ template "list_new" . }}
+        {{ template "map_new" . }}
         {{ template "message_convert_to" . }}
         {{ template "oneof_new" . }}
 
         {{ template "message_string" . }}
-        {{ template "message_return_to_pool" . }}
         {{ template "message_reset" . }}
+        {{ template "message_return_to_pool" . }}
+        {{ template "list_return_to_pool" . }}
+        {{ template "map_return_to_pool" . }}
         {{ template "message_proto_message" . }}
 
         {{ template "message_methods_get" . }}

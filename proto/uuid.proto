@@ -1,13 +1,13 @@
 syntax = "proto3";
 
-package proto;
+package litepb;
 
-option go_package = "github.com/e-tape/litepb/proto";
+option go_package = "github.com/e-tape/litepb/proto;litepb";
 
 import "options.proto";
 
 // Implementation of uuid.UUID transfer
 message UUID {
   // Value of UUID
-  bytes value = 1 [(proto.array_fixed_size) = 16];
+  bytes value = 1 [(litepb.array_fixed_size) = 16];
 }

@@ -1,7 +1,7 @@
 {{- define "field_unmarshal_map_nested" -}}
     {{- $c := . -}}
     {{ with .type -}}
-        {{- /*gotype: github.com/e-tape/litepb/pkg/plugin.Message_Field_Type*/ -}}
+        {{- /*gotype: github.com/e-tape/litepb/proto.Message_Field_Type*/ -}}
         {{ if eq .GetInProto.String "UINT64" -}}
             case 0:
             {{ template "field_unmarshal_uint64" $c }}

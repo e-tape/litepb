@@ -13,14 +13,11 @@
     }}
     if len(data) < index + {{ $valueLength }} { return {{ .errorUnexpectedEndValue }} }
 
-    if a.{{ .field.GetName }} == nil { // TODO rathil or cap(a.{{ .field.GetName }}) == 0 ???
-    a.{{ .field.GetName }} = make({{ template "field_type_name" kv "type" .type }}, 1)
-    }
-
     var mapKey {{ template "field_type_name" kv "type" .type.GetMap.GetKey }}
     var mapValue {{ template "field_type_name" kv "type" .type.GetMap.GetValue }}
+    mapEnd := index + {{ $valueLength }}
 
-    for kv := 0; kv < 2; kv++ {
+    for index < mapEnd {
     {{ template "field_unmarshal_int" kv
     "type" .type
     "endName" (printf "endKV%d" .number)
@@ -65,6 +62,15 @@
     }
     }
     }
+    if a.{{ .field.GetName }} == nil {
+    {{ if is_msg .type.GetMap.GetValue -}}
+        a.{{ .field.GetName }} = {{- template "field_type_path" .type -}}
+        {{ template "func_name_map_new" .type.GetMap.GetValue.GetReflect -}}
+        [{{ template "field_type_name" kv "type" .type.GetMap.GetKey }}](1)
+    {{ else -}}
+        a.{{ .field.GetName }} = make({{ template "field_type_name" kv "type" .type }}, 1)
+    {{ end -}}
+    }
     a.{{ .field.GetName }}[{{ get_result $paramKey }}] = {{ get_result $paramValue }}
-    // index += {{ $valueLength }} - TODO rathil: so we can skip the unknown fields ???
+    // TODO rathil what to do if the value or key never arrived????
 {{- end -}}

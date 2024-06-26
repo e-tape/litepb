@@ -1,0 +1,12 @@
+{{- define "list_new" -}}
+    {{- /*gotype: github.com/e-tape/litepb/proto.Message*/ -}}
+    {{ if is_generate "NEW" -}}
+        func {{ template "func_name_list_new" . }}(cap int) *{{ template "list_type_name" . }} {
+        {{ if .GetMemPoolList -}}
+            if value, ok := {{ template "pool_name_list" . }}.Get().(*{{ template "list_type_name" . }}); ok { return value }
+        {{ end -}}
+        value := make({{ template "list_type_name" . }}, 0, cap)
+        return &value
+        }
+    {{ end -}}
+{{- end -}}

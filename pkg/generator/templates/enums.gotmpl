@@ -1,7 +1,7 @@
 {{- define "enums" -}}
     {{ if is_generate "ENUM" -}}
         {{- range . -}}
-            {{- /*gotype: github.com/e-tape/litepb/pkg/plugin.Enum*/ -}}
+            {{- /*gotype: github.com/e-tape/litepb/proto.Enum*/ -}}
             {{ range (lines .GetComments) -}}
                 //{{ . }}
             {{- end }}

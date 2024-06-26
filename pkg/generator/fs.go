@@ -7,10 +7,10 @@ import (
 	"path"
 	"time"
 
-	"github.com/e-tape/litepb/pkg/plugin"
+	litepb "github.com/e-tape/litepb/proto"
 )
 
-func TemplateFs(templates []*plugin.Template) fs.FS {
+func TemplateFs(templates []*litepb.Template) fs.FS {
 	return &templateFs{
 		templates: templates,
 		native:    nativeTemplateFiles,
@@ -19,7 +19,7 @@ func TemplateFs(templates []*plugin.Template) fs.FS {
 
 type (
 	templateFs struct {
-		templates []*plugin.Template
+		templates []*litepb.Template
 		native    fs.FS
 	}
 	templateFile struct {

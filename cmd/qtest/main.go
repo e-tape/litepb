@@ -8,11 +8,11 @@ import (
 	"strings"
 	"time"
 
-	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/types/pluginpb"
-
+	"github.com/e-tape/litepb/config"
 	"github.com/e-tape/litepb/pkg/generator"
 	"github.com/e-tape/litepb/pkg/stderr"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/pluginpb"
 )
 
 func main() {
@@ -31,12 +31,16 @@ func run() error {
 	if err = proto.Unmarshal(in, request); err != nil {
 		return err
 	}
+	var cfg config.Config
+	if err = config.Parse(&cfg, request.Parameter); err != nil {
+		return err
+	}
 
 	stderr.Logf("COMPILER: %s", request.GetCompilerVersion())
 	stderr.Logf("FILES TO GENERATE: %s", strings.Join(request.GetFileToGenerate(), ", "))
 
 	start := time.Now()
-	response := generator.NewGenerator(request).Generate()
+	response := generator.NewGenerator(cfg, request).Generate()
 	stderr.Logf("GENERATED IN: %s", time.Since(start))
 
 	//generator.GoFmt(response)

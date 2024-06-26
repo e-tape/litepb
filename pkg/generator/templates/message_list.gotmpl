@@ -1,0 +1,6 @@
+{{- define "message_list" -}}
+    {{- /*gotype: github.com/e-tape/litepb/proto.Message*/ -}}
+    {{ if is_generate "LIST" -}}
+        {{ template "list_type_name" . }} []*{{ .GetName }}
+    {{ end -}}
+{{- end -}}

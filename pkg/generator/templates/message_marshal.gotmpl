@@ -1,6 +1,6 @@
 {{- define "message_marshal" -}}
     {{ if is_generate "MARSHAL" -}}
-        {{- /*gotype: github.com/e-tape/litepb/pkg/plugin.Message*/ -}}
+        {{- /*gotype: github.com/e-tape/litepb/proto.Message*/ -}}
         func (a *{{ .GetName }})Marshal() ([]byte, error) {
         return nil, nil
         }

@@ -1,21 +1,22 @@
 {{- define "field_type_name" -}}
     {{- $c := . -}}
     {{ with .type -}}
-        {{- /*gotype: github.com/e-tape/litepb/pkg/plugin.Message_Field_Type*/ -}}
+        {{- /*gotype: github.com/e-tape/litepb/proto.Message_Field_Type*/ -}}
         {{- if is_map . -}}
             {{- if and (is_msg .GetMap.GetValue) (not (or ($c.i_name) ($c.i_name_get))) -}}
                 Map{{- template "field_type_name" kv "type" .GetMap.GetValue "no_pointer" true -}}
                 [{{ template "field_type_name" kv "type" .GetMap.GetKey }}]
             {{- else -}}
-                map[{{ template "field_type_name" kv "type" .GetMap.GetKey "i_name" $c.i_name "i_name_get" $c.i_name_get }}]
-                {{- template "field_type_name" kv "type" .GetMap.GetValue "i_name" $c.i_name "i_name_get" $c.i_name_get }}
+                map[{{ template "field_type_name" kv "type" .GetMap.GetKey "i_name" $c.i_name "i_name_get" $c.i_name_get "no_pointer" $c.no_pointer }}]
+                {{- template "field_type_name" kv "type" .GetMap.GetValue "i_name" $c.i_name "i_name_get" $c.i_name_get "no_pointer" $c.no_pointer }}
             {{- end -}}
         {{- else if is_msg . -}}
             {{- if .GetRepeated -}}
-                {{- if or ($c.i_name) ($c.i_name_get) -}}
+                {{- if not $c.list -}}
                     []
-                {{- else -}}
-                    List
+                    {{- if not (or ($c.i_name) ($c.i_name_get)) -}}
+                        *
+                    {{- end -}}
                 {{- end -}}
             {{- else if not (or ($c.i_name) ($c.i_name_get) ($c.no_pointer)) -}}
                 *
@@ -26,7 +27,11 @@
             {{- if or ($c.i_name) ($c.i_name_get) -}}
                 I
             {{- end -}}
-            {{- .GetReflect.GetName -}}
+            {{- if and .GetRepeated $c.list -}}
+                {{ template "list_type_name" .GetReflect }}
+            {{- else -}}
+                {{- .GetReflect.GetName -}}
+            {{- end -}}
             {{- if $c.i_name_get -}}
                 Get
             {{- end -}}

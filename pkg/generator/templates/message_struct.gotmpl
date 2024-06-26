@@ -1,6 +1,6 @@
 {{- define "message_struct" -}}
+    {{- /*gotype: github.com/e-tape/litepb/proto.Message*/ -}}
     {{ if is_generate "STRUCT" -}}
-        {{- /*gotype: github.com/e-tape/litepb/pkg/plugin.Message*/ -}}
         {{- $msg := . -}}
         {{ range (lines .GetComments) -}}
             //{{ . }}
@@ -12,6 +12,9 @@
                     //{{ . }}
                 {{ end -}}
                 {{ .GetName }} {{ template "field_type_name" kv "type" .GetType }} {{ template "field_tags" . }}
+                {{ if and (.GetType.Repeated) (is_msg .GetType) -}}
+                    p{{ .GetName }} *{{ template "field_type_name" kv "type" .GetType "list" true }} ``
+                {{ end -}}
             {{ end -}}
             {{ with .GetOneof -}}
                 {{ range (lines .GetComments) -}}
@@ -21,7 +24,5 @@
             {{ end -}}
         {{ end -}}
         }
-        List{{ .GetName }} []*{{ .GetName }}
-        Map{{ .GetName }}[K comparable] map[K]*{{ .GetName }}
     {{ end -}}
 {{- end -}}

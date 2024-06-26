@@ -1,7 +1,7 @@
 {{- define "message_interface_name" -}}
     {{- $c := . -}}
     {{ with .msg -}}
-        {{- /*gotype: github.com/e-tape/litepb/pkg/plugin.Message*/ -}}
+        {{- /*gotype: github.com/e-tape/litepb/proto.Message*/ -}}
         {{- if $c.get -}}
             I{{ .GetName }}Get
         {{- else if $c.set -}}

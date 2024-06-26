@@ -1,9 +1,9 @@
 {{- define "message_new" -}}
+    {{- /*gotype: github.com/e-tape/litepb/proto.Message*/ -}}
     {{ if is_generate "NEW" -}}
-        {{- /*gotype: github.com/e-tape/litepb/pkg/plugin.Message*/ -}}
         func {{ template "func_name_message_new" . }}() *{{ .GetName }} {
-        {{- if .GetWithMemPool -}}
-            return pool{{ .GetName }}.Get().(*{{ .GetName }})
+        {{- if .GetMemPoolMessage -}}
+            return {{ template "pool_name_message" . }}.Get().(*{{ .GetName }})
         {{- else -}}
             return {{ template "message_constructor" . }}
         {{- end -}}

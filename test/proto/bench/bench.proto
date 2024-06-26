@@ -4,6 +4,9 @@ package bench;
 
 option go_package = "/bench";
 
+import "vendor/validate/validate.proto";
+//import "proto/options.proto";
+
 message Bench {
   uint64 request_id = 1;
   uint64 uint64 = 4;
@@ -19,7 +22,7 @@ message Bench {
   map<fixed32, string> map = 209;
   map<sint32, InnerForMap> smap = 210;
   repeated InnerForMap iarr = 211;
-  InnerForMap ifm = 212;
+  InnerForMap ifm = 220;
 
   repeated fixed32 r_fixed32 = 299;
   fixed32 fixed32 = 300;
@@ -37,7 +40,11 @@ message Bench {
 
   message Empty{}
   message InnerForMap {
-    uint64 uint64 = 1;
-    uint32 uint32 = 2;
+    uint64 uint64 = 1 [(validate.rules).uint64.gte = 1];
+    uint32 uint32 = 2 [(validate.rules).uint32.gte = 1];
+  }
+  message NoPool {
+//    option (litepb.mem_pool) = Inactive;
+    string string = 1;
   }
 }

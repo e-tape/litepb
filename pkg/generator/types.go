@@ -3,7 +3,8 @@ package generator
 import (
 	"regexp"
 
-	"github.com/e-tape/litepb/pkg/plugin"
+	"github.com/e-tape/litepb/config"
+	litepb "github.com/e-tape/litepb/proto"
 	"google.golang.org/protobuf/types/descriptorpb"
 	"google.golang.org/protobuf/types/pluginpb"
 )
@@ -11,33 +12,20 @@ import (
 // Generator of protobuf bindings
 type (
 	Generator struct {
+		cfg        config.Config
 		request    *pluginpb.CodeGeneratorRequest
 		allFiles   map[Path]*generatorFile
-		allTypes   map[Package]*plugin.Message_Field_Type_Reflect
-		mapTypes   map[Package]*plugin.Message_Field_Type_Map
+		allTypes   map[Package]*litepb.Message_Field_Type_Reflect
+		mapTypes   map[Package]*litepb.Message_Field_Type_Map
 		aliasRegex *regexp.Regexp
 	}
 	Path    = string
 	Package = string
-	//Type    struct {
-	//	Name       string
-	//	Dependency *plugin.Dependency
-	//}
 	// generatorFile of protobuf bindings for single file
 	generatorFile struct {
 		*Generator
-		proto          *plugin.File
-		messages       []*plugin.Message
+		proto          *litepb.File
+		messages       []*litepb.Message
 		sourceCodeInfo *descriptorpb.SourceCodeInfo
 	}
 )
-
-//func (a Type) reflect(alias string) *plugin.Message_Field_Type_Reflect {
-//	reflect := &plugin.Message_Field_Type_Reflect{
-//		Name: a.Name,
-//	}
-//	if a.Alias != alias {
-//		reflect.Path = a.Alias
-//	}
-//	return reflect
-//}

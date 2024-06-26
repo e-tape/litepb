@@ -1,23 +1,27 @@
 package generator
 
 import (
-	"path"
 	"regexp"
 	"strings"
 
-	"github.com/e-tape/litepb/pkg/plugin"
+	"github.com/e-tape/litepb/config"
+	litepb "github.com/e-tape/litepb/proto"
 	"google.golang.org/protobuf/types/pluginpb"
 
 	"github.com/e-tape/litepb/pkg/stderr"
 )
 
 // NewGenerator creates new generator
-func NewGenerator(request *pluginpb.CodeGeneratorRequest) *Generator {
+func NewGenerator(
+	cfg config.Config,
+	request *pluginpb.CodeGeneratorRequest,
+) *Generator {
 	return &Generator{
+		cfg:        cfg,
 		request:    request,
 		allFiles:   make(map[Path]*generatorFile),
-		allTypes:   make(map[Package]*plugin.Message_Field_Type_Reflect),
-		mapTypes:   make(map[Package]*plugin.Message_Field_Type_Map),
+		allTypes:   make(map[Package]*litepb.Message_Field_Type_Reflect),
+		mapTypes:   make(map[Package]*litepb.Message_Field_Type_Map),
 		aliasRegex: regexp.MustCompile(`(?mi)[^a-z0-9]`),
 	}
 }
@@ -26,7 +30,7 @@ func NewGenerator(request *pluginpb.CodeGeneratorRequest) *Generator {
 func (a *Generator) Generate() *pluginpb.CodeGeneratorResponse {
 	codeFiles := make([]*pluginpb.CodeGeneratorResponse_File, 0, len(a.request.GetProtoFile()))
 
-	pluginData := &plugin.Plugin{}
+	pluginData := &litepb.Plugin{}
 	for _, protoFile := range a.request.ProtoFile {
 		stderr.Logf("FILE START")
 		stderr.Logf("\tNAME: %s", protoFile.GetName())
@@ -67,44 +71,40 @@ func (a *Generator) Generate() *pluginpb.CodeGeneratorResponse {
 
 		// TODO rathil del!!!
 		//for _, msg := range fg.proto.Messages {
-		//	msg.WithMemPool = false
+		//	msg.MemPoolMessage = false
 		//}
 
 		//fg.proto.Imports = fg.generateImports(protoFile.GetDependency())
 
-		fg.proto.Generates = []plugin.File_Generate{
-			plugin.File_STRUCT,
-			plugin.File_INTERFACE,
-			plugin.File_POOL,
-			plugin.File_ENUM,
-			plugin.File_NEW,
-			plugin.File_RETURN_TO_POOL,
-			plugin.File_PROTO_MESSAGE,
-			plugin.File_CONVERT_TO,
-			plugin.File_STRING,
-			plugin.File_RESET,
-			plugin.File_CLONE,
-			plugin.File_GETTER,
-			plugin.File_SETTER,
-			plugin.File_SIZE,
+		fg.proto.Generates = []litepb.File_Generate{
+			litepb.File_STRUCT,
+			litepb.File_INTERFACE,
+			litepb.File_POOL,
+			litepb.File_ENUM,
+			litepb.File_LIST,
+			litepb.File_MAP,
+			litepb.File_NEW,
+			litepb.File_RETURN_TO_POOL,
+			litepb.File_PROTO_MESSAGE,
+			litepb.File_CONVERT_TO,
+			litepb.File_STRING,
+			litepb.File_RESET,
+			litepb.File_CLONE,
+			litepb.File_GETTER,
+			litepb.File_SETTER,
+			litepb.File_SIZE,
 		}
 
 		marshal := *fg.proto // TODO rathil refactoring to litepb clone
-		marshal.Name = strings.ToLower(strings.TrimSuffix(
-			path.Base(protoFile.GetName()),
-			path.Ext(protoFile.GetName()),
-		)) + "_marshal.lpb.go"
-		marshal.Generates = []plugin.File_Generate{
-			plugin.File_MARSHAL,
+		marshal.Name = strings.ReplaceAll(marshal.Name, ".lpb.go", "_marshal.lpb.go")
+		marshal.Generates = []litepb.File_Generate{
+			litepb.File_MARSHAL,
 		}
 
 		unmarshal := *fg.proto // TODO rathil refactoring to litepb clone
-		unmarshal.Name = strings.ToLower(strings.TrimSuffix(
-			path.Base(protoFile.GetName()),
-			path.Ext(protoFile.GetName()),
-		)) + "_unmarshal.lpb.go"
-		unmarshal.Generates = []plugin.File_Generate{
-			plugin.File_UNMARSHAL,
+		unmarshal.Name = strings.ReplaceAll(marshal.Name, ".lpb.go", "_unmarshal.lpb.go")
+		unmarshal.Generates = []litepb.File_Generate{
+			litepb.File_UNMARSHAL,
 		}
 
 		pluginData.Files = append(pluginData.Files, fg.proto, &marshal, &unmarshal)
@@ -129,14 +129,10 @@ func (a *Generator) Generate() *pluginpb.CodeGeneratorResponse {
 			stderr.Failf("generate go file for proto [%s]: %s", file.GetName(), err)
 		}
 
-		filePath := path.Join(
-			file.GetPackage().GetDependency().GetPath(),
-			file.GetName(),
-		)
-		stderr.Logf("\tGO FILE: %s", filePath)
+		stderr.Logf("\tGO FILE: %s", file.GetName())
 
 		codeFiles = append(codeFiles, &pluginpb.CodeGeneratorResponse_File{
-			Name:    &filePath,
+			Name:    &file.Name,
 			Content: &content,
 		})
 

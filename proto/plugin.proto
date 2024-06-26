@@ -1,8 +1,8 @@
 syntax = "proto3";
 
-package plugin;
+package litepb;
 
-option go_package = "github.com/e-tape/litepb/pkg/plugin";
+option go_package = "github.com/e-tape/litepb/proto;litepb";
 
 message Plugin {
   repeated File files = 1;
@@ -35,19 +35,21 @@ message File {
     INTERFACE = 1;
     POOL = 2;
     ENUM = 3;
+    LIST = 4;
+    MAP = 5;
 
-    NEW = 10;
-    RETURN_TO_POOL = 11;
-    CONVERT_TO = 12;
-    PROTO_MESSAGE = 13;
-    STRING = 14;
-    RESET = 15;
-    CLONE = 16;
-    GETTER = 17;
-    SETTER = 18;
-    MARSHAL = 19;
-    UNMARSHAL = 20;
-    SIZE = 21;
+    NEW = 100;
+    RETURN_TO_POOL = 101;
+    CONVERT_TO = 102;
+    PROTO_MESSAGE = 103;
+    STRING = 104;
+    RESET = 105;
+    CLONE = 106;
+    GETTER = 107;
+    SETTER = 108;
+    MARSHAL = 109;
+    UNMARSHAL = 110;
+    SIZE = 111;
   }
 }
 
@@ -81,7 +83,9 @@ message Message {
   string comments = 2;
   repeated Property properties = 3;
   bytes options = 4;
-  bool with_mem_pool = 5;
+  bool mem_pool_message = 5;
+  bool mem_pool_list = 6;
+  bool mem_pool_map = 7;
 
   message Property {
     oneof type {
@@ -143,6 +147,6 @@ message Message {
     bytes options = 3;
     repeated Field fields = 4;
     map<string, string> tags = 5;
-    bool with_mem_pool = 6;
+    bool mem_pool = 6;
   }
 }

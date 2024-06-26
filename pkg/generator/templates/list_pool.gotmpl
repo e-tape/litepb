@@ -1,0 +1,8 @@
+{{- define "list_pool" -}}
+    {{ if is_generate "POOL" -}}
+        {{- /*gotype: github.com/e-tape/litepb/proto.Message*/ -}}
+        {{ if .GetMemPoolList -}}
+            {{ template "pool_name_list" . }} = &{{ import "sync" }}.Pool{}
+        {{ end -}}
+    {{ end -}}
+{{- end -}}

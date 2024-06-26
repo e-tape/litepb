@@ -3,11 +3,14 @@ package generator
 import (
 	"bytes"
 	"cmp"
+	"regexp"
 	"slices"
 	"strings"
 
-	"github.com/e-tape/litepb/pkg/plugin"
+	litepb "github.com/e-tape/litepb/proto"
 )
+
+var aliasRegex = regexp.MustCompile("(?mi)[^a-z0-9_]")
 
 func addImport(path string, alias ...string) string {
 	if path == "" || path == tmpl.proto.GetPackage().GetDependency().GetPath() {
@@ -26,12 +29,12 @@ func addImport(path string, alias ...string) string {
 	if len(alias) > 0 {
 		impAlias = alias[0]
 	} else {
-		impAlias = strings.ReplaceAll(path, "/", "_")
+		impAlias = aliasRegex.ReplaceAllString(path, "_")
 	}
 	if path == impAlias {
 		impAlias = ""
 	}
-	tmpl.proto.Imports = append(tmpl.proto.Imports, &plugin.Dependency{
+	tmpl.proto.Imports = append(tmpl.proto.Imports, &litepb.Dependency{
 		Path:  path,
 		Alias: impAlias,
 	})
@@ -53,12 +56,12 @@ func kv(values ...any) map[any]any {
 	return result
 }
 
-func isMsg(fieldType *plugin.Message_Field_Type) bool {
-	return fieldType.GetInProto() == plugin.Message_Field_Type_MESSAGE_OR_MAP && fieldType.GetMap() == nil
+func isMsg(fieldType *litepb.Message_Field_Type) bool {
+	return fieldType.GetInProto() == litepb.Message_Field_Type_MESSAGE_OR_MAP && fieldType.GetMap() == nil
 }
 
-func isMap(fieldType *plugin.Message_Field_Type) bool {
-	return fieldType.GetInProto() == plugin.Message_Field_Type_MESSAGE_OR_MAP && fieldType.GetMap() != nil
+func isMap(fieldType *litepb.Message_Field_Type) bool {
+	return fieldType.GetInProto() == litepb.Message_Field_Type_MESSAGE_OR_MAP && fieldType.GetMap() != nil
 }
 
 func isGenerate(generate string) bool {
@@ -103,11 +106,11 @@ func sort(items any) any {
 	case []string:
 		slices.SortFunc(tItems, cmp.Compare[string])
 		return tItems
-	case []*plugin.Dependency:
-		slices.SortFunc(tItems, func(a, b *plugin.Dependency) int {
+	case []*litepb.Dependency:
+		slices.SortFunc(tItems, func(a, b *litepb.Dependency) int {
 			return cmp.Compare(a.Alias, b.Alias)
 		})
-		return slices.CompactFunc(tItems, func(a, b *plugin.Dependency) bool {
+		return slices.CompactFunc(tItems, func(a, b *litepb.Dependency) bool {
 			if a.Alias == "" && b.Alias == "" {
 				return a.Path == b.Path
 			}

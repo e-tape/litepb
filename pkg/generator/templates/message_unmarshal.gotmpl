@@ -1,6 +1,6 @@
 {{- define "message_unmarshal" -}}
     {{ if is_generate "UNMARSHAL" -}}
-        {{- /*gotype: github.com/e-tape/litepb/pkg/plugin.Message*/ -}}
+        {{- /*gotype: github.com/e-tape/litepb/proto.Message*/ -}}
         {{- $msg := . -}}
         func (a *{{ .GetName }}){{ template "func_name_message_unmarshal" }}(data []byte) error {
         {{ if gt (len .GetProperties) 0 -}}
@@ -21,7 +21,7 @@
             switch fieldNum >> 3 {
             {{ range .GetProperties -}}
                 {{ with .GetField -}}
-                    {{- /*gotype: github.com/e-tape/litepb/pkg/plugin.Message_Field*/ -}}
+                    {{- /*gotype: github.com/e-tape/litepb/proto.Message_Field*/ -}}
                     {{- $field := . -}}
                     case {{ .GetNumber }}:
                     switch fieldNum & 7 {
@@ -42,6 +42,13 @@
                             {{ . -}}
                             {{ if get_result $param -}}
                                 {{ if $field.GetType.GetRepeated -}}
+                                    {{ if is_msg $field.GetType -}}
+                                        if a.{{ $field.GetName }} == nil {
+                                        a.p{{ $field.GetName }} = {{- template "field_type_path" $field.GetType -}}
+                                        {{ template "func_name_list_new" $field.GetType.GetReflect -}}(1)
+                                        a.{{ $field.GetName }} = *a.p{{ $field.GetName }}
+                                        }
+                                    {{ end -}}
                                     a.{{ $field.GetName }} = append(a.{{ $field.GetName }}, {{ get_result $param }})
                                 {{ else -}}
                                     a.{{ $field.GetName }} = {{ get_result $param }}
@@ -55,11 +62,10 @@
                     }
                 {{ end -}}
                 {{ with .GetOneof -}}
-                    {{- /*gotype: github.com/e-tape/litepb/pkg/plugin.Message_OneOf*/ -}}
+                    {{- /*gotype: github.com/e-tape/litepb/proto.Message_OneOf*/ -}}
                     {{- $oneof := . -}}
-                    // TODO oneof
                     {{ range .GetFields -}}
-                        {{- /*gotype: github.com/e-tape/litepb/pkg/plugin.Message_Field*/ -}}
+                        {{- /*gotype: github.com/e-tape/litepb/proto.Message_Field*/ -}}
                         {{- $field := . -}}
                         case {{ .GetNumber }}:
                         switch fieldNum & 7 {

@@ -8,14 +8,14 @@ import (
 	"io/fs"
 	"text/template"
 
-	"github.com/e-tape/litepb/pkg/plugin"
+	litepb "github.com/e-tape/litepb/proto"
 )
 
 const mainTemplate = "file"
 
 type Template struct {
 	tmpl  *template.Template
-	proto *plugin.File
+	proto *litepb.File
 }
 
 var (
@@ -26,7 +26,7 @@ var (
 
 func (a *Template) Execute(
 	tmplFs fs.FS,
-	proto *plugin.File,
+	proto *litepb.File,
 ) (string, error) {
 	// TODO rathil once
 	tmplFile, err := template.New("").

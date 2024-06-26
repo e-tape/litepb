@@ -1,5 +1,5 @@
 {{- define "oneof_types" -}}
-    {{- /*gotype: github.com/e-tape/litepb/pkg/plugin.Message*/ -}}
+    {{- /*gotype: github.com/e-tape/litepb/proto.Message*/ -}}
     {{- $msg := . -}}
     {{ range .GetProperties -}}
         {{ with .GetOneof -}}

@@ -1,0 +1,6 @@
+{{- define "message_map" -}}
+    {{- /*gotype: github.com/e-tape/litepb/proto.Message*/ -}}
+    {{ if is_generate "MAP" -}}
+        {{ template "map_type_name" . }}[K comparable] map[K]*{{ .GetName }}
+    {{ end -}}
+{{- end -}}

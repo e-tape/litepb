@@ -3,43 +3,45 @@ package main
 import (
 	"testing"
 
+	gogo "bench/proto/gogo/bench"
+	google "bench/proto/google/bench"
+	litepb "bench/proto/litepb"
 	"google.golang.org/protobuf/proto"
-	gogo "test/bench/proto/gogo/bench"
-	google "test/bench/proto/google/bench"
-	litepb "test/bench/proto/litepb/bench"
 )
+
+// RUN `make test-compile-for-bench` for init test proto
 
 var decodeData []byte
 var decodeModel = &google.Bench{
-	Uint64: 2065657434543,
-	Uint32: 156547,
-	//String_: "123456",
-	Smap: map[int32]*google.Bench_InnerForMap{
-		1: {
-			Uint64: 1,
-			Uint32: 20,
-		},
-		2: {
-			Uint64: 1000,
-			Uint32: 2000,
-		},
-		9: {
-			Uint64: 99,
-			Uint32: 99,
-		},
-		14: {
-			Uint64: 14,
-			Uint32: 14,
-		},
-		72: {
-			Uint64: 72,
-			Uint32: 72,
-		},
-		602: {
-			Uint64: 602,
-			Uint32: 602,
-		},
-	},
+	Uint64:  2065657434543,
+	Uint32:  156547,
+	String_: "123456",
+	//Smap: map[int32]*google.Bench_InnerForMap{
+	//	1: {
+	//		Uint64: 1,
+	//		Uint32: 20,
+	//	},
+	//	2: {
+	//		Uint64: 1000,
+	//		Uint32: 2000,
+	//	},
+	//	9: {
+	//		Uint64: 99,
+	//		Uint32: 99,
+	//	},
+	//	14: {
+	//		Uint64: 14,
+	//		Uint32: 14,
+	//	},
+	//	72: {
+	//		Uint64: 72,
+	//		Uint32: 72,
+	//	},
+	//	602: {
+	//		Uint64: 602,
+	//		Uint32: 602,
+	//	},
+	//},
 	Iarr: []*google.Bench_InnerForMap{
 		{
 			Uint64: 1001,
@@ -54,6 +56,7 @@ var decodeModel = &google.Bench{
 			Uint32: 62002,
 		},
 	},
+	Fixed32: 32,
 }
 
 func init() {
@@ -74,7 +77,8 @@ func BenchmarkSimpleGoogle(b *testing.B) {
 			decodeModel.Uint64 != model.Uint64 ||
 			decodeModel.String_ != model.String_ ||
 			len(decodeModel.Smap) != len(model.Smap) ||
-			len(decodeModel.Iarr) != len(model.Iarr) {
+			len(decodeModel.Iarr) != len(model.Iarr) ||
+			decodeModel.Fixed32 != model.Fixed32 {
 			panic(`eq`)
 		}
 	}
@@ -90,7 +94,8 @@ func BenchmarkSimpleGogo(b *testing.B) {
 			decodeModel.Uint64 != model.Uint64 ||
 			decodeModel.String_ != model.String_ ||
 			len(decodeModel.Smap) != len(model.Smap) ||
-			len(decodeModel.Iarr) != len(model.Iarr) {
+			len(decodeModel.Iarr) != len(model.Iarr) ||
+			decodeModel.Fixed32 != model.Fixed32 {
 			panic(`eq`)
 		}
 	}
@@ -106,7 +111,8 @@ func BenchmarkSimpleLitePb(b *testing.B) {
 			decodeModel.Uint64 != model.Uint64 ||
 			decodeModel.String_ != model.String_ ||
 			len(decodeModel.Smap) != len(model.Smap) ||
-			len(decodeModel.Iarr) != len(model.Iarr) {
+			len(decodeModel.Iarr) != len(model.Iarr) ||
+			decodeModel.Fixed32 != model.Fixed32 {
 			panic(`eq`)
 		}
 	}
@@ -122,7 +128,8 @@ func BenchmarkSimpleLitePbReturnToPool(b *testing.B) {
 			decodeModel.Uint64 != model.Uint64 ||
 			decodeModel.String_ != model.String_ ||
 			len(decodeModel.Smap) != len(model.Smap) ||
-			len(decodeModel.Iarr) != len(model.Iarr) {
+			len(decodeModel.Iarr) != len(model.Iarr) ||
+			decodeModel.Fixed32 != model.Fixed32 {
 			panic(`eq`)
 		}
 		model.ReturnToPool()
@@ -140,7 +147,8 @@ func BenchmarkParallelGoogle(b *testing.B) {
 				decodeModel.Uint64 != model.Uint64 ||
 				decodeModel.String_ != model.String_ ||
 				len(decodeModel.Smap) != len(model.Smap) ||
-				len(decodeModel.Iarr) != len(model.Iarr) {
+				len(decodeModel.Iarr) != len(model.Iarr) ||
+				decodeModel.Fixed32 != model.Fixed32 {
 				panic(`eq`)
 			}
 		}
@@ -158,7 +166,8 @@ func BenchmarkParallelGogo(b *testing.B) {
 				decodeModel.Uint64 != model.Uint64 ||
 				decodeModel.String_ != model.String_ ||
 				len(decodeModel.Smap) != len(model.Smap) ||
-				len(decodeModel.Iarr) != len(model.Iarr) {
+				len(decodeModel.Iarr) != len(model.Iarr) ||
+				decodeModel.Fixed32 != model.Fixed32 {
 				panic(`eq`)
 			}
 		}
@@ -176,7 +185,8 @@ func BenchmarkParallelLitePb(b *testing.B) {
 				decodeModel.Uint64 != model.Uint64 ||
 				decodeModel.String_ != model.String_ ||
 				len(decodeModel.Smap) != len(model.Smap) ||
-				len(decodeModel.Iarr) != len(model.Iarr) {
+				len(decodeModel.Iarr) != len(model.Iarr) ||
+				decodeModel.Fixed32 != model.Fixed32 {
 				panic(`eq`)
 			}
 		}
@@ -194,9 +204,38 @@ func BenchmarkParallelLitePbReturnToPool(b *testing.B) {
 				decodeModel.Uint64 != model.Uint64 ||
 				decodeModel.String_ != model.String_ ||
 				len(decodeModel.Smap) != len(model.Smap) ||
-				len(decodeModel.Iarr) != len(model.Iarr) {
+				len(decodeModel.Iarr) != len(model.Iarr) ||
+				decodeModel.Fixed32 != model.Fixed32 {
 				panic(`eq`)
 			}
+			model.ReturnToPool()
+		}
+	})
+}
+
+func BenchmarkParallelField(b *testing.B) {
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			model := litepb.NewBench()
+			model.Iarr = []*litepb.Bench_InnerForMap{
+				litepb.NewBench_InnerForMap(),
+				litepb.NewBench_InnerForMap(),
+				litepb.NewBench_InnerForMap(),
+			}
+			model.ReturnToPool()
+		}
+	})
+}
+
+func BenchmarkParallelSetter(b *testing.B) {
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			model := litepb.NewBench()
+			model.SetIarr([]litepb.IBench_InnerForMapGet{
+				litepb.NewBench_InnerForMap(),
+				litepb.NewBench_InnerForMap(),
+				litepb.NewBench_InnerForMap(),
+			})
 			model.ReturnToPool()
 		}
 	})

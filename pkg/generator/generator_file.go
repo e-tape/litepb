@@ -5,8 +5,8 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/e-tape/litepb/pkg/plugin"
 	"github.com/e-tape/litepb/pkg/stderr"
+	litepb "github.com/e-tape/litepb/proto"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 	"google.golang.org/protobuf/types/descriptorpb"
@@ -25,21 +25,26 @@ func (a *Generator) newFile(protoFile *descriptorpb.FileDescriptorProto) *genera
 		packageName = pathAlias
 	}
 	alias := a.aliasRegex.ReplaceAllString(packagePath, `_`)
+	name := strings.ToLower(strings.TrimSuffix(
+		path.Base(protoFile.GetName()),
+		path.Ext(protoFile.GetName()),
+	)) + ".lpb.go"
+	namePath := path.Dir(packagePath)
+	if a.cfg.SourceRelative {
+		namePath = path.Dir(protoFile.GetName())
+	}
 	return &generatorFile{
 		Generator: a,
-		proto: &plugin.File{
-			Package: &plugin.Package{
-				Dependency: &plugin.Dependency{
+		proto: &litepb.File{
+			Package: &litepb.Package{
+				Dependency: &litepb.Dependency{
 					Path:  packagePath,
 					Alias: alias,
 				},
 				Name: packageName,
 			},
-			Source: protoFile.GetName(),
-			Name: strings.ToLower(strings.TrimSuffix(
-				path.Base(protoFile.GetName()),
-				path.Ext(protoFile.GetName()),
-			)) + ".lpb.go",
+			Source:  protoFile.GetName(),
+			Name:    path.Join(namePath, name),
 			Options: protoFile.GetOptions().ProtoReflect().GetUnknown(),
 		},
 		sourceCodeInfo: protoFile.GetSourceCodeInfo(),
@@ -74,14 +79,14 @@ func (a *generatorFile) collectTypes(
 	names []string,
 ) {
 	for _, enum := range enums {
-		a.allTypes[a.generatePackage(packages, enum.GetName())] = &plugin.Message_Field_Type_Reflect{
+		a.allTypes[a.generatePackage(packages, enum.GetName())] = &litepb.Message_Field_Type_Reflect{
 			Name:       a.generateTypeName(names, enum.GetName()),
 			Dependency: a.proto.Package.Dependency,
 		}
 	}
 
 	for _, message := range messages {
-		a.allTypes[a.generatePackage(packages, message.GetName())] = &plugin.Message_Field_Type_Reflect{
+		a.allTypes[a.generatePackage(packages, message.GetName())] = &litepb.Message_Field_Type_Reflect{
 			Name:       a.generateTypeName(names, message.GetName()),
 			Dependency: a.proto.Package.Dependency,
 		}
@@ -100,13 +105,13 @@ func (a *generatorFile) collectMapTypes(
 ) {
 	for _, message := range messages {
 		if message.GetOptions().GetMapEntry() {
-			a.mapTypes[a.generatePackage(packages, message.GetName())] = &plugin.Message_Field_Type_Map{
-				Key: &plugin.Message_Field_Type{
-					InProto: plugin.Message_Field_Type_Proto(message.GetField()[0].GetType()),
+			a.mapTypes[a.generatePackage(packages, message.GetName())] = &litepb.Message_Field_Type_Map{
+				Key: &litepb.Message_Field_Type{
+					InProto: litepb.Message_Field_Type_Proto(message.GetField()[0].GetType()),
 					Reflect: a.generateReflect(message.GetField()[0], false),
 				},
-				Value: &plugin.Message_Field_Type{
-					InProto: plugin.Message_Field_Type_Proto(message.GetField()[1].GetType()),
+				Value: &litepb.Message_Field_Type{
+					InProto: litepb.Message_Field_Type_Proto(message.GetField()[1].GetType()),
 					Reflect: a.generateReflect(message.GetField()[1], false),
 				},
 			}
@@ -126,19 +131,19 @@ func (a *generatorFile) generateEnums(
 	messageSourceCodePath []int32,
 	enumSourceCodePath []int32,
 	names []string,
-) []*plugin.Enum {
-	result := make([]*plugin.Enum, 0, len(enums))
+) []*litepb.Enum {
+	result := make([]*litepb.Enum, 0, len(enums))
 	for enumIndex, enum := range enums {
-		values := make([]*plugin.Enum_Value, 0, len(enum.GetValue()))
+		values := make([]*litepb.Enum_Value, 0, len(enum.GetValue()))
 		for valueIndex, value := range enum.GetValue() {
-			values = append(values, &plugin.Enum_Value{
+			values = append(values, &litepb.Enum_Value{
 				Name:     value.GetName(),
 				Comments: a.findEnumValueComments(enumSourceCodePath, enumIndex, valueIndex),
 				Number:   value.GetNumber(),
 				Options:  value.GetOptions().ProtoReflect().GetUnknown(),
 			})
 		}
-		result = append(result, &plugin.Enum{
+		result = append(result, &litepb.Enum{
 			Name:         a.generateTypeName(names, enum.GetName()),
 			Comments:     a.findEnumComments(enumSourceCodePath, enumIndex),
 			ValuesPrefix: enum.GetName(),
@@ -173,36 +178,45 @@ func (a *generatorFile) generateMessages(
 			continue
 		}
 
-		msg := &plugin.Message{
-			Name:        a.generateTypeName(names, message.GetName()),
-			Comments:    a.findMessageComments(messageSourceCodePath, messageIndex),
-			Properties:  make([]*plugin.Message_Property, 0, len(message.GetField())),
-			Options:     message.GetOptions().ProtoReflect().GetUnknown(),
-			WithMemPool: len(message.GetField()) > 0, // TODO rathil add option to disable
+		msg := &litepb.Message{
+			Name:       a.generateTypeName(names, message.GetName()),
+			Comments:   a.findMessageComments(messageSourceCodePath, messageIndex),
+			Properties: make([]*litepb.Message_Property, 0, len(message.GetField())),
+			Options:    message.GetOptions().ProtoReflect().GetUnknown(),
+			//MemPoolMessage:     len(message.GetField()) > 0, // TODO rathil add option to disable
+			//MemPoolList: true,                        // TODO rathil from options
+			//MemPoolMap:  true,                        // TODO rathil from options
 		}
+		switch {
+		case a.cfg.MemPoolMessageAll == litepb.Activity_Inactive:
+			msg.MemPoolMessage = false
+		case a.cfg.MemPoolMessageAll == litepb.Activity_Active && len(message.GetField()) > 0:
+			msg.MemPoolMessage = true
+		}
+		switch {
+		case a.cfg.MemPoolListAll == litepb.Activity_Inactive:
+			msg.MemPoolList = false
+		case a.cfg.MemPoolListAll == litepb.Activity_Active && len(message.GetField()) > 0:
+			msg.MemPoolList = true
+		}
+		switch {
+		case a.cfg.MemPoolMapAll == litepb.Activity_Inactive:
+			msg.MemPoolMap = false
+		case a.cfg.MemPoolMapAll == litepb.Activity_Active && len(message.GetField()) > 0:
+			msg.MemPoolMap = true
+		}
+		// TODO rathil get option to active/inactive all MemPool
 		a.messages = append(a.messages, msg)
 
-		oneOfs := make([]*plugin.Message_OneOf, 0, len(message.GetOneofDecl()))
-		//for _, oneof := range message.GetOneofDecl() {
-		//	oneOfs = append(oneOfs, &plugin.Message_OneOf{
-		//		Name:     a.generateOneofName(oneof.GetName()),
-		//		Comments: "", // TODO rathil implement
-		//		Options:  oneof.GetOptions().ProtoReflect().GetUnknown(),
-		//		Fields:   make([]*plugin.Message_Field, 0, 1),
-		//		Tags: map[string]string{
-		//			"json": oneof.GetName(),
-		//		},
-		//		WithMemPool: true,
-		//	})
-		//}
+		oneOfs := make([]*litepb.Message_OneOf, 0, len(message.GetOneofDecl()))
 		for fieldIndex, field := range message.GetField() {
 			mapField, mapOk := a.mapTypes[field.GetTypeName()]
-			msgField := &plugin.Message_Field{
+			msgField := &litepb.Message_Field{
 				Number:   field.GetNumber(),
 				Name:     a.generateFieldName(msg, field.GetName()),
 				Comments: a.findMessageFieldComments(messageSourceCodePath, messageIndex, fieldIndex),
-				Type: &plugin.Message_Field_Type{
-					InProto:  plugin.Message_Field_Type_Proto(field.GetType()),
+				Type: &litepb.Message_Field_Type{
+					InProto:  litepb.Message_Field_Type_Proto(field.GetType()),
 					Reflect:  a.generateReflect(field, mapOk),
 					Repeated: !mapOk && field.GetLabel() == descriptorpb.FieldDescriptorProto_LABEL_REPEATED,
 					Map:      mapField,
@@ -213,30 +227,37 @@ func (a *generatorFile) generateMessages(
 					"json": field.GetJsonName(),
 				},
 			}
-			property := &plugin.Message_Property{}
+			property := &litepb.Message_Property{}
 			if field.OneofIndex != nil {
 				if len(oneOfs) <= int(field.GetOneofIndex()) {
-					oneof := message.GetOneofDecl()[field.GetOneofIndex()]
-					oneOfs = append(oneOfs, &plugin.Message_OneOf{
-						Name:     a.generateFieldName(msg, oneof.GetName()),
+					oneofDecl := message.GetOneofDecl()[field.GetOneofIndex()]
+					oneof := &litepb.Message_OneOf{
+						Name:     a.generateFieldName(msg, oneofDecl.GetName()),
 						Comments: "", // TODO rathil implement
-						Options:  oneof.GetOptions().ProtoReflect().GetUnknown(),
-						Fields:   make([]*plugin.Message_Field, 0, 1),
+						Options:  oneofDecl.GetOptions().ProtoReflect().GetUnknown(),
+						Fields:   make([]*litepb.Message_Field, 0, 1),
 						Tags: map[string]string{
-							"json": oneof.GetName(),
+							"json": oneofDecl.GetName(),
 						},
-						WithMemPool: true,
-					})
+					}
+					switch {
+					case a.cfg.MemPoolOneofAll == litepb.Activity_Inactive:
+						oneof.MemPool = false
+					case a.cfg.MemPoolOneofAll == litepb.Activity_Active:
+						oneof.MemPool = true
+					}
+					// TODO rathil get option to active/inactive MemPoolMessage
+					oneOfs = append(oneOfs, oneof)
 				}
 				oneOfs[field.GetOneofIndex()].Fields = append(oneOfs[field.GetOneofIndex()].Fields, msgField)
 				if len(oneOfs[field.GetOneofIndex()].Fields) > 1 {
 					continue
 				}
-				property.Type = &plugin.Message_Property_Oneof{
+				property.Type = &litepb.Message_Property_Oneof{
 					Oneof: oneOfs[field.GetOneofIndex()],
 				}
 			} else {
-				property.Type = &plugin.Message_Property_Field{
+				property.Type = &litepb.Message_Property_Field{
 					Field: msgField,
 				}
 			}
@@ -251,7 +272,7 @@ func (a *generatorFile) generateMessages(
 	}
 }
 
-func (a *generatorFile) generateFieldName(msg *plugin.Message, name string) string {
+func (a *generatorFile) generateFieldName(msg *litepb.Message, name string) string {
 	pName := strings.TrimLeft(name, "_")
 	prefix := strings.TrimSuffix(name, pName)
 	pName = strings.ReplaceAll(
@@ -275,11 +296,11 @@ func (a *generatorFile) generateFieldName(msg *plugin.Message, name string) stri
 	}
 	for _, p := range msg.Properties {
 		switch pt := p.Type.(type) {
-		case *plugin.Message_Property_Field:
+		case *litepb.Message_Property_Field:
 			if pt.Field.GetName() == pName {
 				pName += "_"
 			}
-		case *plugin.Message_Property_Oneof:
+		case *litepb.Message_Property_Oneof:
 			if pt.Oneof.GetName() == pName {
 				pName += "_"
 			}
@@ -291,33 +312,33 @@ func (a *generatorFile) generateFieldName(msg *plugin.Message, name string) stri
 func (a *generatorFile) generateReflect(
 	field *descriptorpb.FieldDescriptorProto,
 	mapOk bool,
-) *plugin.Message_Field_Type_Reflect {
+) *litepb.Message_Field_Type_Reflect {
 	if mapOk {
 		return nil
 	}
 	switch field.GetType() {
 	case descriptorpb.FieldDescriptorProto_TYPE_DOUBLE:
-		return &plugin.Message_Field_Type_Reflect{Name: "float64"}
+		return &litepb.Message_Field_Type_Reflect{Name: "float64"}
 	case descriptorpb.FieldDescriptorProto_TYPE_FLOAT:
-		return &plugin.Message_Field_Type_Reflect{Name: "float32"}
+		return &litepb.Message_Field_Type_Reflect{Name: "float32"}
 	case descriptorpb.FieldDescriptorProto_TYPE_INT64,
 		descriptorpb.FieldDescriptorProto_TYPE_SFIXED64,
 		descriptorpb.FieldDescriptorProto_TYPE_SINT64:
-		return &plugin.Message_Field_Type_Reflect{Name: "int64"}
+		return &litepb.Message_Field_Type_Reflect{Name: "int64"}
 	case descriptorpb.FieldDescriptorProto_TYPE_UINT64,
 		descriptorpb.FieldDescriptorProto_TYPE_FIXED64:
-		return &plugin.Message_Field_Type_Reflect{Name: "uint64"}
+		return &litepb.Message_Field_Type_Reflect{Name: "uint64"}
 	case descriptorpb.FieldDescriptorProto_TYPE_INT32,
 		descriptorpb.FieldDescriptorProto_TYPE_SFIXED32,
 		descriptorpb.FieldDescriptorProto_TYPE_SINT32:
-		return &plugin.Message_Field_Type_Reflect{Name: "int32"}
+		return &litepb.Message_Field_Type_Reflect{Name: "int32"}
 	case descriptorpb.FieldDescriptorProto_TYPE_UINT32,
 		descriptorpb.FieldDescriptorProto_TYPE_FIXED32:
-		return &plugin.Message_Field_Type_Reflect{Name: "uint32"}
+		return &litepb.Message_Field_Type_Reflect{Name: "uint32"}
 	case descriptorpb.FieldDescriptorProto_TYPE_BOOL:
-		return &plugin.Message_Field_Type_Reflect{Name: "bool"}
+		return &litepb.Message_Field_Type_Reflect{Name: "bool"}
 	case descriptorpb.FieldDescriptorProto_TYPE_STRING:
-		return &plugin.Message_Field_Type_Reflect{Name: "string"}
+		return &litepb.Message_Field_Type_Reflect{Name: "string"}
 	case descriptorpb.FieldDescriptorProto_TYPE_GROUP:
 		stderr.Failf("groups are not supported")
 		return nil
@@ -325,7 +346,7 @@ func (a *generatorFile) generateReflect(
 		descriptorpb.FieldDescriptorProto_TYPE_ENUM:
 		return a.allTypes[field.GetTypeName()] //.reflect(a.proto.Package.Dependency.Alias)
 	case descriptorpb.FieldDescriptorProto_TYPE_BYTES:
-		return &plugin.Message_Field_Type_Reflect{Name: "[]byte"}
+		return &litepb.Message_Field_Type_Reflect{Name: "[]byte"}
 	default:
 		stderr.Failf("unknown type %d", field.GetType())
 		return nil

@@ -1,6 +1,6 @@
 {{- define "message_string" -}}
     {{ if is_generate "STRING" -}}
-        {{- /*gotype: github.com/e-tape/litepb/pkg/plugin.Message*/ -}}
+        {{- /*gotype: github.com/e-tape/litepb/proto.Message*/ -}}
         func (a *{{ .GetName }}) String() string {
         if a == nil { return "<nil>" }
         return {{ import "fmt" -}}.Sprintf("%+v", a){{/* TODO: Implement proper string */}}

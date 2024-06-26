@@ -1,6 +1,6 @@
 {{- define "message_interface_get" -}}
     {{ if is_generate "INTERFACE" -}}
-        {{- /*gotype: github.com/e-tape/litepb/pkg/plugin.Message*/ -}}
+        {{- /*gotype: github.com/e-tape/litepb/proto.Message*/ -}}
         {{- $msg := . -}}
         {{ template "message_interface_name" kv "msg" . "get" true }} interface {
         {{ range .GetProperties -}}

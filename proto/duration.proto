@@ -1,8 +1,8 @@
 syntax = "proto3";
 
-package proto;
+package litepb;
 
-option go_package = "github.com/e-tape/litepb/proto";
+option go_package = "github.com/e-tape/litepb/proto;litepb";
 
 // Implementation of time.Duration transfer
 message Duration {
