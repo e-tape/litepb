@@ -4,7 +4,7 @@
         {{- /*gotype: github.com/e-tape/litepb/proto.Message_Field_Type*/ -}}
         {{- if is_map . -}}
             {{- if and (is_msg .GetMap.GetValue) (not (or ($c.i_name) ($c.i_name_get))) -}}
-                Map{{- template "field_type_name" kv "type" .GetMap.GetValue "no_pointer" true -}}
+                {{ template "map_type_name" .GetMap.GetValue.GetReflect -}}
                 [{{ template "field_type_name" kv "type" .GetMap.GetKey }}]
             {{- else -}}
                 map[{{ template "field_type_name" kv "type" .GetMap.GetKey "i_name" $c.i_name "i_name_get" $c.i_name_get "no_pointer" $c.no_pointer }}]
