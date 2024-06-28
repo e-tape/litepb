@@ -104,7 +104,7 @@ func BenchmarkSimpleGogo(b *testing.B) {
 func BenchmarkSimpleLitePb(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		model := &litepb.Bench{}
-		if err := model.Unmarshal(decodeData); err != nil {
+		if err := model.UnmarshalProto(decodeData); err != nil {
 			panic(err)
 		}
 		if decodeModel.Uint32 != model.Uint32 ||
@@ -121,7 +121,7 @@ func BenchmarkSimpleLitePb(b *testing.B) {
 func BenchmarkSimpleLitePbReturnToPool(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		model := litepb.NewBench()
-		if err := model.Unmarshal(decodeData); err != nil {
+		if err := model.UnmarshalProto(decodeData); err != nil {
 			panic(err)
 		}
 		if decodeModel.Uint32 != model.Uint32 ||
@@ -178,7 +178,7 @@ func BenchmarkParallelLitePb(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
 			model := &litepb.Bench{}
-			if err := model.Unmarshal(decodeData); err != nil {
+			if err := model.UnmarshalProto(decodeData); err != nil {
 				panic(err)
 			}
 			if decodeModel.Uint32 != model.Uint32 ||
@@ -197,7 +197,7 @@ func BenchmarkParallelLitePbReturnToPool(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
 			model := litepb.NewBench()
-			if err := model.Unmarshal(decodeData); err != nil {
+			if err := model.UnmarshalProto(decodeData); err != nil {
 				panic(err)
 			}
 			if decodeModel.Uint32 != model.Uint32 ||
@@ -218,9 +218,9 @@ func BenchmarkParallelField(b *testing.B) {
 		for pb.Next() {
 			model := litepb.NewBench()
 			model.Iarr = []*litepb.Bench_InnerForMap{
-				litepb.NewBench_InnerForMap(),
-				litepb.NewBench_InnerForMap(),
-				litepb.NewBench_InnerForMap(),
+				{},
+				{},
+				{},
 			}
 			model.ReturnToPool()
 		}
@@ -232,8 +232,8 @@ func BenchmarkParallelSetter(b *testing.B) {
 		for pb.Next() {
 			model := litepb.NewBench()
 			model.SetIarr([]litepb.IBench_InnerForMapGet{
-				litepb.NewBench_InnerForMap(),
-				litepb.NewBench_InnerForMap(),
+				litepb.NewBench_InnerForMap().SetUint32(2),
+				litepb.NewBench_InnerForMap().SetUint64(6),
 				litepb.NewBench_InnerForMap(),
 			})
 			model.ReturnToPool()

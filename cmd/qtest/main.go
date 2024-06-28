@@ -31,8 +31,8 @@ func run() error {
 	if err = proto.Unmarshal(in, request); err != nil {
 		return err
 	}
-	var cfg config.Config
-	if err = config.Parse(&cfg, request.Parameter); err != nil {
+	cfg, err := config.Parse(request.Parameter)
+	if err != nil {
 		return err
 	}
 
