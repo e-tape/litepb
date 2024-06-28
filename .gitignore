@@ -8,3 +8,4 @@ bin/
 **/generated/**
 
 test/bench/proto/
+qtest

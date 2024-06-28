@@ -7,8 +7,6 @@ import (
 
 	"github.com/e-tape/litepb/pkg/stderr"
 	litepb "github.com/e-tape/litepb/proto"
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
 	"google.golang.org/protobuf/types/descriptorpb"
 )
 
@@ -51,17 +49,6 @@ func (a *Generator) newFile(protoFile *descriptorpb.FileDescriptorProto) *genera
 	}
 }
 
-//func (a *generatorFile) generateImports(dependencies []string) []*plugin.Dependency {
-//	result := make([]*plugin.Dependency, 0, len(dependencies))
-//	for _, dependency := range dependencies {
-//		if a.allFiles[dependency].proto.GetPackage().GetDependency().GetAlias() == a.proto.GetPackage().GetDependency().GetAlias() {
-//			continue
-//		}
-//		result = append(result, a.allFiles[dependency].proto.GetPackage().GetDependency())
-//	}
-//	return result
-//}
-
 func (a *generatorFile) generatePackage(packages []string, item string) string {
 	return a.generateJoin(packages, item, ".")
 }
@@ -80,14 +67,14 @@ func (a *generatorFile) collectTypes(
 ) {
 	for _, enum := range enums {
 		a.allTypes[a.generatePackage(packages, enum.GetName())] = &litepb.Message_Field_Type_Reflect{
-			Name:       a.generateTypeName(names, enum.GetName()),
+			Name:       a.generateTypeName(names, generateName(enum.GetName())),
 			Dependency: a.proto.Package.Dependency,
 		}
 	}
 
 	for _, message := range messages {
 		a.allTypes[a.generatePackage(packages, message.GetName())] = &litepb.Message_Field_Type_Reflect{
-			Name:       a.generateTypeName(names, message.GetName()),
+			Name:       a.generateTypeName(names, generateName(message.GetName())),
 			Dependency: a.proto.Package.Dependency,
 		}
 		a.collectTypes(
@@ -144,9 +131,9 @@ func (a *generatorFile) generateEnums(
 			})
 		}
 		result = append(result, &litepb.Enum{
-			Name:         a.generateTypeName(names, enum.GetName()),
+			Name:         a.generateTypeName(names, generateName(enum.GetName())),
 			Comments:     a.findEnumComments(enumSourceCodePath, enumIndex),
-			ValuesPrefix: enum.GetName(),
+			ValuesPrefix: generateName(enum.GetName()),
 			Values:       values,
 			Options:      enum.GetOptions().ProtoReflect().GetUnknown(),
 		})
@@ -179,7 +166,7 @@ func (a *generatorFile) generateMessages(
 		}
 
 		msg := &litepb.Message{
-			Name:       a.generateTypeName(names, message.GetName()),
+			Name:       a.generateTypeName(names, generateName(message.GetName())),
 			Comments:   a.findMessageComments(messageSourceCodePath, messageIndex),
 			Properties: make([]*litepb.Message_Property, 0, len(message.GetField())),
 			Options:    message.GetOptions().ProtoReflect().GetUnknown(),
@@ -187,24 +174,9 @@ func (a *generatorFile) generateMessages(
 			//MemPoolList: true,                        // TODO rathil from options
 			//MemPoolMap:  true,                        // TODO rathil from options
 		}
-		switch {
-		case a.cfg.MemPoolMessageAll == litepb.Activity_Inactive:
-			msg.MemPoolMessage = false
-		case a.cfg.MemPoolMessageAll == litepb.Activity_Active && len(message.GetField()) > 0:
-			msg.MemPoolMessage = true
-		}
-		switch {
-		case a.cfg.MemPoolListAll == litepb.Activity_Inactive:
-			msg.MemPoolList = false
-		case a.cfg.MemPoolListAll == litepb.Activity_Active && len(message.GetField()) > 0:
-			msg.MemPoolList = true
-		}
-		switch {
-		case a.cfg.MemPoolMapAll == litepb.Activity_Inactive:
-			msg.MemPoolMap = false
-		case a.cfg.MemPoolMapAll == litepb.Activity_Active && len(message.GetField()) > 0:
-			msg.MemPoolMap = true
-		}
+		msg.MemPoolMessage = a.cfg.MemPoolMessageAll == litepb.Activity_Active
+		msg.MemPoolList = a.cfg.MemPoolListAll == litepb.Activity_Active
+		msg.MemPoolMap = a.cfg.MemPoolMapAll == litepb.Activity_Active
 		// TODO rathil get option to active/inactive all MemPool
 		a.messages = append(a.messages, msg)
 
@@ -273,23 +245,7 @@ func (a *generatorFile) generateMessages(
 }
 
 func (a *generatorFile) generateFieldName(msg *litepb.Message, name string) string {
-	pName := strings.TrimLeft(name, "_")
-	prefix := strings.TrimSuffix(name, pName)
-	pName = strings.ReplaceAll(
-		cases.Title(language.English).String(
-			strings.ReplaceAll(pName, "_", " "),
-		),
-		" ", "",
-	)
-	pName = prefix + pName
-	pName, ok := strings.CutPrefix(pName, "__")
-	if ok {
-		pName = "X" + pName
-	}
-	pName, ok = strings.CutPrefix(pName, "_")
-	if ok {
-		pName = "X" + pName
-	}
+	pName := generateName(name)
 	switch pName {
 	case "String":
 		pName += "_"

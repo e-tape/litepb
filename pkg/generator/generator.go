@@ -38,6 +38,7 @@ func (a *Generator) Generate() *pluginpb.CodeGeneratorResponse {
 		stderr.Logf("\tSYNTAX: %s", protoFile.GetSyntax())
 		stderr.Logf("\tDEPENDENCIES: %s", strings.Join(protoFile.GetDependency(), ", "))
 
+		a.generateMessagesFromExtensions(protoFile)
 		fg := a.newFile(protoFile)
 		a.allFiles[protoFile.GetName()] = fg
 

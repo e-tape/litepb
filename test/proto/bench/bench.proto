@@ -44,7 +44,7 @@ message Bench {
     uint32 uint32 = 2 [(validate.rules).uint32.gte = 1];
   }
   message NoPool {
-//    option (litepb.mem_pool) = Inactive;
+    //    option (litepb.mem_pool) = Inactive;
     string string = 1;
   }
 }
