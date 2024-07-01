@@ -1,0 +1,55 @@
+syntax = "proto3";
+
+package bench;
+
+option go_package = "/bench";
+
+import "vendor/validate/validate.proto";
+//import "proto/options.proto";
+import "proto/uuid.proto";
+
+message Bench {
+  litepb.UUID uuid = 10100;
+  repeated litepb.UUID r_uuid = 10101;
+  map<int32, litepb.UUID> m_uuid = 10102;
+
+  uint64 request_id = 1;
+  uint64 uint64 = 4;
+  uint32 uint32 = 200;
+  int64 int64 = 201;
+  int32 int32 = 202;
+  sint64 sint64 = 203;
+  sint32 sint32 = 204;
+  repeated sint64 r_sint64 = 205;
+  repeated sint32 r_sint32 = 206;
+  string string = 207;
+  repeated string r_string = 208;
+  map<fixed32, string> map = 209;
+  map<sint32, InnerForMap> smap = 210;
+  repeated InnerForMap iarr = 211;
+  InnerForMap ifm = 220;
+
+  repeated fixed32 r_fixed32 = 299;
+  fixed32 fixed32 = 300;
+  sfixed32 sfixed32 = 301;
+  float float = 303;
+
+  fixed64 fixed64 = 400;
+  sfixed64 sfixed64 = 401;
+  double double = 403;
+
+  oneof __age {
+    uint32 age1 = 500;
+    Empty no_age = 501;
+  }
+
+  message Empty{}
+  message InnerForMap {
+    uint64 uint64 = 1 [(validate.rules).uint64.gte = 1];
+    uint32 uint32 = 2 [(validate.rules).uint32.gte = 1];
+  }
+  message NoPool {
+    //    option (litepb.mem_pool) = Inactive;
+    string string = 1;
+  }
+}

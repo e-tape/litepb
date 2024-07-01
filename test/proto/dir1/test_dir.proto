@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package dir1;
+
+option go_package = "test/generated/test/dir;dir_package";
+
+message Dir1 {
+  string name = 1;
+}

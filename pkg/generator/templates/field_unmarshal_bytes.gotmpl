@@ -1,0 +1,15 @@
+{{- define "field_unmarshal_bytes" -}}
+    {{- $valueLength := (printf "%sLength" .valueName) -}}
+    {{- template "field_unmarshal_int" kv
+    "type" .type
+    "endName" .endName
+    "errorUnexpectedEnd" .errorUnexpectedEndLength
+    "valueName" $valueLength
+    "valueCreate" true
+    "valueTypeName" "int"
+    "rangeItems" (arr 0 7 14 21 28)
+    }}
+    index += {{ $valueLength }}
+    if len(data) < index { return {{ .errorUnexpectedEndValue }} }
+    {{- set_result . (printf "data[index-%s : index]" $valueLength ) -}}
+{{- end -}}

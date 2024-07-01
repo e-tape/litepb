@@ -1,0 +1,12 @@
+{{- define "field_unmarshal_enum" -}}
+    {{- template "field_unmarshal_int" kv
+    "type" .type
+    "endName" .endName
+    "errorUnexpectedEnd" .errorUnexpectedEnd
+    "valueName" .valueName
+    "valueCreate" .valueCreate
+    "valueTypeName" (render "type_name" (kv "type" .type "format" "<path><name>"))
+    "rangeItems" (arr 0 7 14 21 28)
+    -}}
+    {{- set_result . .valueName -}}
+{{- end -}}

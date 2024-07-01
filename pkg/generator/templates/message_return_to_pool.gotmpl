@@ -1,0 +1,14 @@
+{{- define "message_return_to_pool" -}}
+    {{- /*gotype: github.com/e-tape/litepb/proto.Message*/ -}}
+    {{ if is_generate "RETURN_TO_POOL" -}}
+        func (a *{{ template "type_name" kv "msg" . }}){{ template "func_name_message_return_to_pool" }}() {
+        {{ if gt (len .GetProperties) 0 -}}
+            if a == nil { return }
+            a.reset()
+            {{ if .GetMemPoolMessage -}}
+                {{ template "pool_name_message" . }}.Put(a)
+            {{ end -}}
+        {{ end -}}
+        }
+    {{ end -}}
+{{- end -}}

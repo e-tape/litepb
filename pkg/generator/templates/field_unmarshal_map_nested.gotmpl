@@ -1,0 +1,78 @@
+{{- define "field_unmarshal_map_nested" -}}
+    {{- $c := . -}}
+    {{ with .type -}}
+        {{- /*gotype: github.com/e-tape/litepb/proto.Message_Field_Type*/ -}}
+        {{ if eq .GetInProto.String "UINT64" -}}
+            case 0:
+            {{ template "field_unmarshal_uint64" $c }}
+        {{ end -}}
+        {{ if eq .GetInProto.String "INT64" -}}
+            case 0:
+            {{ template "field_unmarshal_int64" $c }}
+        {{ end -}}
+        {{ if eq .GetInProto.String "SINT64" -}}
+            case 0:
+            {{ template "field_unmarshal_sint64" $c }}
+        {{ end -}}
+        {{ if eq .GetInProto.String "UINT32" -}}
+            case 0:
+            {{ template "field_unmarshal_uint32" $c }}
+        {{ end -}}
+        {{ if eq .GetInProto.String "INT32" -}}
+            case 0:
+            {{ template "field_unmarshal_int32" $c }}
+        {{ end -}}
+        {{ if eq .GetInProto.String "SINT32" -}}
+            case 0:
+            {{ template "field_unmarshal_sint32" $c }}
+        {{ end -}}
+        {{ if eq .GetInProto.String "BOOL" -}}
+            case 0:
+            {{ template "field_unmarshal_bool" $c }}
+        {{ end -}}
+        {{ if eq .GetInProto.String "ENUM" -}}
+            case 0:
+            {{ template "field_unmarshal_enum" $c }}
+        {{ end -}}
+        {{ if eq .GetInProto.String "STRING" -}}
+            case 2:
+            {{ template "field_unmarshal_string" $c }}
+            {{ $c.valueName }} = {{ get_result $c }}
+            {{ set_result $c $c.valueName -}}
+        {{ end -}}
+        {{ if eq .GetInProto.String "BYTES" -}}
+            case 2:
+            {{ template "field_unmarshal_bytes" $c }}
+            {{ $c.valueName }} = {{ get_result $c }}
+            {{ set_result $c $c.valueName -}}
+        {{ end -}}
+        {{ if and (eq .GetInProto.String "MESSAGE_OR_MAP") (not (is_map .)) -}}
+            case 2:
+            {{ template "field_unmarshal_message" $c }}
+        {{ end -}}
+        {{ if eq .GetInProto.String "FIXED64" -}}
+            case 1:
+            {{ template "field_unmarshal_fixed64" $c }}
+        {{ end -}}
+        {{ if eq .GetInProto.String "SFIXED64" -}}
+            case 1:
+            {{ template "field_unmarshal_sfixed64" $c }}
+        {{ end -}}
+        {{ if eq .GetInProto.String "DOUBLE" -}}
+            case 1:
+            {{ template "field_unmarshal_double" $c }}
+        {{ end -}}
+        {{ if eq .GetInProto.String "FIXED32" -}}
+            case 5:
+            {{ template "field_unmarshal_fixed32" $c }}
+        {{ end -}}
+        {{ if eq .GetInProto.String "SFIXED32" -}}
+            case 5:
+            {{ template "field_unmarshal_sfixed32" $c }}
+        {{ end -}}
+        {{ if eq .GetInProto.String "FLOAT" -}}
+            case 5:
+            {{ template "field_unmarshal_float" $c }}
+        {{ end -}}
+    {{ end -}}
+{{- end -}}

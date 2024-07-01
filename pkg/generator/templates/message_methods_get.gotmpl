@@ -1,0 +1,46 @@
+{{- define "message_methods_get" -}}
+    {{ if is_generate "GETTER" -}}
+        {{- /*gotype: github.com/e-tape/litepb/proto.Message*/ -}}
+        {{- $msg := . -}}
+        {{ range .GetProperties -}}
+            {{ with .GetField -}}
+                func (a *{{ template "type_name" kv "msg" $msg }}) Get{{ .GetName }}() {{ template "type_name" kv
+                "type" .GetType
+                "i" true
+                }} {
+                {{ if or (render "type_is_custom" .GetType) (render "type_is_custom" .GetType.GetMap.GetValue) -}}
+                    if a == nil { return {{ template "type_custom_zero_value" .GetType }} }
+                    return a.{{ .GetName }}
+                {{ else -}}
+                    if a == nil { return {{ .GetZeroValue }} }
+                    {{ if or (and (is_map .GetType) (is_msg .GetType.GetMap.GetValue)) (and (is_msg .GetType) (.GetType.GetRepeated)) -}}
+                        result := make({{ template "type_name" kv "type" .GetType "i" true }}, len(a.{{ .GetName }}))
+                        for index, value := range a.{{ .GetName }} {
+                        result[index] = value
+                        }
+                        return result
+                    {{ else -}}
+                        return a.{{ .GetName }}
+                    {{ end -}}
+                {{ end -}}
+                }
+            {{ end -}}
+            {{ with .GetOneof -}}
+                {{- $oneof := . -}}
+                func (a *{{ template "type_name" kv "msg" $msg }}) Get{{ .GetName }}() {{ template "oneof_type_name" kv "msg" $msg "oneof" . }} {
+                if a == nil { return nil }
+                return a.{{ .GetName }}
+                }
+                {{ range .GetFields -}}
+                    func (a *{{ template "type_name" kv "msg" $msg }}) Get{{ .GetName }}() {{ template "type_name" kv "type" .GetType "i_get" true }} {
+                    if a == nil { return {{ .GetZeroValue }}}
+                    if value, ok := a.{{ $oneof.GetName }}.(*{{ template "oneof_type_name" kv "msg" $msg "field" . }}); ok {
+                    return value.{{ .GetName }}
+                    }
+                    return {{ .GetZeroValue }}
+                    }
+                {{ end -}}
+            {{ end -}}
+        {{ end -}}
+    {{ end -}}
+{{- end -}}

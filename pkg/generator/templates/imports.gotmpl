@@ -1,0 +1,9 @@
+{{- define "imports" -}}
+    {{- /*gotype: github.com/e-tape/litepb/proto.Import*/ -}}
+
+    import (
+    {{ range . -}}
+        {{ .GetAlias }} "{{ .GetPath }}"
+    {{ end -}}
+    )
+{{- end -}}

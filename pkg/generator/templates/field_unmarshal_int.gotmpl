@@ -1,0 +1,18 @@
+{{- define "field_unmarshal_int" -}}
+    {{- $c := . -}}
+    {{ if .valueCreate -}}
+        var {{ .valueName }} {{ .valueTypeName }}
+    {{ end -}}
+    {{ range .rangeItems -}}
+        {{ if gt . 0 -}}
+            index++
+        {{ end -}}
+        if len(data) > index {
+        {{ $c.valueName }} |= {{ $c.valueTypeName }}(data[index]&127) {{- if gt . 0 }} << {{ . }}{{ end }}
+        if data[index] < 128 { goto {{ $c.endName }} }
+        }
+    {{ end -}}
+    return {{ .errorUnexpectedEnd }}
+    {{ .endName }}:
+    index++
+{{- end -}}

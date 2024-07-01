@@ -2,11 +2,13 @@ syntax = "proto3";
 
 package test;
 
-option go_package = "generated/test";
+option go_package = "test/generated/test";
 
 import "test2.proto";
 import "test3.proto";
 import "dir/test.proto";
+import "dir1/test_dir.proto";
+import "dir2/test_dir.proto";
 import "dir/dir/test.proto";
 
 import "common/c1.proto";
@@ -19,6 +21,10 @@ enum Direction {
   WEST = 3;
 }
 
+message R1 {
+  uint64 u64 = 1;
+}
+
 // Test message
 message Test {
   // ID
@@ -26,19 +32,65 @@ message Test {
   // Name
   string name = 2;
 
-  test2.Ok ok2 = 3;
+  test.Ok ok2 = 3;
   test3.Ok ok3 = 4;
 
   test3.Ok.Status status = 5;
 
-  map<string, Foo> kv = 6;
+  map<int32, Foo> kv = 6;
+  map<string, sint64> kv_int = 7;
 
-  dir.Baz baz = 7;
-  dir.dir.Baz3 baz3 = 8;
+  dir.Baz baz = 8;
+  dir.dir.Baz3 baz3 = 9;
+  dir1.Dir1 dir1 = 10;
+  dir.Dir2 dir2 = 11;
 
-  common.C1 c1 = 9;
-  common.C2 c2 = 10;
+  common.C1 c1 = 12;
+  common.C2 c2 = 13;
 
+  //  option (field_number_slice_len) = 20;
+  oneof oo_u {
+    int32 oo_i = 20;// [(type) = "int64", (num) = 9];
+    string s = 21;
+    MsgForQOneof field_msg = 22;
+  }
+  test3.Error error = 30;
+  MsgForQOneof for_oneof = 31;
+  test.MsgForQOneof for_oneof_global = 32;
+
+  repeated dir1.Dir1 r_dir1 = 39;
+  repeated uint64 r_uint64 = 40;
+  repeated uint32 r_uint32 = 41;
+  repeated int32 r_int32 = 42;
+  repeated int64 r_int64 = 43;
+  int64 int64 = 44;
+  int32 int32 = 45;
+  uint64 uint64 = 46;
+  uint32 uint32 = 47;
+  sint32 sint32 = 48;
+  sint64 sint64 = 49;
+  repeated sint32 r_sint32 = 50;
+  repeated sint64 r_sint64 = 51;
+  repeated bool r_bool = 52;
+  bool bool = 53;
+  Direction direction_enum = 54;
+  repeated Direction r_direction_enum = 55;
+
+  fixed32 fixed32 = 300;
+  sfixed32 sfixed32 = 301;
+  float float = 303;
+
+  fixed64 fixed64 = 400;
+  sfixed64 sfixed64 = 401;
+  double double = 403;
+
+
+  // ForOneof - msg for oneof
+  message MsgForQOneof {
+    int32 __int = 1;
+    int32 ___int2 = 2;
+    int32 ____int3 = 4;
+  }
   // Inner message TEST
   message Inner {
     // Inner text
@@ -46,6 +98,15 @@ message Test {
     // Inner error
     test3.Error error = 3;
   }
+}
+// ForOneof - msg for oneof
+message MsgForQOneof {
+  int32 __int = 1;
+}
+
+
+message PreFoo {
+  bool first = 1;
 }
 
 // Foo message
@@ -58,8 +119,9 @@ message Foo {
   repeated Bar bars = 2;
   // The bar
   Bar bar = 3;
+  PreFoo pre_foo = 4;
 
-  Status status = 4;
+  Status status = 5;
 
   // Status of FOO
   enum Status {
@@ -72,7 +134,7 @@ message Foo {
   // Inner message
   message Inner {
     // Inner text
-    string text = 2;
+    string text = 1;
   }
 }
 
@@ -81,4 +143,5 @@ message Bar {
   bool done = 2;
   // Numbers
   repeated int32 numbers = 3;
+  repeated Foo.Inner foo_inner_field = 4;
 }

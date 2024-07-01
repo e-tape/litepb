@@ -1,0 +1,3 @@
+{{- define "error_unexpected_end_of_field_length_kv" -}}
+    {{- import "fmt" -}}.Errorf("litepb: unexpected end of field length for map field {{ . }}")
+{{- end -}}

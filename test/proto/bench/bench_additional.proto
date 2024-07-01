@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package bench;
+
+option go_package = "/bench";
+
+import "proto/options.proto";
+
+message NoPool {
+  option (litepb.mem_pool_message) = Inactive;
+  string string = 1;
+}

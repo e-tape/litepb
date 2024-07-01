@@ -1,0 +1,38 @@
+{{- define "field_unmarshal_varint" -}}
+    {{- $c := . -}}
+    {{- with .field -}}
+        {{- /*gotype: github.com/e-tape/litepb/proto.Message_Field*/ -}}
+        {{ if eq .GetType.GetInProto.String "UINT64" -}}
+            case 0:
+            {{ template "field_unmarshal_uint64" $c }}
+        {{ end -}}
+        {{ if eq .GetType.GetInProto.String "INT64" -}}
+            case 0:
+            {{ template "field_unmarshal_int64" $c }}
+        {{ end -}}
+        {{ if eq .GetType.GetInProto.String "SINT64" -}}
+            case 0:
+            {{ template "field_unmarshal_sint64" $c }}
+        {{ end -}}
+        {{ if eq .GetType.GetInProto.String "UINT32" -}}
+            case 0:
+            {{ template "field_unmarshal_uint32" $c }}
+        {{ end -}}
+        {{ if eq .GetType.GetInProto.String "INT32" -}}
+            case 0:
+            {{ template "field_unmarshal_int32" $c }}
+        {{ end -}}
+        {{ if eq .GetType.GetInProto.String "SINT32" -}}
+            case 0:
+            {{ template "field_unmarshal_sint32" $c }}
+        {{ end -}}
+        {{ if eq .GetType.GetInProto.String "BOOL" -}}
+            case 0:
+            {{ template "field_unmarshal_bool" $c }}
+        {{ end -}}
+        {{ if eq .GetType.GetInProto.String "ENUM" -}}
+            case 0:
+            {{ template "field_unmarshal_enum" $c }}
+        {{ end -}}
+    {{- end -}}
+{{- end -}}

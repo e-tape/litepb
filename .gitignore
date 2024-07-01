@@ -6,3 +6,6 @@ bin/
 
 # Generated files
 **/generated/**
+
+test/bench/proto/
+qtest

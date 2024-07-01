@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package litepb;
+
+option go_package = "github.com/e-tape/litepb/proto;litepb";
+
+// Implementation of big.Int transfer
+message BigInt {
+  // big.Int data in bytes
+  bytes value = 1;
+}
+
+// Implementation of big.Float transfer
+message BigFloat {
+  // big.Float data in string
+  string value = 1;
+}

@@ -1,30 +1,58 @@
 package generator
 
 import (
+	"bytes"
 	"embed"
 	_ "embed"
-	"strings"
+	"fmt"
+	"io/fs"
 	"text/template"
+
+	litepb "github.com/e-tape/litepb/proto"
 )
 
-//go:embed templates/*.tmpl
-var goTemplateFiles embed.FS
+const mainTemplate = "file"
 
-var goTemplate = template.Must(
-	template.New("").
-		Funcs(goTemplateFunc).
-		ParseFS(goTemplateFiles, "templates/*.tmpl"),
+type Template struct {
+	tmpl  *template.Template
+	proto *litepb.File
+}
+
+var (
+	//go:embed templates/*.gotmpl
+	nativeTemplateFiles embed.FS
+	tmpl                = &Template{}
 )
 
-const mainTemplate = "main"
-
-var additionalImports = []string{"fmt"}
-
-var goTemplateFunc = template.FuncMap{
-	"lines": func(text string) []string {
-		if text == "" {
-			return nil
-		}
-		return strings.Split(text, "\n")
-	},
+func (a *Template) Execute(
+	tmplFs fs.FS,
+	proto *litepb.File,
+) (string, error) {
+	// TODO rathil once
+	tmplFile, err := template.New("").
+		Funcs(template.FuncMap{
+			"import":      addImport,
+			"arr":         arr,
+			"kv":          kv,
+			"lines":       lines,
+			"replace":     replace,
+			"is_msg":      isMsg,
+			"is_map":      isMap,
+			"is_generate": isGenerate,
+			"get_result":  getResult,
+			"set_result":  setResult,
+			"render":      render,
+			"sort":        sort,
+		}).
+		ParseFS(tmplFs, "templates/*.gotmpl")
+	if err != nil {
+		return "", fmt.Errorf("create template, err: %w", err)
+	}
+	a.tmpl = tmplFile
+	buf := bytes.NewBuffer(nil)
+	a.proto = proto
+	if err = a.tmpl.ExecuteTemplate(buf, mainTemplate, proto); err != nil {
+		return "", err
+	}
+	return buf.String(), nil
 }

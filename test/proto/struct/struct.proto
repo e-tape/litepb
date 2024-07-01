@@ -1,0 +1,64 @@
+syntax = "proto3";
+
+package bench;
+
+option go_package = "/bench";
+
+message Bench {
+  uint64 request_id = 1;
+  uint64 uint64 = 4;
+  uint32 uint32 = 200;
+  int64 int64 = 201;
+  int32 int32 = 202;
+  sint64 sint64 = 203;
+  sint32 sint32 = 204;
+  repeated sint64 r_sint64 = 205;
+  repeated sint32 r_sint32 = 206;
+  string string = 207;
+  repeated string r_string = 208;
+  map<fixed32, string> map = 209;
+  map<sint32, InnerForMap> smap = 210;
+
+  repeated fixed32 r_fixed32 = 299;
+  fixed32 fixed32 = 300;
+  sfixed32 sfixed32 = 301;
+  float float = 303;
+
+  fixed64 fixed64 = 400;
+  sfixed64 sfixed64 = 401;
+  double double = 403;
+
+  oneof __age {
+    uint32 age1 = 500;
+    Empty no_age = 501;
+  }
+  oneof __page {
+    fixed32 page1 = 600;
+    _Empty no_page = 601;
+  }
+  oneof _page {
+    fixed32 page2 = 610;
+    __Empty no_page2 = 611;
+  }
+  oneof ___page {
+    fixed32 page3 = 620;
+    __Empty no_page3 = 621;
+  }
+  oneof _____page {
+    fixed32 page4 = 630;
+    __Empty no_page4 = 631;
+  }
+  int32 _age = 1000;
+  //  int32 X_age = 1001;
+  int32 X_page = 1002;
+  string ProtoMessage = 999;
+
+  message Empty{}
+  message _Empty{}
+  message __Empty{}
+  message XEmpty{}
+  message InnerForMap {
+    uint64 uint64 = 1;
+    uint32 uint32 = 2;
+  }
+}

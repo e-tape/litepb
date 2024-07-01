@@ -1,0 +1,26 @@
+{{- define "oneof_types" -}}
+    {{- /*gotype: github.com/e-tape/litepb/proto.Message*/ -}}
+    {{- $msg := . -}}
+    {{ range .GetProperties -}}
+        {{ with .GetOneof -}}
+            {{ if is_generate "INTERFACE" -}}
+                {{ template "oneof_type_name" kv "msg" $msg "oneof" . }} interface {
+                {{ template "func_name_oneof_return_to_pool" }}()
+                oneof{{ template "oneof_type_name" kv "msg" $msg "field" . }}()
+                marshalTo([]byte) (int, error)
+                size() int
+                }
+            {{ end -}}
+            {{ if is_generate "STRUCT" -}}
+                {{ range .GetFields -}}
+                    {{ template "oneof_type_name" kv "msg" $msg "field" . }} struct {
+                    {{ range (lines .GetComments) -}}
+                        //{{ . }}
+                    {{ end -}}
+                    {{ .GetName }} {{ template "type_name" kv "type" .GetType }} {{ template "field_tags" . }}
+                    }
+                {{ end -}}
+            {{ end -}}
+        {{ end -}}
+    {{ end -}}
+{{- end -}}

@@ -1,0 +1,21 @@
+{{- define "enums" -}}
+    {{ if is_generate "ENUM" -}}
+        {{- range . -}}
+            {{- /*gotype: github.com/e-tape/litepb/proto.Enum*/ -}}
+            {{ range (lines .GetComments) -}}
+                //{{ . }}
+            {{- end }}
+            type {{ template "type_name" kv "msg" . }} int32
+
+            {{  $enum := . -}}
+            const (
+            {{ range .GetValues -}}
+                {{ range (lines .Comments) -}}
+                    //{{ . }}
+                {{ end -}}
+                {{ $enum.GetValuesPrefix }}_{{ .GetName }} {{ $enum.GetName }} = {{ .GetNumber }}
+            {{ end -}}
+            )
+        {{ end -}}
+    {{ end -}}
+{{- end -}}

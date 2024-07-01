@@ -1,0 +1,45 @@
+syntax = "proto2";
+
+package litepb;
+
+import "google/protobuf/descriptor.proto";
+
+option go_package = "github.com/e-tape/litepb/proto;litepb";
+
+extend google.protobuf.FileOptions {
+  // Pool objects activity for all messages in this file
+  optional Activity mem_pool_message_all = 15998;
+  // Pool objects activity for all messages list in this file
+  optional Activity mem_pool_list_all = 15997;
+  // Pool objects activity for all messages map in this file
+  optional Activity mem_pool_map_all = 15996;
+  // Pool objects activity for all messages oneof in this file
+  optional Activity mem_pool_oneof_all = 15995;
+}
+extend google.protobuf.MessageOptions {
+  // Field number to be added to the message to transfer the length of all repeating fields. Default: 15999
+  optional int32 slice_packed_number = 15999;
+  // Pool objects activity for message (has priority over options from FileOptions)
+  optional Activity mem_pool_message = 15998;
+  // Pool objects activity for message list (has priority over options from FileOptions)
+  optional Activity mem_pool_list = 15997;
+  // Pool objects activity for message map (has priority over options from FileOptions)
+  optional Activity mem_pool_map = 15996;
+  // Pool objects activity for message oneof (has priority over options from FileOptions)
+  optional Activity mem_pool_oneof = 15995;
+}
+extend google.protobuf.FieldOptions {
+  // Transforming a slice into a fixed-length array
+  optional int32 array_fixed_size = 15999;
+  // Change the declared type in the protobuf to your personal type
+  optional string type = 15998;
+  // Field name when marshal to JSON
+  optional string json_tag = 15997;
+  // Additional tags
+  optional string additional_tags = 15996;
+}
+
+enum Activity {
+  Active = 0;
+  Inactive = 1;
+}

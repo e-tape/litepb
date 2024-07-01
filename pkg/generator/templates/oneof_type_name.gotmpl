@@ -1,0 +1,7 @@
+{{- define "oneof_type_name" -}}
+    {{- if .oneof -}}
+        {{ template "type_name" kv "msg" .msg "i" true }}Oneof{{ .oneof.GetName }}
+    {{- else if .field -}}
+        {{ .msg.GetName }}Oneof{{ .field.GetName }}
+    {{- end -}}
+{{- end -}}

@@ -1,0 +1,4 @@
+{{- define "type_new" -}}
+    {{- /*gotype: github.com/e-tape/litepb/proto.Message_Field_Type*/ -}}
+    {{- template "field_type_path" . }}{{ template "func_name_message_new" .GetReflect }}
+{{- end -}}

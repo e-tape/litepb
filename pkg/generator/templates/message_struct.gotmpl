@@ -1,0 +1,28 @@
+{{- define "message_struct" -}}
+    {{- /*gotype: github.com/e-tape/litepb/proto.Message*/ -}}
+    {{ if is_generate "STRUCT" -}}
+        {{- $msg := . -}}
+        {{ range (lines .GetComments) -}}
+            //{{ . }}
+        {{ end -}}
+        {{ template "type_name" kv "msg" . }} struct {
+        {{- range .GetProperties -}}
+            {{ with .GetField -}}
+                {{ range (lines .GetComments) -}}
+                    //{{ . }}
+                {{ end -}}
+                {{ .GetName }} {{ template "type_name" kv "type" .GetType }} {{ template "field_tags" . }}
+                {{ if and (.GetType.Repeated) (is_msg .GetType) (not (render "type_is_custom" .GetType)) -}}
+                    p{{ .GetName }} *{{ template "type_name" kv "type" .GetType "list" true }} ``
+                {{ end -}}
+            {{ end -}}
+            {{ with .GetOneof -}}
+                {{ range (lines .GetComments) -}}
+                    //{{ . }}
+                {{ end -}}
+                {{ .GetName }} {{ template "oneof_type_name" kv "msg" $msg "oneof" . }} {{ template "oneof_tags" . }}
+            {{ end -}}
+        {{ end -}}
+        }
+    {{ end -}}
+{{- end -}}

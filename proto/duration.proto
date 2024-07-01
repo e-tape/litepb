@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package litepb;
+
+option go_package = "github.com/e-tape/litepb/proto;litepb";
+
+// Implementation of time.Duration transfer
+message Duration {
+  // Value of time.Duration
+  int64 value = 1;
+}

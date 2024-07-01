@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package dir;
 
-option go_package = "generated/test/dir;dir_package";
+option go_package = "test/generated/test/dir;dir_package";
 
 message Baz {}
 

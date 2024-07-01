@@ -1,0 +1,32 @@
+{{- define "message_reset" -}}
+    {{ if is_generate "RESET" -}}
+        {{- /*gotype: github.com/e-tape/litepb/proto.Message*/ -}}
+        func (a *{{ template "type_name" kv "msg" . }}) Reset() {
+        {{- if gt (len .GetProperties) 0}}
+            if a == nil { return }
+            a.reset()
+        {{- end }}
+        }
+        func (a *{{ template "type_name" kv "msg" . }}) reset() {
+        {{- if gt (len .GetProperties) 0}}
+            {{ range .GetProperties -}}
+                {{ with .GetField -}}
+                    {{ if not (render "type_is_custom" .GetType) -}}
+                        {{ if and (.GetType.GetRepeated) (is_msg .GetType) -}}
+                            {{ template "list_return_to_pool_pointer" . }}
+                        {{ else if and (is_map .GetType) (is_msg .GetType.GetMap.GetValue) (not (render "type_is_custom" .GetType.GetMap.GetValue)) -}}
+                            if a.{{ .GetName }} != nil { a.{{ .GetName }}.{{ template "func_name_map_return_to_pool" }}() }
+                        {{ else if is_msg .GetType -}}
+                            if a.{{ .GetName }} != nil { a.{{ .GetName }}.{{ template "func_name_message_return_to_pool" }}() }
+                        {{ end -}}
+                    {{ end -}}
+                {{ end -}}
+                {{ with .GetOneof -}}
+                    if a.{{ .GetName }} != nil { a.{{ .GetName }}.{{ template "func_name_oneof_return_to_pool" }}() }
+                {{ end -}}
+            {{ end -}}
+            *a = {{ .GetName }}{}
+        {{- end }}
+        }
+    {{ end -}}
+{{- end -}}
