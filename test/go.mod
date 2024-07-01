@@ -5,9 +5,8 @@ go 1.22.4
 replace github.com/e-tape/litepb => ../
 
 require (
-	github.com/e-tape/litepb v0.0.0-00010101000000-000000000000
-	github.com/envoyproxy/protoc-gen-validate v1.0.4
-	github.com/gogo/protobuf v1.3.2
-	github.com/golang/protobuf v1.5.4
+	github.com/google/uuid v1.6.0
 	google.golang.org/protobuf v1.34.2
 )
+
+require golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect

@@ -1,4 +1,4 @@
 {{- define "pool_name_list" -}}
     {{- /*gotype: github.com/e-tape/litepb/proto.Message*/ -}}
-    poolList{{ .GetName }}
+    poolList{{ template "type_name" kv "msg" . }}
 {{- end -}}

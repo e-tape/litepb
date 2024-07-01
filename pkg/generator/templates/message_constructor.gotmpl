@@ -1,4 +1,4 @@
 {{- define "message_constructor" -}}
     {{- /*gotype: github.com/e-tape/litepb/proto.Message*/ -}}
-    &{{ .GetName }}{}
+    &{{ template "type_name" kv "msg" . }}{}
 {{- end -}}

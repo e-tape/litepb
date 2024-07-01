@@ -17,7 +17,7 @@
                     {{ range (lines .GetComments) -}}
                         //{{ . }}
                     {{ end -}}
-                    {{ .GetName }} {{ template "field_type_name" kv "type" .GetType }} {{ template "field_tags" . }}
+                    {{ .GetName }} {{ template "type_name" kv "type" .GetType }} {{ template "field_tags" . }}
                     }
                 {{ end -}}
             {{ end -}}

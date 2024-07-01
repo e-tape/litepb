@@ -103,7 +103,7 @@ func (a *Generator) Generate() *pluginpb.CodeGeneratorResponse {
 		}
 
 		unmarshal := *fg.proto // TODO rathil refactoring to litepb clone
-		unmarshal.Name = strings.ReplaceAll(marshal.Name, ".lpb.go", "_unmarshal.lpb.go")
+		unmarshal.Name = strings.ReplaceAll(fg.proto.Name, ".lpb.go", "_unmarshal.lpb.go")
 		unmarshal.Generates = []litepb.File_Generate{
 			litepb.File_UNMARSHAL,
 		}

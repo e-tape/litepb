@@ -2,15 +2,15 @@ module bench
 
 go 1.22.4
 
-replace (
-	github.com/e-tape/litepb => ../..
-	//github.com/golang/protobuf => ./proto/litepb/github.com/golang/protobuf
-)
+replace github.com/e-tape/litepb => ../../
 
 require (
-	github.com/e-tape/litepb v0.0.0-00010101000000-000000000000
+	github.com/e-tape/litepb v0.0.0-20240628203019-4987e239966f
 	github.com/envoyproxy/protoc-gen-validate v1.0.4
 	github.com/gogo/protobuf v1.3.2
 	github.com/golang/protobuf v1.5.4
+	github.com/google/uuid v1.6.0
 	google.golang.org/protobuf v1.34.2
 )
+
+require gopkg.in/yaml.v3 v3.0.1 // indirect

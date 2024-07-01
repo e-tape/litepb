@@ -1,11 +1,13 @@
 package main
 
 import (
+	"bytes"
 	"testing"
 
 	gogo "bench/proto/gogo/bench"
 	google "bench/proto/google/bench"
-	litepb "bench/proto/litepb"
+	litepb "bench/proto/litepb/bench"
+	litepb2 "github.com/e-tape/litepb/proto"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -13,6 +15,10 @@ import (
 
 var decodeData []byte
 var decodeModel = &google.Bench{
+	Uuid: &litepb2.UUID{
+		Value: []byte{18, 52, 86, 120, 21, 117, 69, 117, 101, 117, 135, 83, 19, 84, 21, 64},
+	},
+
 	Uint64:  2065657434543,
 	Uint32:  156547,
 	String_: "123456",
@@ -73,7 +79,8 @@ func BenchmarkSimpleGoogle(b *testing.B) {
 		if err := proto.Unmarshal(decodeData, model); err != nil {
 			panic(err)
 		}
-		if decodeModel.Uint32 != model.Uint32 ||
+		if !bytes.Equal(decodeModel.Uuid.Value, model.Uuid.Value) ||
+			decodeModel.Uint32 != model.Uint32 ||
 			decodeModel.Uint64 != model.Uint64 ||
 			decodeModel.String_ != model.String_ ||
 			len(decodeModel.Smap) != len(model.Smap) ||
@@ -90,7 +97,8 @@ func BenchmarkSimpleGogo(b *testing.B) {
 		if err := model.Unmarshal(decodeData); err != nil {
 			panic(err)
 		}
-		if decodeModel.Uint32 != model.Uint32 ||
+		if !bytes.Equal(decodeModel.Uuid.Value, model.Uuid.Value) ||
+			decodeModel.Uint32 != model.Uint32 ||
 			decodeModel.Uint64 != model.Uint64 ||
 			decodeModel.String_ != model.String_ ||
 			len(decodeModel.Smap) != len(model.Smap) ||
@@ -107,7 +115,8 @@ func BenchmarkSimpleLitePb(b *testing.B) {
 		if err := model.UnmarshalProto(decodeData); err != nil {
 			panic(err)
 		}
-		if decodeModel.Uint32 != model.Uint32 ||
+		if !bytes.Equal(decodeModel.Uuid.Value, model.Uuid[:]) ||
+			decodeModel.Uint32 != model.Uint32 ||
 			decodeModel.Uint64 != model.Uint64 ||
 			decodeModel.String_ != model.String_ ||
 			len(decodeModel.Smap) != len(model.Smap) ||
@@ -124,7 +133,8 @@ func BenchmarkSimpleLitePbReturnToPool(b *testing.B) {
 		if err := model.UnmarshalProto(decodeData); err != nil {
 			panic(err)
 		}
-		if decodeModel.Uint32 != model.Uint32 ||
+		if !bytes.Equal(decodeModel.Uuid.Value, model.Uuid[:]) ||
+			decodeModel.Uint32 != model.Uint32 ||
 			decodeModel.Uint64 != model.Uint64 ||
 			decodeModel.String_ != model.String_ ||
 			len(decodeModel.Smap) != len(model.Smap) ||
@@ -143,7 +153,8 @@ func BenchmarkParallelGoogle(b *testing.B) {
 			if err := proto.Unmarshal(decodeData, model); err != nil {
 				panic(err)
 			}
-			if decodeModel.Uint32 != model.Uint32 ||
+			if !bytes.Equal(decodeModel.Uuid.Value, model.Uuid.Value) ||
+				decodeModel.Uint32 != model.Uint32 ||
 				decodeModel.Uint64 != model.Uint64 ||
 				decodeModel.String_ != model.String_ ||
 				len(decodeModel.Smap) != len(model.Smap) ||
@@ -162,7 +173,8 @@ func BenchmarkParallelGogo(b *testing.B) {
 			if err := model.Unmarshal(decodeData); err != nil {
 				panic(err)
 			}
-			if decodeModel.Uint32 != model.Uint32 ||
+			if !bytes.Equal(decodeModel.Uuid.Value, model.Uuid.Value) ||
+				decodeModel.Uint32 != model.Uint32 ||
 				decodeModel.Uint64 != model.Uint64 ||
 				decodeModel.String_ != model.String_ ||
 				len(decodeModel.Smap) != len(model.Smap) ||
@@ -181,7 +193,8 @@ func BenchmarkParallelLitePb(b *testing.B) {
 			if err := model.UnmarshalProto(decodeData); err != nil {
 				panic(err)
 			}
-			if decodeModel.Uint32 != model.Uint32 ||
+			if !bytes.Equal(decodeModel.Uuid.Value, model.Uuid[:]) ||
+				decodeModel.Uint32 != model.Uint32 ||
 				decodeModel.Uint64 != model.Uint64 ||
 				decodeModel.String_ != model.String_ ||
 				len(decodeModel.Smap) != len(model.Smap) ||
@@ -200,7 +213,8 @@ func BenchmarkParallelLitePbReturnToPool(b *testing.B) {
 			if err := model.UnmarshalProto(decodeData); err != nil {
 				panic(err)
 			}
-			if decodeModel.Uint32 != model.Uint32 ||
+			if !bytes.Equal(decodeModel.Uuid.Value, model.Uuid[:]) ||
+				decodeModel.Uint32 != model.Uint32 ||
 				decodeModel.Uint64 != model.Uint64 ||
 				decodeModel.String_ != model.String_ ||
 				len(decodeModel.Smap) != len(model.Smap) ||

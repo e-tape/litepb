@@ -1,4 +1,4 @@
 {{- define "func_name_message_convert_to" -}}
     {{- /*gotype: github.com/e-tape/litepb/proto.Message*/ -}}
-    ConvertTo{{ .GetName }}
+    ConvertTo{{ template "type_name" kv "msg" . }}
 {{- end -}}

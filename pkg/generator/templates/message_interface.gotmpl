@@ -1,9 +1,9 @@
 {{- define "message_interface" -}}
     {{ if is_generate "INTERFACE" -}}
         {{- /*gotype: github.com/e-tape/litepb/proto.Message*/ -}}
-        {{ template "message_interface_name" kv "msg" . }} interface {
-        {{ template "message_interface_name" kv "msg" . "get" true }}
-        {{ template "message_interface_name" kv "msg" . "set" true }}
+        {{ template "type_name" kv "msg" . "i" true }} interface {
+        {{ template "type_name" kv "msg" . "i_get" true }}
+        {{ template "type_name" kv "msg" . "i_set" true }}
         }
     {{ end -}}
 {{- end -}}

@@ -22,7 +22,7 @@ func main() {
 }
 
 func run() error {
-	in, err := os.ReadFile(`bin/1.bin`)
+	in, err := os.ReadFile(`/tmp/1.bin`)
 	if err != nil {
 		return err
 	}

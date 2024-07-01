@@ -13,8 +13,8 @@
     }}
     if len(data) < index + {{ $valueLength }} { return {{ .errorUnexpectedEndValue }} }
 
-    var mapKey {{ template "field_type_name" kv "type" .type.GetMap.GetKey }}
-    var mapValue {{ template "field_type_name" kv "type" .type.GetMap.GetValue }}
+    var mapKey {{ template "type_name" kv "type" .type.GetMap.GetKey }}
+    var mapValue {{ template "type_name" kv "type" .type.GetMap.GetValue }}
     mapEnd := index + {{ $valueLength }}
 
     for index < mapEnd {
@@ -63,12 +63,12 @@
     }
     }
     if a.{{ .field.GetName }} == nil {
-    {{ if is_msg .type.GetMap.GetValue -}}
+    {{ if and (is_msg .type.GetMap.GetValue) (not (render "type_is_custom" .type.GetMap.GetValue)) -}}
         a.{{ .field.GetName }} = {{- template "field_type_path" .type -}}
         {{ template "func_name_map_new" .type.GetMap.GetValue.GetReflect -}}
-        [{{ template "field_type_name" kv "type" .type.GetMap.GetKey }}](1)
+        [{{ template "type_name" kv "type" .type.GetMap.GetKey }}](1)
     {{ else -}}
-        a.{{ .field.GetName }} = make({{ template "field_type_name" kv "type" .type }}, 1)
+        a.{{ .field.GetName }} = make({{ template "type_name" kv "type" .type }}, 1)
     {{ end -}}
     }
     a.{{ .field.GetName }}[{{ get_result $paramKey }}] = {{ get_result $paramValue }}

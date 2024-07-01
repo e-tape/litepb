@@ -2,18 +2,18 @@
     {{ if is_generate "INTERFACE" -}}
         {{- /*gotype: github.com/e-tape/litepb/proto.Message*/ -}}
         {{- $msg := . -}}
-        {{ template "message_interface_name" kv "msg" . "set" true }} interface {
+        {{ template "type_name" kv "msg" . "i_set" true }} interface {
         {{ range .GetProperties -}}
             {{ with .GetField -}}
-                Set{{ .GetName }}({{ template "field_type_name" kv
+                Set{{ .GetName }}({{ template "type_name" kv
                 "type" .GetType
-                "i_name_get" true
-                }}) {{ template "message_interface_name" kv "msg" $msg }}
+                "i_get" true
+                }}) {{ template "type_name" kv "msg" $msg "i" true }}
             {{ end -}}
             {{ with .GetOneof -}}
-                Set{{ .GetName }}({{ template "oneof_type_name" kv "msg" $msg "oneof" . }}) {{ template "message_interface_name" kv "msg" $msg }}
+                Set{{ .GetName }}({{ template "oneof_type_name" kv "msg" $msg "oneof" . }}) {{ template "type_name" kv "msg" $msg "i" true }}
                 {{ range .GetFields -}}
-                    Set{{ .GetName }}({{ template "field_type_name" kv "type" .GetType "i_name_get" true }}) {{ template "message_interface_name" kv "msg" $msg }}
+                    Set{{ .GetName }}({{ template "type_name" kv "type" .GetType "i_get" true }}) {{ template "type_name" kv "msg" $msg "i" true }}
                 {{ end -}}
             {{ end -}}
         {{ end -}}

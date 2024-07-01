@@ -4,7 +4,7 @@ package litepb;
 
 option go_package = "github.com/e-tape/litepb/proto;litepb";
 
-import "options.proto";
+import "proto/options.proto";
 
 // Implementation of uuid.UUID transfer
 message UUID {

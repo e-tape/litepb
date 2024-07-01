@@ -1,6 +1,6 @@
 {{- define "message_proto_message" -}}
     {{ if is_generate "PROTO_MESSAGE" -}}
         {{- /*gotype: github.com/e-tape/litepb/proto.Message*/ -}}
-        func (a *{{ .GetName }}) ProtoMessage() {}
+        func (a *{{ template "type_name" kv "msg" . }}) ProtoMessage() {}
     {{ end -}}
 {{- end -}}

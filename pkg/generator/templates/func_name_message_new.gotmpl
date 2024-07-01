@@ -1,4 +1,4 @@
 {{- define "func_name_message_new" -}}
     {{- /*gotype: github.com/e-tape/litepb/proto.Message*/ -}}
-    New{{ .GetName }}
+    New{{ template "type_name" kv "msg" . }}
 {{- end -}}

@@ -27,7 +27,7 @@ func (a *Generator) newFile(protoFile *descriptorpb.FileDescriptorProto) *genera
 		path.Base(protoFile.GetName()),
 		path.Ext(protoFile.GetName()),
 	)) + ".lpb.go"
-	namePath := path.Dir(packagePath)
+	namePath := packagePath
 	if a.cfg.SourceRelative {
 		namePath = path.Dir(protoFile.GetName())
 	}

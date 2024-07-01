@@ -5,18 +5,15 @@
         {{ if eq .GetType.GetInProto.String "STRING" -}}
             case 2:
             {{ template "field_unmarshal_string" $c }}
-        {{ end -}}
-        {{ if eq .GetType.GetInProto.String "BYTES" -}}
+        {{ else if eq .GetType.GetInProto.String "BYTES" -}}
             case 2:
             {{ template "field_unmarshal_bytes" $c }}
-        {{ end -}}
-        {{ if and (eq .GetType.GetInProto.String "MESSAGE_OR_MAP") (not (is_map .GetType)) -}}
-            case 2:
-            {{ template "field_unmarshal_message" $c }}
-        {{ end -}}
-        {{ if and (eq .GetType.GetInProto.String "MESSAGE_OR_MAP") (is_map .GetType) -}}
+        {{ else if and (eq .GetType.GetInProto.String "MESSAGE_OR_MAP") (is_map .GetType) -}}
             case 2:
             {{ template "field_unmarshal_map" $c }}
+        {{ else if eq .GetType.GetInProto.String "MESSAGE_OR_MAP" -}}
+            case 2:
+            {{ template "field_unmarshal_message" $c }}
         {{ end -}}
     {{- end -}}
 {{- end -}}

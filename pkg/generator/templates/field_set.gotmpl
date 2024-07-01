@@ -1,12 +1,13 @@
 {{- define "field_set" -}}
     {{- /*gotype: github.com/e-tape/litepb/proto.Message_Field*/ -}}
     if a == nil { panic("uninitialized object") } // TODO rathil del???
-    {{ if and (is_msg .GetType) (.GetType.GetRepeated) -}}
+    {{ $isCustom := render "type_is_custom" .GetType -}}
+    {{ if and (is_msg .GetType) (.GetType.GetRepeated) (not $isCustom) -}}
         {{ template "field_set_list" . }}
-    {{ else if and (is_map .GetType) (is_msg .GetType.GetMap.GetValue) -}}
+    {{ else if and (is_map .GetType) (is_msg .GetType.GetMap.GetValue) (not (render "type_is_custom" .GetType.GetMap.GetValue)) -}}
         if a.{{ .GetName }} != nil { a.{{ .GetName }}.{{ template "func_name_map_return_to_pool" }}() }
         {{ template "field_set_map" . }}
-    {{ else if is_msg .GetType -}}
+    {{ else if and (is_msg .GetType) (not $isCustom) -}}
         a.{{ .GetName }}.{{ template "func_name_message_return_to_pool" }}()
         a.{{ .GetName }} = {{ template "type_convert_to" .GetType }}(value)
     {{ else -}}

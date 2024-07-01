@@ -5,15 +5,15 @@
         {{ range (lines .GetComments) -}}
             //{{ . }}
         {{ end -}}
-        {{ .GetName }} struct {
+        {{ template "type_name" kv "msg" . }} struct {
         {{- range .GetProperties -}}
             {{ with .GetField -}}
                 {{ range (lines .GetComments) -}}
                     //{{ . }}
                 {{ end -}}
-                {{ .GetName }} {{ template "field_type_name" kv "type" .GetType }} {{ template "field_tags" . }}
-                {{ if and (.GetType.Repeated) (is_msg .GetType) -}}
-                    p{{ .GetName }} *{{ template "field_type_name" kv "type" .GetType "list" true }} ``
+                {{ .GetName }} {{ template "type_name" kv "type" .GetType }} {{ template "field_tags" . }}
+                {{ if and (.GetType.Repeated) (is_msg .GetType) (not (render "type_is_custom" .GetType)) -}}
+                    p{{ .GetName }} *{{ template "type_name" kv "type" .GetType "list" true }} ``
                 {{ end -}}
             {{ end -}}
             {{ with .GetOneof -}}

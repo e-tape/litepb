@@ -9,9 +9,14 @@
     "valueTypeName" "int"
     "rangeItems" (arr 0 7 14 21 28)
     }}
-    index += {{ $valueLength }}
-    if len(data) < index { return {{ .errorUnexpectedEndValue }} }
-    {{ .valueName }} {{ if .valueCreate }}:{{ end }}= {{ template "type_new" .type }}()
-    if err := {{ .valueName }}.{{ template "func_name_message_unmarshal" "" }}(data[index-{{ $valueLength }} : index]); err != nil { return err }
+    if len(data) < index+{{ $valueLength }} { return {{ .errorUnexpectedEndValue }} }
+    {{ $custom := render "type_custom_unmarshal" (kv "c" . "valueLength" $valueLength) -}}
+    {{- if $custom -}}
+        {{ $custom }}
+    {{- else -}}
+        index += {{ $valueLength }}
+        {{ .valueName }} {{ if .valueCreate }}:{{ end }}= {{ template "type_new" .type }}()
+        if err := {{ .valueName }}.{{ template "func_name_message_unmarshal" "" }}(data[index-{{ $valueLength }} : index]); err != nil { return err }
+    {{- end -}}
     {{- set_result . .valueName -}}
 {{- end -}}

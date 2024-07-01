@@ -31,18 +31,18 @@
                     }
                 {{ end -}}
                 {{ if is_generate "GETTER" -}}
-                    func (a *{{ template "oneof_type_name" kv "msg" $msg "field" . }}) Get{{ .GetName }}() {{ template "field_type_name" kv
+                    func (a *{{ template "oneof_type_name" kv "msg" $msg "field" . }}) Get{{ .GetName }}() {{ template "type_name" kv
                     "type" .GetType
-                    "i_name_get" true
+                    "i_get" true
                     -}} {
                     if a == nil { return {{ .GetZeroValue }} }
                     return a.{{ .GetName }}
                     }
                 {{ end -}}
                 {{ if is_generate "SETTER" -}}
-                    func (a *{{ template "oneof_type_name" kv "msg" $msg "field" . }}) Set{{ .GetName }}(value {{ template "field_type_name" kv
+                    func (a *{{ template "oneof_type_name" kv "msg" $msg "field" . }}) Set{{ .GetName }}(value {{ template "type_name" kv
                     "type" .GetType
-                    "i_name_get" true
+                    "i_get" true
                     -}}) {{ template "oneof_type_name" kv "msg" $msg "oneof" $oneof }} {
                     {{ template "field_set" . }}
                     }

@@ -7,9 +7,22 @@ test-compile: build-protoc-gen-litepb
 
 test-compile-for-bench: build-protoc-gen-litepb
 	mkdir -p test/bench/proto/google/
-	protoc --proto_path=./test/proto/bench/ --proto_path=/usr/local/include/ --proto_path=./ --go_out test/bench/proto/google/ ./test/proto/bench/bench.proto
-	mkdir -p test/bench/proto/gogo/
-	protoc --proto_path=./test/proto/bench/ --proto_path=/usr/local/include/ --proto_path=./ --gogofast_out test/bench/proto/gogo/ ./test/proto/bench/bench.proto
+	protoc --proto_path=./test/proto/bench/ \
+		--proto_path=/usr/local/include/ \
+		--proto_path=./ \
+		--go_out test/bench/proto/google/ \
+		./test/proto/bench/bench.proto
+	mkdir -p test/bench/proto/gogo/proto/
+	protoc --proto_path=./test/proto/bench/ \
+		--proto_path=/usr/local/include/ \
+		--proto_path=./ \
+		--gogofast_out test/bench/proto/gogo/ \
+		./test/proto/bench/bench.proto
+	protoc --proto_path=./ \
+		--proto_path=/usr/local/include/ \
+		--gogofast_out test/bench/proto/gogo/proto \
+		./proto/uuid.proto
+	sed -i -e 's/github.com\/e-tape\/litepb\/proto/bench\/proto\/gogo\/proto\/github.com\/e-tape\/litepb\/proto/g' test/bench/proto/gogo/bench/bench.pb.go
 	mkdir -p test/bench/proto/litepb/
 	protoc --plugin ./bin/protoc-gen-litepb \
  		--proto_path=./test/proto/bench/ \

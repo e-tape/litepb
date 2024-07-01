@@ -6,8 +6,13 @@ option go_package = "/bench";
 
 import "vendor/validate/validate.proto";
 //import "proto/options.proto";
+import "proto/uuid.proto";
 
 message Bench {
+  litepb.UUID uuid = 10100;
+  repeated litepb.UUID r_uuid = 10101;
+  map<int32, litepb.UUID> m_uuid = 10102;
+
   uint64 request_id = 1;
   uint64 uint64 = 4;
   uint32 uint32 = 200;

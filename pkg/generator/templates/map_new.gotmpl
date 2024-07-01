@@ -1,12 +1,12 @@
 {{- define "map_new" -}}
     {{- /*gotype: github.com/e-tape/litepb/proto.Message*/ -}}
     {{ if is_generate "NEW" -}}
-        func {{ template "func_name_map_new" . }}[K comparable](cap int) {{ template "map_type_name" . }}[K] {
+        func {{ template "func_name_map_new" . }}[K comparable](cap int) {{ template "type_name" kv "msg" . "map" true }}[K] {
         {{ if .GetMemPoolMap -}}
             {{ template "map_pool_init" . }}
-            if value , ok := pool.(*sync.Pool).Get().({{ template "map_type_name" . }}[K]); ok { return value }
+            if value , ok := pool.(*sync.Pool).Get().({{ template "type_name" kv "msg" . "map" true }}[K]); ok { return value }
         {{ end -}}
-        return make({{ template "map_type_name" . }}[K], cap)
+        return make({{ template "type_name" kv "msg" . "map" true }}[K], cap)
         }
     {{ end -}}
 {{- end -}}

@@ -1,11 +1,11 @@
 {{- define "list_new" -}}
     {{- /*gotype: github.com/e-tape/litepb/proto.Message*/ -}}
     {{ if is_generate "NEW" -}}
-        func {{ template "func_name_list_new" . }}(cap int) *{{ template "list_type_name" . }} {
+        func {{ template "func_name_list_new" . }}(cap int) *{{ template "type_name" kv "msg" . "list" true }} {
         {{ if .GetMemPoolList -}}
-            if value, ok := {{ template "pool_name_list" . }}.Get().(*{{ template "list_type_name" . }}); ok { return value }
+            if value, ok := {{ template "pool_name_list" . }}.Get().(*{{ template "type_name" kv "msg" . "list" true }}); ok { return value }
         {{ end -}}
-        value := make({{ template "list_type_name" . }}, 0, cap)
+        value := make({{ template "type_name" kv "msg" . "list" true }}, 0, cap)
         return &value
         }
     {{ end -}}
