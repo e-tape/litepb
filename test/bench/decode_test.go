@@ -6,8 +6,9 @@ import (
 
 	gogo "bench/proto/gogo/bench"
 	google "bench/proto/google/bench"
-	litepb "bench/proto/litepb/bench"
+	litepb "bench/proto/litepb_old/bench"
 	litepb2 "github.com/e-tape/litepb/proto"
+	"github.com/google/uuid"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -18,7 +19,6 @@ var decodeModel = &google.Bench{
 	Uuid: &litepb2.UUID{
 		Value: []byte{18, 52, 86, 120, 21, 117, 69, 117, 101, 117, 135, 83, 19, 84, 21, 64},
 	},
-
 	Uint64:  2065657434543,
 	Uint32:  156547,
 	String_: "123456",
@@ -79,7 +79,7 @@ func BenchmarkSimpleGoogle(b *testing.B) {
 		if err := proto.Unmarshal(decodeData, model); err != nil {
 			panic(err)
 		}
-		if !bytes.Equal(decodeModel.Uuid.Value, model.Uuid.Value) ||
+		if !bytes.Equal(decodeModel.GetUuid().GetValue(), model.GetUuid().GetValue()) ||
 			decodeModel.Uint32 != model.Uint32 ||
 			decodeModel.Uint64 != model.Uint64 ||
 			decodeModel.String_ != model.String_ ||
@@ -97,7 +97,7 @@ func BenchmarkSimpleGogo(b *testing.B) {
 		if err := model.Unmarshal(decodeData); err != nil {
 			panic(err)
 		}
-		if !bytes.Equal(decodeModel.Uuid.Value, model.Uuid.Value) ||
+		if !bytes.Equal(decodeModel.GetUuid().GetValue(), model.GetUuid().GetValue()) ||
 			decodeModel.Uint32 != model.Uint32 ||
 			decodeModel.Uint64 != model.Uint64 ||
 			decodeModel.String_ != model.String_ ||
@@ -109,13 +109,13 @@ func BenchmarkSimpleGogo(b *testing.B) {
 	}
 }
 
-func BenchmarkSimpleLitePb(b *testing.B) {
+func BenchmarkSimpleLiteOldPb(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		model := &litepb.Bench{}
 		if err := model.UnmarshalProto(decodeData); err != nil {
 			panic(err)
 		}
-		if !bytes.Equal(decodeModel.Uuid.Value, model.Uuid[:]) ||
+		if !(bytes.Equal(decodeModel.GetUuid().GetValue(), model.Uuid[:]) || model.Uuid == uuid.Nil) ||
 			decodeModel.Uint32 != model.Uint32 ||
 			decodeModel.Uint64 != model.Uint64 ||
 			decodeModel.String_ != model.String_ ||
@@ -127,13 +127,13 @@ func BenchmarkSimpleLitePb(b *testing.B) {
 	}
 }
 
-func BenchmarkSimpleLitePbReturnToPool(b *testing.B) {
+func BenchmarkSimpleLiteOldPbReturnToPool(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		model := litepb.NewBench()
 		if err := model.UnmarshalProto(decodeData); err != nil {
 			panic(err)
 		}
-		if !bytes.Equal(decodeModel.Uuid.Value, model.Uuid[:]) ||
+		if !(bytes.Equal(decodeModel.GetUuid().GetValue(), model.Uuid[:]) || model.Uuid == uuid.Nil) ||
 			decodeModel.Uint32 != model.Uint32 ||
 			decodeModel.Uint64 != model.Uint64 ||
 			decodeModel.String_ != model.String_ ||
@@ -153,7 +153,7 @@ func BenchmarkParallelGoogle(b *testing.B) {
 			if err := proto.Unmarshal(decodeData, model); err != nil {
 				panic(err)
 			}
-			if !bytes.Equal(decodeModel.Uuid.Value, model.Uuid.Value) ||
+			if !bytes.Equal(decodeModel.GetUuid().GetValue(), model.GetUuid().GetValue()) ||
 				decodeModel.Uint32 != model.Uint32 ||
 				decodeModel.Uint64 != model.Uint64 ||
 				decodeModel.String_ != model.String_ ||
@@ -173,7 +173,7 @@ func BenchmarkParallelGogo(b *testing.B) {
 			if err := model.Unmarshal(decodeData); err != nil {
 				panic(err)
 			}
-			if !bytes.Equal(decodeModel.Uuid.Value, model.Uuid.Value) ||
+			if !bytes.Equal(decodeModel.GetUuid().GetValue(), model.GetUuid().GetValue()) ||
 				decodeModel.Uint32 != model.Uint32 ||
 				decodeModel.Uint64 != model.Uint64 ||
 				decodeModel.String_ != model.String_ ||
@@ -186,14 +186,14 @@ func BenchmarkParallelGogo(b *testing.B) {
 	})
 }
 
-func BenchmarkParallelLitePb(b *testing.B) {
+func BenchmarkParallelLiteOldPb(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
 			model := &litepb.Bench{}
 			if err := model.UnmarshalProto(decodeData); err != nil {
 				panic(err)
 			}
-			if !bytes.Equal(decodeModel.Uuid.Value, model.Uuid[:]) ||
+			if !(bytes.Equal(decodeModel.GetUuid().GetValue(), model.Uuid[:]) || model.Uuid == uuid.Nil) ||
 				decodeModel.Uint32 != model.Uint32 ||
 				decodeModel.Uint64 != model.Uint64 ||
 				decodeModel.String_ != model.String_ ||
@@ -206,14 +206,14 @@ func BenchmarkParallelLitePb(b *testing.B) {
 	})
 }
 
-func BenchmarkParallelLitePbReturnToPool(b *testing.B) {
+func BenchmarkParallelLiteOldPbReturnToPool(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
 			model := litepb.NewBench()
 			if err := model.UnmarshalProto(decodeData); err != nil {
 				panic(err)
 			}
-			if !bytes.Equal(decodeModel.Uuid.Value, model.Uuid[:]) ||
+			if !(bytes.Equal(decodeModel.GetUuid().GetValue(), model.Uuid[:]) || model.Uuid == uuid.Nil) ||
 				decodeModel.Uint32 != model.Uint32 ||
 				decodeModel.Uint64 != model.Uint64 ||
 				decodeModel.String_ != model.String_ ||
@@ -223,6 +223,19 @@ func BenchmarkParallelLitePbReturnToPool(b *testing.B) {
 				panic(`eq`)
 			}
 			model.ReturnToPool()
+		}
+	})
+}
+
+func BenchmarkParallelGogoField(b *testing.B) {
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			model := &gogo.Bench{}
+			model.Iarr = []*gogo.Bench_InnerForMap{
+				{},
+				{},
+				{},
+			}
 		}
 	})
 }
@@ -230,13 +243,12 @@ func BenchmarkParallelLitePbReturnToPool(b *testing.B) {
 func BenchmarkParallelField(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
-			model := litepb.NewBench()
+			model := &litepb.Bench{}
 			model.Iarr = []*litepb.Bench_InnerForMap{
 				{},
 				{},
 				{},
 			}
-			model.ReturnToPool()
 		}
 	})
 }
@@ -246,7 +258,7 @@ func BenchmarkParallelSetter(b *testing.B) {
 		for pb.Next() {
 			model := litepb.NewBench()
 			model.SetIarr([]litepb.IBench_InnerForMapGet{
-				litepb.NewBench_InnerForMap().SetUint32(2),
+				litepb.NewBench_InnerForMap().SetUint32(2).SetUint64(5).SetUint64(654),
 				litepb.NewBench_InnerForMap().SetUint64(6),
 				litepb.NewBench_InnerForMap(),
 			})
