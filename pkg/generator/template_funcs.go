@@ -48,6 +48,10 @@ func arr(values ...any) []any {
 	return values
 }
 
+func arrAppend(arr []any, values ...any) []any {
+	return append(arr, values...)
+}
+
 func kv(values ...any) map[any]any {
 	result := make(map[any]any, len(values)/2)
 	for i := 0; i < len(values); i += 2 {
@@ -84,13 +88,35 @@ func replace(input string, values ...string) string {
 	return strings.NewReplacer(values...).Replace(input)
 }
 
-func getResult(value map[any]any) any {
-	return value["result"]
+func set(value any, k any, v any) any {
+	switch vt := value.(type) {
+	case map[any]any:
+		vt[k] = v
+	case []any:
+		kt := k.(int)
+		if len(vt) > kt {
+			vt[kt] = v
+		}
+	}
+	return ""
 }
 
-func setResult(value map[any]any, result any) any {
-	value["result"] = result
-	return ""
+func get(value any, k any, defaultValue ...any) any {
+	switch vt := value.(type) {
+	case map[any]any:
+		if v, ok := vt[k]; ok {
+			return v
+		}
+	case []any:
+		kt := k.(int)
+		if len(vt) > kt {
+			return vt[kt]
+		}
+	}
+	if len(defaultValue) > 0 {
+		return defaultValue[0]
+	}
+	return nil
 }
 
 func render(name string, data any) (string, error) {
@@ -118,4 +144,85 @@ func sort(items any) any {
 		})
 	}
 	return items
+}
+
+func add(x, y int) int { return x + y }
+func sub(x, y int) int { return x - y }
+func mul(x, y int) int { return x * y }
+
+func packFieldNumBytes(
+	number int32,
+	inProtoAny any,
+	packed bool,
+) []byte {
+	var wireType int32
+	var inProto litepb.Message_Field_Type_Proto
+	switch it := inProtoAny.(type) {
+	case litepb.Message_Field_Type_Proto:
+		inProto = it
+	case int:
+		inProto = litepb.Message_Field_Type_Proto(it)
+	}
+	switch litepb.Message_Field_Type_Proto(inProto) {
+	case litepb.Message_Field_Type_INT32,
+		litepb.Message_Field_Type_INT64,
+		litepb.Message_Field_Type_UINT32,
+		litepb.Message_Field_Type_UINT64,
+		litepb.Message_Field_Type_SINT32,
+		litepb.Message_Field_Type_SINT64,
+		litepb.Message_Field_Type_BOOL:
+		if !packed {
+			wireType = 0
+		} else {
+			wireType = 2
+		}
+	case litepb.Message_Field_Type_ENUM:
+		wireType = 0
+	case litepb.Message_Field_Type_FIXED64,
+		litepb.Message_Field_Type_SFIXED64,
+		litepb.Message_Field_Type_DOUBLE:
+		if !packed {
+			wireType = 1
+		} else {
+			wireType = 2
+		}
+	case litepb.Message_Field_Type_STRING,
+		litepb.Message_Field_Type_BYTES,
+		litepb.Message_Field_Type_MESSAGE_OR_MAP:
+		wireType = 2
+	case litepb.Message_Field_Type_FIXED32,
+		litepb.Message_Field_Type_SFIXED32,
+		litepb.Message_Field_Type_FLOAT:
+		if !packed {
+			wireType = 5
+		} else {
+			wireType = 2
+		}
+	}
+
+	num := number<<3 | wireType
+	result := make([]byte, 0, 4)
+	for num >= 1<<7 {
+		result = append(result, byte(num&127|128))
+		num >>= 7
+	}
+	return append(result, byte(num))
+}
+
+func packFieldNumInt(
+	number int32,
+	inProto any,
+	packed bool,
+) any {
+	data := packFieldNumBytes(number, inProto, packed)
+	switch len(data) {
+	case 1:
+		return data[0]
+	case 2:
+		return uint16(data[0]) | uint16(data[1])<<8
+	case 3:
+		return uint32(data[0]) | uint32(data[1])<<8 | uint32(data[2])<<16
+	default:
+		return uint32(data[0]) | uint32(data[1])<<8 | uint32(data[2])<<16 | uint32(data[3])<<24
+	}
 }

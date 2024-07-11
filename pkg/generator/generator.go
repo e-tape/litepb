@@ -70,13 +70,6 @@ func (a *Generator) Generate() *pluginpb.CodeGeneratorResponse {
 		)
 		fg.proto.Messages = fg.messages
 
-		// TODO rathil del!!!
-		//for _, msg := range fg.proto.Messages {
-		//	msg.MemPoolMessage = false
-		//}
-
-		//fg.proto.Imports = fg.generateImports(protoFile.GetDependency())
-
 		fg.proto.Generates = []litepb.File_Generate{
 			litepb.File_STRUCT,
 			litepb.File_INTERFACE,

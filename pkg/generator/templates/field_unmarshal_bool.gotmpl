@@ -1,7 +1,5 @@
 {{- define "field_unmarshal_bool" -}}
-    if len(data) <= index || data[index] > 127 {
-    return {{ template "error_unexpected_end_of_field_value" .fieldName }}
-    }
+    if len(data) <= index || data[index] > 127 { return {{ .errorUnexpectedEndValue }} }
     index++
-    {{- set_result . "data[index-1] == 1" -}}
+    {{- set . "result" (render "field_unmarshal_bool_result" .) -}}
 {{- end -}}

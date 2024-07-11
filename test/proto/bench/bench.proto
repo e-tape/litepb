@@ -29,6 +29,8 @@ message Bench {
   repeated InnerForMap iarr = 211;
   InnerForMap ifm = 220;
 
+  repeated int32 r_int32 = 250;
+
   repeated fixed32 r_fixed32 = 299;
   fixed32 fixed32 = 300;
   sfixed32 sfixed32 = 301;
@@ -42,6 +44,19 @@ message Bench {
     uint32 age1 = 500;
     Empty no_age = 501;
   }
+
+  oneof ordering {
+    uint32 o1 = 160;
+//    int64 o2 = 8;
+//    int64 o3 = 14;
+//    int64 o4 = 15;
+//    int64 o5 = 16;
+  }
+
+  int64 o2 = 8;
+  int64 o3 = 14;
+  int64 o4 = 15;
+  int64 o5 = 16;
 
   message Empty{}
   message InnerForMap {

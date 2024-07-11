@@ -2,7 +2,7 @@
 // versions:
 // 	protoc-gen-go v1.26.0
 // 	protoc        v3.12.1
-// source: time.proto
+// source: proto/time.proto
 
 package litepb
 
@@ -36,7 +36,7 @@ type Time struct {
 func (x *Time) Reset() {
 	*x = Time{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_time_proto_msgTypes[0]
+		mi := &file_proto_time_proto_msgTypes[0]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -49,7 +49,7 @@ func (x *Time) String() string {
 func (*Time) ProtoMessage() {}
 
 func (x *Time) ProtoReflect() protoreflect.Message {
-	mi := &file_time_proto_msgTypes[0]
+	mi := &file_proto_time_proto_msgTypes[0]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -62,7 +62,7 @@ func (x *Time) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Time.ProtoReflect.Descriptor instead.
 func (*Time) Descriptor() ([]byte, []int) {
-	return file_time_proto_rawDescGZIP(), []int{0}
+	return file_proto_time_proto_rawDescGZIP(), []int{0}
 }
 
 func (x *Time) GetSeconds() int64 {
@@ -79,36 +79,37 @@ func (x *Time) GetNanos() int32 {
 	return 0
 }
 
-var File_time_proto protoreflect.FileDescriptor
+var File_proto_time_proto protoreflect.FileDescriptor
 
-var file_time_proto_rawDesc = []byte{
-	0x0a, 0x0a, 0x74, 0x69, 0x6d, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12, 0x06, 0x6c, 0x69,
-	0x74, 0x65, 0x70, 0x62, 0x22, 0x36, 0x0a, 0x04, 0x54, 0x69, 0x6d, 0x65, 0x12, 0x18, 0x0a, 0x07,
-	0x73, 0x65, 0x63, 0x6f, 0x6e, 0x64, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x03, 0x52, 0x07, 0x73,
-	0x65, 0x63, 0x6f, 0x6e, 0x64, 0x73, 0x12, 0x14, 0x0a, 0x05, 0x6e, 0x61, 0x6e, 0x6f, 0x73, 0x18,
-	0x02, 0x20, 0x01, 0x28, 0x05, 0x52, 0x05, 0x6e, 0x61, 0x6e, 0x6f, 0x73, 0x42, 0x27, 0x5a, 0x25,
-	0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x65, 0x2d, 0x74, 0x61, 0x70,
-	0x65, 0x2f, 0x6c, 0x69, 0x74, 0x65, 0x70, 0x62, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x3b, 0x6c,
-	0x69, 0x74, 0x65, 0x70, 0x62, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+var file_proto_time_proto_rawDesc = []byte{
+	0x0a, 0x10, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f, 0x74, 0x69, 0x6d, 0x65, 0x2e, 0x70, 0x72, 0x6f,
+	0x74, 0x6f, 0x12, 0x06, 0x6c, 0x69, 0x74, 0x65, 0x70, 0x62, 0x22, 0x36, 0x0a, 0x04, 0x54, 0x69,
+	0x6d, 0x65, 0x12, 0x18, 0x0a, 0x07, 0x73, 0x65, 0x63, 0x6f, 0x6e, 0x64, 0x73, 0x18, 0x01, 0x20,
+	0x01, 0x28, 0x03, 0x52, 0x07, 0x73, 0x65, 0x63, 0x6f, 0x6e, 0x64, 0x73, 0x12, 0x14, 0x0a, 0x05,
+	0x6e, 0x61, 0x6e, 0x6f, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x05, 0x52, 0x05, 0x6e, 0x61, 0x6e,
+	0x6f, 0x73, 0x42, 0x27, 0x5a, 0x25, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d,
+	0x2f, 0x65, 0x2d, 0x74, 0x61, 0x70, 0x65, 0x2f, 0x6c, 0x69, 0x74, 0x65, 0x70, 0x62, 0x2f, 0x70,
+	0x72, 0x6f, 0x74, 0x6f, 0x3b, 0x6c, 0x69, 0x74, 0x65, 0x70, 0x62, 0x62, 0x06, 0x70, 0x72, 0x6f,
+	0x74, 0x6f, 0x33,
 }
 
 var (
-	file_time_proto_rawDescOnce sync.Once
-	file_time_proto_rawDescData = file_time_proto_rawDesc
+	file_proto_time_proto_rawDescOnce sync.Once
+	file_proto_time_proto_rawDescData = file_proto_time_proto_rawDesc
 )
 
-func file_time_proto_rawDescGZIP() []byte {
-	file_time_proto_rawDescOnce.Do(func() {
-		file_time_proto_rawDescData = protoimpl.X.CompressGZIP(file_time_proto_rawDescData)
+func file_proto_time_proto_rawDescGZIP() []byte {
+	file_proto_time_proto_rawDescOnce.Do(func() {
+		file_proto_time_proto_rawDescData = protoimpl.X.CompressGZIP(file_proto_time_proto_rawDescData)
 	})
-	return file_time_proto_rawDescData
+	return file_proto_time_proto_rawDescData
 }
 
-var file_time_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
-var file_time_proto_goTypes = []interface{}{
+var file_proto_time_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
+var file_proto_time_proto_goTypes = []interface{}{
 	(*Time)(nil), // 0: litepb.Time
 }
-var file_time_proto_depIdxs = []int32{
+var file_proto_time_proto_depIdxs = []int32{
 	0, // [0:0] is the sub-list for method output_type
 	0, // [0:0] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
@@ -116,13 +117,13 @@ var file_time_proto_depIdxs = []int32{
 	0, // [0:0] is the sub-list for field type_name
 }
 
-func init() { file_time_proto_init() }
-func file_time_proto_init() {
-	if File_time_proto != nil {
+func init() { file_proto_time_proto_init() }
+func file_proto_time_proto_init() {
+	if File_proto_time_proto != nil {
 		return
 	}
 	if !protoimpl.UnsafeEnabled {
-		file_time_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
+		file_proto_time_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Time); i {
 			case 0:
 				return &v.state
@@ -139,18 +140,18 @@ func file_time_proto_init() {
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: file_time_proto_rawDesc,
+			RawDescriptor: file_proto_time_proto_rawDesc,
 			NumEnums:      0,
 			NumMessages:   1,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
-		GoTypes:           file_time_proto_goTypes,
-		DependencyIndexes: file_time_proto_depIdxs,
-		MessageInfos:      file_time_proto_msgTypes,
+		GoTypes:           file_proto_time_proto_goTypes,
+		DependencyIndexes: file_proto_time_proto_depIdxs,
+		MessageInfos:      file_proto_time_proto_msgTypes,
 	}.Build()
-	File_time_proto = out.File
-	file_time_proto_rawDesc = nil
-	file_time_proto_goTypes = nil
-	file_time_proto_depIdxs = nil
+	File_proto_time_proto = out.File
+	file_proto_time_proto_rawDesc = nil
+	file_proto_time_proto_goTypes = nil
+	file_proto_time_proto_depIdxs = nil
 }

@@ -4,97 +4,108 @@
         {{- $msg := . -}}
         func (a *{{ template "type_name" kv "msg" . }}){{ template "func_name_message_unmarshal" }}(data []byte) error {
         {{ if gt (len .GetProperties) 0 -}}
-            // TODO rathil move to template???
-            var index int
-            for len(data) > index {
-            fieldNum := int32(data[index] & 127)
-            if data[index] < 128 { goto end }
-            {{ range arr 7 14 21 -}}
-                index++
-                if len(data) > index {
-                fieldNum |= int32(data[index]&127) << {{ . }}
-                if data[index] < 128 { goto end }
+            {{- /*
+                { // $item
+                    "number": 0,
+                    "unmarshal": "",
+                    "link": ""
                 }
-            {{ end -}}
-            return {{ template "error_unexpected_end_of_field_number" }}
-            end:
-            index++
-            switch fieldNum >> 3 {
-            {{ range .GetProperties -}}
+            */ -}}
+            {{- $items := arr arr arr arr arr -}}
+            {{ range .GetProperties  -}}
                 {{ with .GetField -}}
-                    {{- /*gotype: github.com/e-tape/litepb/proto.Message_Field*/ -}}
                     {{- $field := . -}}
-                    case {{ .GetNumber }}:
-                    switch fieldNum & 7 {
-                    {{ range arr "field_unmarshal_varint" "field_unmarshal_len" "field_unmarshal_i64" "field_unmarshal_i32" -}}
-                        {{- $param := kv
-                        "field" $field
-                        "type" $field.GetType
-                        "number" $field.GetNumber
-                        "valueName" "value"
-                        "valueCreate" true
-                        "endName" (printf "end%d" $field.GetNumber)
-                        "fieldName" (printf "%s.%s" $msg.GetName $field.GetName)
-                        "errorUnexpectedEndLength" (render "error_unexpected_end_of_field_length" (printf "%s.%s" $msg.GetName $field.GetName))
-                        "errorUnexpectedEndValue" (render "error_unexpected_end_of_field_value" (printf "%s.%s" $msg.GetName $field.GetName))
-                        "errorUnexpectedEnd" (render "error_unexpected_end_of_field_value" (printf "%s.%s" $msg.GetName $field.GetName))
-                        -}}
-                        {{ with render . $param -}}
-                            {{ . -}}
-                            {{ with get_result $param -}}
-                                {{ if $field.GetType.GetRepeated -}}
-                                    {{ if and (is_msg $field.GetType) (not (render "type_is_custom" $field.GetType)) -}}
-                                        if a.{{ $field.GetName }} == nil {
-                                        a.p{{ $field.GetName }} = {{ template "field_type_path" $field.GetType -}}
-                                        {{ template "func_name_list_new" $field.GetType.GetReflect -}}(1)
-                                        a.{{ $field.GetName }} = *a.p{{ $field.GetName }}
-                                        }
-                                    {{ end -}}
-                                    a.{{ $field.GetName }} = append(a.{{ $field.GetName }}, {{ . }})
-                                {{ else -}}
-                                    a.{{ $field.GetName }} = {{ . }}
-                                {{ end -}}
-                            {{ end -}}
-                        {{ end -}}
+                    {{- $packedList := arr false -}}
+                    {{ if .GetType.GetRepeated -}}
+                        {{- $packedList = append $packedList true -}}
                     {{ end -}}
-                    default:
-                    return {{ template "error_incorrect_wire_type" kv "msg" $msg "field" . "fieldNum" "fieldNum" }}
-                    }
-                {{ end -}}
-                {{ with .GetOneof -}}
-                    {{- /*gotype: github.com/e-tape/litepb/proto.Message_OneOf*/ -}}
-                    {{- $oneof := . -}}
-                    {{ range .GetFields -}}
-                        {{- /*gotype: github.com/e-tape/litepb/proto.Message_Field*/ -}}
-                        {{- $field := . -}}
-                        case {{ .GetNumber }}:
-                        switch fieldNum & 7 {
+                    {{ range $packedList -}}
+                        {{- $packed := . -}}
                         {{ range arr "field_unmarshal_varint" "field_unmarshal_len" "field_unmarshal_i64" "field_unmarshal_i32" -}}
                             {{- $param := kv
                             "field" $field
                             "type" $field.GetType
                             "number" $field.GetNumber
+                            "packed" $packed
                             "valueName" "value"
+                            "valueLength" "valueLength"
                             "valueCreate" true
-                            "endName" (printf "end%d" $field.GetNumber)
                             "fieldName" (printf "%s.%s" $msg.GetName $field.GetName)
                             "errorUnexpectedEndLength" (render "error_unexpected_end_of_field_length" (printf "%s.%s" $msg.GetName $field.GetName))
                             "errorUnexpectedEndValue" (render "error_unexpected_end_of_field_value" (printf "%s.%s" $msg.GetName $field.GetName))
                             "errorUnexpectedEnd" (render "error_unexpected_end_of_field_value" (printf "%s.%s" $msg.GetName $field.GetName))
+                            "errorIncorrectLength" (render "error_incorrect_of_field_length" (printf "%s.%s" $msg.GetName $field.GetName))
                             -}}
                             {{ with render . $param -}}
-                                {{ . -}}
-                                {{ with get_result $param -}}
-                                    a.Set{{ $field.GetName }}({{ . }})
-                                {{ end -}}
+                                {{- $index := sub (len (pack_field_num_bytes $field.GetNumber $field.GetType.GetInProto $packed)) 1 -}}
+                                {{- $item := (kv
+                                "number" (pack_field_num_int $field.GetNumber $field.GetType.GetInProto $packed)
+                                "unmarshal" .
+                                "link" (render "field_set_unmarshal_result" (kv "field" $field "result" (get $param "result")))
+                                ) -}}
+                                {{- set $items $index (append (get $items $index) $item) -}}
                             {{ end -}}
                         {{ end -}}
-                        default:
-                        return {{ template "error_incorrect_wire_type" kv "msg" $msg "field" . "fieldNum" "fieldNum" }}
-                        }
+                    {{ end -}}
+                {{ end -}}
+                {{ with .GetOneof -}}
+                    {{ range .GetFields -}}
+                        {{- $field := . -}}
+                        {{ range arr "field_unmarshal_varint" "field_unmarshal_len" "field_unmarshal_i64" "field_unmarshal_i32" -}}
+                            {{- $param := kv
+                            "field" $field
+                            "type" $field.GetType
+                            "number" $field.GetNumber
+                            "packed" false
+                            "valueName" "value"
+                            "valueLength" "valueLength"
+                            "valueCreate" true
+                            "fieldName" (printf "%s.%s" $msg.GetName $field.GetName)
+                            "errorUnexpectedEndLength" (render "error_unexpected_end_of_field_length" (printf "%s.%s" $msg.GetName $field.GetName))
+                            "errorUnexpectedEndValue" (render "error_unexpected_end_of_field_value" (printf "%s.%s" $msg.GetName $field.GetName))
+                            "errorUnexpectedEnd" (render "error_unexpected_end_of_field_value" (printf "%s.%s" $msg.GetName $field.GetName))
+                            "errorIncorrectLength" (render "error_incorrect_of_field_length" (printf "%s.%s" $msg.GetName $field.GetName))
+                            -}}
+                            {{ with render . $param -}}
+                                {{- $index := sub (len (pack_field_num_bytes $field.GetNumber $field.GetType.GetInProto false)) 1 -}}
+                                {{- $item := (kv
+                                "number" (pack_field_num_int $field.GetNumber $field.GetType.GetInProto false)
+                                "unmarshal" .
+                                "link" (render "field_set_unmarshal_result" (kv "oneof" $field "result" (get $param "result")))
+                                ) -}}
+                                {{- set $items $index (append (get $items $index) $item) -}}
+                            {{ end -}}
+                        {{ end -}}
                     {{ end -}}
                 {{ end -}}
             {{ end -}}
+
+            var index int
+            for len(data) > index {
+            switch {
+            {{ range $index, $value := $items -}}
+                {{ if $value -}}
+                    case len(data) > index{{ if $index }}+{{ $index }}{{ end }} && data[index{{ if $index }}+{{ $index }}{{ end }}] < 128:
+                    index += {{ add $index 1 }}
+                    switch {{ if eq $index 0 -}}
+                        data[index-1]
+                    {{- else if eq $index 1 -}}
+                        uint16(data[index-2]) | uint16(data[index-1])<<8
+                    {{- else if eq $index 2 -}}
+                        uint32(data[index-3]) | uint32(data[index-2])<<8 | uint32(data[index-1])<<16
+                    {{- else if eq $index 3 -}}
+                        uint32(data[index-4]) | uint32(data[index-3])<<8 | uint32(data[index-2])<<16 | uint32(data[index-1])<<24
+                    {{- end }} {
+                    {{ range $value -}}
+                        case {{ .number }}:
+                        {{ .unmarshal -}}
+                        {{ .link }}
+                    {{ end -}}
+                    }
+                {{ end -}}
+            {{ end -}}
+            default:
+            return {{ template "error_unexpected_end_of_field_number" }}
             }
             }
         {{ end -}}

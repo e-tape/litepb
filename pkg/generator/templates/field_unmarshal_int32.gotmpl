@@ -1,12 +1,11 @@
 {{- define "field_unmarshal_int32" -}}
     {{- template "field_unmarshal_int" kv
     "type" .type
-    "endName" .endName
     "errorUnexpectedEnd" .errorUnexpectedEnd
     "valueName" .valueName
     "valueCreate" .valueCreate
     "valueTypeName" "int32"
     "rangeItems" (arr 0 7 14 21 28)
     -}}
-    {{- set_result . .valueName -}}
+    {{- set . "result" .valueName -}}
 {{- end -}}

@@ -31,18 +31,24 @@ func (a *Template) Execute(
 	// TODO rathil once
 	tmplFile, err := template.New("").
 		Funcs(template.FuncMap{
-			"import":      addImport,
-			"arr":         arr,
-			"kv":          kv,
-			"lines":       lines,
-			"replace":     replace,
-			"is_msg":      isMsg,
-			"is_map":      isMap,
-			"is_generate": isGenerate,
-			"get_result":  getResult,
-			"set_result":  setResult,
-			"render":      render,
-			"sort":        sort,
+			"import":               addImport,
+			"arr":                  arr,
+			"append":               arrAppend,
+			"kv":                   kv,
+			"lines":                lines,
+			"replace":              replace,
+			"is_msg":               isMsg,
+			"is_map":               isMap,
+			"is_generate":          isGenerate,
+			"set":                  set,
+			"get":                  get,
+			"render":               render,
+			"sort":                 sort,
+			"add":                  add,
+			"sub":                  sub,
+			"mul":                  mul,
+			"pack_field_num_bytes": packFieldNumBytes,
+			"pack_field_num_int":   packFieldNumInt,
 		}).
 		ParseFS(tmplFs, "templates/*.gotmpl")
 	if err != nil {

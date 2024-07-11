@@ -2,7 +2,7 @@
 // versions:
 // 	protoc-gen-go v1.26.0
 // 	protoc        v3.12.1
-// source: big.proto
+// source: proto/big.proto
 
 package litepb
 
@@ -33,7 +33,7 @@ type BigInt struct {
 func (x *BigInt) Reset() {
 	*x = BigInt{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_big_proto_msgTypes[0]
+		mi := &file_proto_big_proto_msgTypes[0]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -46,7 +46,7 @@ func (x *BigInt) String() string {
 func (*BigInt) ProtoMessage() {}
 
 func (x *BigInt) ProtoReflect() protoreflect.Message {
-	mi := &file_big_proto_msgTypes[0]
+	mi := &file_proto_big_proto_msgTypes[0]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -59,7 +59,7 @@ func (x *BigInt) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BigInt.ProtoReflect.Descriptor instead.
 func (*BigInt) Descriptor() ([]byte, []int) {
-	return file_big_proto_rawDescGZIP(), []int{0}
+	return file_proto_big_proto_rawDescGZIP(), []int{0}
 }
 
 func (x *BigInt) GetValue() []byte {
@@ -82,7 +82,7 @@ type BigFloat struct {
 func (x *BigFloat) Reset() {
 	*x = BigFloat{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_big_proto_msgTypes[1]
+		mi := &file_proto_big_proto_msgTypes[1]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -95,7 +95,7 @@ func (x *BigFloat) String() string {
 func (*BigFloat) ProtoMessage() {}
 
 func (x *BigFloat) ProtoReflect() protoreflect.Message {
-	mi := &file_big_proto_msgTypes[1]
+	mi := &file_proto_big_proto_msgTypes[1]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -108,7 +108,7 @@ func (x *BigFloat) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BigFloat.ProtoReflect.Descriptor instead.
 func (*BigFloat) Descriptor() ([]byte, []int) {
-	return file_big_proto_rawDescGZIP(), []int{1}
+	return file_proto_big_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *BigFloat) GetValue() string {
@@ -118,38 +118,38 @@ func (x *BigFloat) GetValue() string {
 	return ""
 }
 
-var File_big_proto protoreflect.FileDescriptor
+var File_proto_big_proto protoreflect.FileDescriptor
 
-var file_big_proto_rawDesc = []byte{
-	0x0a, 0x09, 0x62, 0x69, 0x67, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12, 0x06, 0x6c, 0x69, 0x74,
-	0x65, 0x70, 0x62, 0x22, 0x1e, 0x0a, 0x06, 0x42, 0x69, 0x67, 0x49, 0x6e, 0x74, 0x12, 0x14, 0x0a,
-	0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x05, 0x76, 0x61,
-	0x6c, 0x75, 0x65, 0x22, 0x20, 0x0a, 0x08, 0x42, 0x69, 0x67, 0x46, 0x6c, 0x6f, 0x61, 0x74, 0x12,
-	0x14, 0x0a, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05,
-	0x76, 0x61, 0x6c, 0x75, 0x65, 0x42, 0x27, 0x5a, 0x25, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e,
-	0x63, 0x6f, 0x6d, 0x2f, 0x65, 0x2d, 0x74, 0x61, 0x70, 0x65, 0x2f, 0x6c, 0x69, 0x74, 0x65, 0x70,
-	0x62, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x3b, 0x6c, 0x69, 0x74, 0x65, 0x70, 0x62, 0x62, 0x06,
-	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+var file_proto_big_proto_rawDesc = []byte{
+	0x0a, 0x0f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f, 0x62, 0x69, 0x67, 0x2e, 0x70, 0x72, 0x6f, 0x74,
+	0x6f, 0x12, 0x06, 0x6c, 0x69, 0x74, 0x65, 0x70, 0x62, 0x22, 0x1e, 0x0a, 0x06, 0x42, 0x69, 0x67,
+	0x49, 0x6e, 0x74, 0x12, 0x14, 0x0a, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x18, 0x01, 0x20, 0x01,
+	0x28, 0x0c, 0x52, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x22, 0x20, 0x0a, 0x08, 0x42, 0x69, 0x67,
+	0x46, 0x6c, 0x6f, 0x61, 0x74, 0x12, 0x14, 0x0a, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x18, 0x01,
+	0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x42, 0x27, 0x5a, 0x25, 0x67,
+	0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x65, 0x2d, 0x74, 0x61, 0x70, 0x65,
+	0x2f, 0x6c, 0x69, 0x74, 0x65, 0x70, 0x62, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x3b, 0x6c, 0x69,
+	0x74, 0x65, 0x70, 0x62, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
-	file_big_proto_rawDescOnce sync.Once
-	file_big_proto_rawDescData = file_big_proto_rawDesc
+	file_proto_big_proto_rawDescOnce sync.Once
+	file_proto_big_proto_rawDescData = file_proto_big_proto_rawDesc
 )
 
-func file_big_proto_rawDescGZIP() []byte {
-	file_big_proto_rawDescOnce.Do(func() {
-		file_big_proto_rawDescData = protoimpl.X.CompressGZIP(file_big_proto_rawDescData)
+func file_proto_big_proto_rawDescGZIP() []byte {
+	file_proto_big_proto_rawDescOnce.Do(func() {
+		file_proto_big_proto_rawDescData = protoimpl.X.CompressGZIP(file_proto_big_proto_rawDescData)
 	})
-	return file_big_proto_rawDescData
+	return file_proto_big_proto_rawDescData
 }
 
-var file_big_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
-var file_big_proto_goTypes = []interface{}{
+var file_proto_big_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
+var file_proto_big_proto_goTypes = []interface{}{
 	(*BigInt)(nil),   // 0: litepb.BigInt
 	(*BigFloat)(nil), // 1: litepb.BigFloat
 }
-var file_big_proto_depIdxs = []int32{
+var file_proto_big_proto_depIdxs = []int32{
 	0, // [0:0] is the sub-list for method output_type
 	0, // [0:0] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
@@ -157,13 +157,13 @@ var file_big_proto_depIdxs = []int32{
 	0, // [0:0] is the sub-list for field type_name
 }
 
-func init() { file_big_proto_init() }
-func file_big_proto_init() {
-	if File_big_proto != nil {
+func init() { file_proto_big_proto_init() }
+func file_proto_big_proto_init() {
+	if File_proto_big_proto != nil {
 		return
 	}
 	if !protoimpl.UnsafeEnabled {
-		file_big_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
+		file_proto_big_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*BigInt); i {
 			case 0:
 				return &v.state
@@ -175,7 +175,7 @@ func file_big_proto_init() {
 				return nil
 			}
 		}
-		file_big_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
+		file_proto_big_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*BigFloat); i {
 			case 0:
 				return &v.state
@@ -192,18 +192,18 @@ func file_big_proto_init() {
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: file_big_proto_rawDesc,
+			RawDescriptor: file_proto_big_proto_rawDesc,
 			NumEnums:      0,
 			NumMessages:   2,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
-		GoTypes:           file_big_proto_goTypes,
-		DependencyIndexes: file_big_proto_depIdxs,
-		MessageInfos:      file_big_proto_msgTypes,
+		GoTypes:           file_proto_big_proto_goTypes,
+		DependencyIndexes: file_proto_big_proto_depIdxs,
+		MessageInfos:      file_proto_big_proto_msgTypes,
 	}.Build()
-	File_big_proto = out.File
-	file_big_proto_rawDesc = nil
-	file_big_proto_goTypes = nil
-	file_big_proto_depIdxs = nil
+	File_proto_big_proto = out.File
+	file_proto_big_proto_rawDesc = nil
+	file_proto_big_proto_goTypes = nil
+	file_proto_big_proto_depIdxs = nil
 }

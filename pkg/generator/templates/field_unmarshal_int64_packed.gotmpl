@@ -1,0 +1,7 @@
+{{- define "field_unmarshal_int64_packed" -}}
+    {{- set . "valueCreate" true -}}
+    {{- set . "valueTypeName" "int64" -}}
+    {{- set . "rangeItems" (arr 0 7 14 21 28 35 42 49 56 63) -}}
+    {{- set . "packedResult" .valueName -}}
+    {{- template "field_unmarshal_packed" . -}}
+{{- end -}}

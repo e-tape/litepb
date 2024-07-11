@@ -3,16 +3,23 @@
     {{- with .field -}}
         {{- /*gotype: github.com/e-tape/litepb/proto.Message_Field*/ -}}
         {{ if eq .GetType.GetInProto.String "FIXED32" -}}
-            case 5:
-            {{ template "field_unmarshal_fixed32" $c }}
-        {{ end -}}
-        {{ if eq .GetType.GetInProto.String "SFIXED32" -}}
-            case 5:
-            {{ template "field_unmarshal_sfixed32" $c }}
-        {{ end -}}
-        {{ if eq .GetType.GetInProto.String "FLOAT" -}}
-            case 5:
-            {{ template "field_unmarshal_float" $c }}
+            {{ if not $c.packed -}}
+                {{ template "field_unmarshal_fixed32" $c }}
+            {{ else -}}
+                {{ template "field_unmarshal_fixed32_packed" $c -}}
+            {{ end -}}
+        {{ else if eq .GetType.GetInProto.String "SFIXED32" -}}
+            {{ if not $c.packed -}}
+                {{ template "field_unmarshal_sfixed32" $c }}
+            {{ else -}}
+                {{ template "field_unmarshal_sfixed32_packed" $c -}}
+            {{ end -}}
+        {{ else if eq .GetType.GetInProto.String "FLOAT" -}}
+            {{ if not $c.packed -}}
+                {{ template "field_unmarshal_float" $c }}
+            {{ else -}}
+                {{ template "field_unmarshal_float_packed" $c -}}
+            {{ end -}}
         {{ end -}}
     {{- end -}}
 {{- end -}}

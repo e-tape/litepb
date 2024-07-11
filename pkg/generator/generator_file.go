@@ -265,6 +265,50 @@ func (a *generatorFile) generateFieldName(msg *litepb.Message, name string) stri
 	return pName
 }
 
+func (a *generatorFile) generateWireTypes(
+	field *descriptorpb.FieldDescriptorProto,
+	mapOk bool,
+) *litepb.Message_Field_Type_Reflect {
+	if mapOk {
+		return nil
+	}
+	switch field.GetType() {
+	case descriptorpb.FieldDescriptorProto_TYPE_DOUBLE:
+		return &litepb.Message_Field_Type_Reflect{Name: "float64"}
+	case descriptorpb.FieldDescriptorProto_TYPE_FLOAT:
+		return &litepb.Message_Field_Type_Reflect{Name: "float32"}
+	case descriptorpb.FieldDescriptorProto_TYPE_INT64,
+		descriptorpb.FieldDescriptorProto_TYPE_SFIXED64,
+		descriptorpb.FieldDescriptorProto_TYPE_SINT64:
+		return &litepb.Message_Field_Type_Reflect{Name: "int64"}
+	case descriptorpb.FieldDescriptorProto_TYPE_UINT64,
+		descriptorpb.FieldDescriptorProto_TYPE_FIXED64:
+		return &litepb.Message_Field_Type_Reflect{Name: "uint64"}
+	case descriptorpb.FieldDescriptorProto_TYPE_INT32,
+		descriptorpb.FieldDescriptorProto_TYPE_SFIXED32,
+		descriptorpb.FieldDescriptorProto_TYPE_SINT32:
+		return &litepb.Message_Field_Type_Reflect{Name: "int32"}
+	case descriptorpb.FieldDescriptorProto_TYPE_UINT32,
+		descriptorpb.FieldDescriptorProto_TYPE_FIXED32:
+		return &litepb.Message_Field_Type_Reflect{Name: "uint32"}
+	case descriptorpb.FieldDescriptorProto_TYPE_BOOL:
+		return &litepb.Message_Field_Type_Reflect{Name: "bool"}
+	case descriptorpb.FieldDescriptorProto_TYPE_STRING:
+		return &litepb.Message_Field_Type_Reflect{Name: "string"}
+	case descriptorpb.FieldDescriptorProto_TYPE_GROUP:
+		stderr.Failf("groups are not supported")
+		return nil
+	case descriptorpb.FieldDescriptorProto_TYPE_MESSAGE,
+		descriptorpb.FieldDescriptorProto_TYPE_ENUM:
+		return a.allTypes[field.GetTypeName()] //.reflect(a.proto.Package.Dependency.Alias)
+	case descriptorpb.FieldDescriptorProto_TYPE_BYTES:
+		return &litepb.Message_Field_Type_Reflect{Name: "[]byte"}
+	default:
+		stderr.Failf("unknown type %d", field.GetType())
+		return nil
+	}
+}
+
 func (a *generatorFile) generateReflect(
 	field *descriptorpb.FieldDescriptorProto,
 	mapOk bool,

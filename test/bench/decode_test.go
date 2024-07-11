@@ -6,14 +6,18 @@ import (
 
 	gogo "bench/proto/gogo/bench"
 	google "bench/proto/google/bench"
-	litepb "bench/proto/litepb_old/bench"
+	litepbNoPool "bench/proto/litepb_no_pool/bench"
+	litepbPool "bench/proto/litepb_pool/bench"
 	litepb2 "github.com/e-tape/litepb/proto"
 	"github.com/google/uuid"
 	"google.golang.org/protobuf/proto"
 )
 
 // RUN `make test-compile-for-bench` for init test proto
+// go test -bench . -benchmem -benchtime 2s -cpuprofile cpu.prof
+// go tool pprof -http :7000 ./cpu.prof
 
+var _ = litepb2.UUID{}
 var decodeData []byte
 var decodeModel = &google.Bench{
 	Uuid: &litepb2.UUID{
@@ -22,32 +26,32 @@ var decodeModel = &google.Bench{
 	Uint64:  2065657434543,
 	Uint32:  156547,
 	String_: "123456",
-	//Smap: map[int32]*google.Bench_InnerForMap{
-	//	1: {
-	//		Uint64: 1,
-	//		Uint32: 20,
-	//	},
-	//	2: {
-	//		Uint64: 1000,
-	//		Uint32: 2000,
-	//	},
-	//	9: {
-	//		Uint64: 99,
-	//		Uint32: 99,
-	//	},
-	//	14: {
-	//		Uint64: 14,
-	//		Uint32: 14,
-	//	},
-	//	72: {
-	//		Uint64: 72,
-	//		Uint32: 72,
-	//	},
-	//	602: {
-	//		Uint64: 602,
-	//		Uint32: 602,
-	//	},
-	//},
+	Smap: map[int32]*google.Bench_InnerForMap{
+		1: {
+			Uint64: 1,
+			Uint32: 20,
+		},
+		2: {
+			Uint64: 1000,
+			Uint32: 2000,
+		},
+		9: {
+			Uint64: 99,
+			Uint32: 99,
+		},
+		14: {
+			Uint64: 14,
+			Uint32: 14,
+		},
+		72: {
+			Uint64: 72,
+			Uint32: 72,
+		},
+		602: {
+			Uint64: 602,
+			Uint32: 602,
+		},
+	},
 	Iarr: []*google.Bench_InnerForMap{
 		{
 			Uint64: 1001,
@@ -62,7 +66,13 @@ var decodeModel = &google.Bench{
 			Uint32: 62002,
 		},
 	},
-	Fixed32: 32,
+	Ifm: &google.Bench_InnerForMap{
+		Uint64: 64,
+		Uint32: 32,
+	},
+	Fixed64: 2065657434543,
+	Fixed32: 156547,
+	RInt32:  []int32{1, 2, 3, 4, 5, 6, 7, 8, 9, 0},
 }
 
 func init() {
@@ -85,6 +95,9 @@ func BenchmarkSimpleGoogle(b *testing.B) {
 			decodeModel.String_ != model.String_ ||
 			len(decodeModel.Smap) != len(model.Smap) ||
 			len(decodeModel.Iarr) != len(model.Iarr) ||
+			decodeModel.GetIfm().GetUint32() != model.GetIfm().GetUint32() ||
+			decodeModel.GetIfm().GetUint64() != model.GetIfm().GetUint64() ||
+			len(decodeModel.RInt32) != len(model.RInt32) ||
 			decodeModel.Fixed32 != model.Fixed32 {
 			panic(`eq`)
 		}
@@ -103,15 +116,18 @@ func BenchmarkSimpleGogo(b *testing.B) {
 			decodeModel.String_ != model.String_ ||
 			len(decodeModel.Smap) != len(model.Smap) ||
 			len(decodeModel.Iarr) != len(model.Iarr) ||
+			decodeModel.GetIfm().GetUint32() != model.GetIfm().GetUint32() ||
+			decodeModel.GetIfm().GetUint64() != model.GetIfm().GetUint64() ||
+			len(decodeModel.RInt32) != len(model.RInt32) ||
 			decodeModel.Fixed32 != model.Fixed32 {
 			panic(`eq`)
 		}
 	}
 }
 
-func BenchmarkSimpleLiteOldPb(b *testing.B) {
+func BenchmarkSimpleLitePb(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		model := &litepb.Bench{}
+		model := litepbPool.NewBench()
 		if err := model.UnmarshalProto(decodeData); err != nil {
 			panic(err)
 		}
@@ -121,15 +137,19 @@ func BenchmarkSimpleLiteOldPb(b *testing.B) {
 			decodeModel.String_ != model.String_ ||
 			len(decodeModel.Smap) != len(model.Smap) ||
 			len(decodeModel.Iarr) != len(model.Iarr) ||
+			decodeModel.GetIfm().GetUint32() != model.GetIfm().GetUint32() ||
+			decodeModel.GetIfm().GetUint64() != model.GetIfm().GetUint64() ||
+			len(decodeModel.RInt32) != len(model.RInt32) ||
 			decodeModel.Fixed32 != model.Fixed32 {
 			panic(`eq`)
 		}
+		model.ReturnToPool()
 	}
 }
 
-func BenchmarkSimpleLiteOldPbReturnToPool(b *testing.B) {
+func BenchmarkSimpleLitePbNoPool(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		model := litepb.NewBench()
+		model := litepbNoPool.NewBench()
 		if err := model.UnmarshalProto(decodeData); err != nil {
 			panic(err)
 		}
@@ -139,6 +159,9 @@ func BenchmarkSimpleLiteOldPbReturnToPool(b *testing.B) {
 			decodeModel.String_ != model.String_ ||
 			len(decodeModel.Smap) != len(model.Smap) ||
 			len(decodeModel.Iarr) != len(model.Iarr) ||
+			decodeModel.GetIfm().GetUint32() != model.GetIfm().GetUint32() ||
+			decodeModel.GetIfm().GetUint64() != model.GetIfm().GetUint64() ||
+			len(decodeModel.RInt32) != len(model.RInt32) ||
 			decodeModel.Fixed32 != model.Fixed32 {
 			panic(`eq`)
 		}
@@ -159,6 +182,9 @@ func BenchmarkParallelGoogle(b *testing.B) {
 				decodeModel.String_ != model.String_ ||
 				len(decodeModel.Smap) != len(model.Smap) ||
 				len(decodeModel.Iarr) != len(model.Iarr) ||
+				decodeModel.GetIfm().GetUint32() != model.GetIfm().GetUint32() ||
+				decodeModel.GetIfm().GetUint64() != model.GetIfm().GetUint64() ||
+				len(decodeModel.RInt32) != len(model.RInt32) ||
 				decodeModel.Fixed32 != model.Fixed32 {
 				panic(`eq`)
 			}
@@ -179,6 +205,9 @@ func BenchmarkParallelGogo(b *testing.B) {
 				decodeModel.String_ != model.String_ ||
 				len(decodeModel.Smap) != len(model.Smap) ||
 				len(decodeModel.Iarr) != len(model.Iarr) ||
+				decodeModel.GetIfm().GetUint32() != model.GetIfm().GetUint32() ||
+				decodeModel.GetIfm().GetUint64() != model.GetIfm().GetUint64() ||
+				len(decodeModel.RInt32) != len(model.RInt32) ||
 				decodeModel.Fixed32 != model.Fixed32 {
 				panic(`eq`)
 			}
@@ -186,10 +215,10 @@ func BenchmarkParallelGogo(b *testing.B) {
 	})
 }
 
-func BenchmarkParallelLiteOldPb(b *testing.B) {
+func BenchmarkParallelLitePb(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
-			model := &litepb.Bench{}
+			model := litepbPool.NewBench()
 			if err := model.UnmarshalProto(decodeData); err != nil {
 				panic(err)
 			}
@@ -199,17 +228,21 @@ func BenchmarkParallelLiteOldPb(b *testing.B) {
 				decodeModel.String_ != model.String_ ||
 				len(decodeModel.Smap) != len(model.Smap) ||
 				len(decodeModel.Iarr) != len(model.Iarr) ||
+				decodeModel.GetIfm().GetUint32() != model.GetIfm().GetUint32() ||
+				decodeModel.GetIfm().GetUint64() != model.GetIfm().GetUint64() ||
+				len(decodeModel.RInt32) != len(model.RInt32) ||
 				decodeModel.Fixed32 != model.Fixed32 {
 				panic(`eq`)
 			}
+			model.ReturnToPool()
 		}
 	})
 }
 
-func BenchmarkParallelLiteOldPbReturnToPool(b *testing.B) {
+func BenchmarkParallelLitePbNoPool(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
-			model := litepb.NewBench()
+			model := litepbNoPool.NewBench()
 			if err := model.UnmarshalProto(decodeData); err != nil {
 				panic(err)
 			}
@@ -219,50 +252,12 @@ func BenchmarkParallelLiteOldPbReturnToPool(b *testing.B) {
 				decodeModel.String_ != model.String_ ||
 				len(decodeModel.Smap) != len(model.Smap) ||
 				len(decodeModel.Iarr) != len(model.Iarr) ||
+				decodeModel.GetIfm().GetUint32() != model.GetIfm().GetUint32() ||
+				decodeModel.GetIfm().GetUint64() != model.GetIfm().GetUint64() ||
+				len(decodeModel.RInt32) != len(model.RInt32) ||
 				decodeModel.Fixed32 != model.Fixed32 {
 				panic(`eq`)
 			}
-			model.ReturnToPool()
-		}
-	})
-}
-
-func BenchmarkParallelGogoField(b *testing.B) {
-	b.RunParallel(func(pb *testing.PB) {
-		for pb.Next() {
-			model := &gogo.Bench{}
-			model.Iarr = []*gogo.Bench_InnerForMap{
-				{},
-				{},
-				{},
-			}
-		}
-	})
-}
-
-func BenchmarkParallelField(b *testing.B) {
-	b.RunParallel(func(pb *testing.PB) {
-		for pb.Next() {
-			model := &litepb.Bench{}
-			model.Iarr = []*litepb.Bench_InnerForMap{
-				{},
-				{},
-				{},
-			}
-		}
-	})
-}
-
-func BenchmarkParallelSetter(b *testing.B) {
-	b.RunParallel(func(pb *testing.PB) {
-		for pb.Next() {
-			model := litepb.NewBench()
-			model.SetIarr([]litepb.IBench_InnerForMapGet{
-				litepb.NewBench_InnerForMap().SetUint32(2).SetUint64(5).SetUint64(654),
-				litepb.NewBench_InnerForMap().SetUint64(6),
-				litepb.NewBench_InnerForMap(),
-			})
-			model.ReturnToPool()
 		}
 	})
 }

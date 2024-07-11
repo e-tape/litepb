@@ -23,13 +23,24 @@ test-compile-for-bench: build-protoc-gen-litepb
 		--gogofaster_out test/bench/proto/gogo/proto \
 		./proto/uuid.proto
 	sed -i -e 's/github.com\/e-tape\/litepb\/proto/bench\/proto\/gogo\/proto\/github.com\/e-tape\/litepb\/proto/g' test/bench/proto/gogo/bench/bench.pb.go
-	mkdir -p test/bench/proto/litepb/
+	mkdir -p test/bench/proto/litepb_pool/
 	protoc --plugin ./bin/protoc-gen-litepb \
  		--proto_path=./test/proto/bench/ \
  		--proto_path=./ \
  		--proto_path=/usr/local/include/ \
- 		--litepb_out test/bench/proto/litepb/ \
+ 		--litepb_out test/bench/proto/litepb_pool/ \
  		--litepb_opt test/proto/bench/litepb.yaml \
+ 		--litepb_opt mem_pool_message_all=true \
+ 		--litepb_opt mem_pool_list_all=true \
+ 		--litepb_opt mem_pool_map_all=true \
+ 		./test/proto/bench/bench.proto
+	mkdir -p test/bench/proto/litepb_no_pool/
+	protoc --plugin ./bin/protoc-gen-litepb \
+ 		--proto_path=./test/proto/bench/ \
+ 		--proto_path=./ \
+ 		--proto_path=/usr/local/include/ \
+ 		--litepb_out test/bench/proto/litepb_no_pool/ \
+ 		--litepb_opt test/proto/bench/litepb.yaml,mem_pool_message_all=false \
  		./test/proto/bench/bench.proto
 
 build-protoc-gen-litepb:
@@ -48,8 +59,8 @@ uu:
 	find ./proto -name '*.proto' | while read file; \
 		do protoc \
 			--plugin ./bin/protoc-gen-litepb \
-			--proto_path=./proto \
-			--go_out=./proto/ \
+			--proto_path=./ \
+			--go_out=./ \
 			--go_opt=paths=source_relative \
 			$${file} || exit 1; \
 		done

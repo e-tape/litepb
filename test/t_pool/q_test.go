@@ -92,11 +92,14 @@ var ringPool = &RingPool{
 var threadPools sync.Map
 
 func getLocalMapPool() *sync.Pool {
-	pool, _ := threadPools.LoadOrStore(getThreadId(), &sync.Pool{
-		New: func() any {
-			return &Q{}
-		},
-	})
+	pool, ok := threadPools.Load(getThreadId())
+	if !ok {
+		pool, _ = threadPools.LoadOrStore(getThreadId(), &sync.Pool{
+			New: func() any {
+				return &Q{}
+			},
+		})
+	}
 	return pool.(*sync.Pool)
 }
 
