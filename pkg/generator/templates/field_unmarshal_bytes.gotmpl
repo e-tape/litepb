@@ -9,7 +9,7 @@
     if {{ .valueLength }} < 0 { return {{ .errorIncorrectLength }} }
     index += {{ .valueLength }}
     if len(data) < index { return {{ .errorUnexpectedEndValue }} }
-    {{- set . "result" (render "field_unmarshal_bytes_result" .valueLength ) -}}
+    {{ set . "result" (render "field_unmarshal_bytes_result" .valueLength ) -}}
 {{- end -}}
 {{- define "field_unmarshal_bytes_result" -}}
     data[index-{{ . }} : index]
