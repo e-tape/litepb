@@ -9,8 +9,5 @@
     if {{ .valueLength }} < 0 { return {{ .errorIncorrectLength }} }
     index += {{ .valueLength }}
     if len(data) < index { return {{ .errorUnexpectedEndValue }} }
-    {{ set . "result" (render "field_unmarshal_string_result" .valueLength) -}}
-{{- end -}}
-{{- define "field_unmarshal_string_result" -}}
-    {{ template "convert_bytes_to_string" "" }}(&data[index-{{ . }}], {{ . }})
+    {{ set . "result" (render "field_unmarshal_string_result" (kv "msg" .msg "valueLength" .valueLength)) -}}
 {{- end -}}

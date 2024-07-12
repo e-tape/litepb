@@ -1,0 +1,7 @@
+{{- define "field_unmarshal_string_result" -}}
+    {{- if .msg.GetUnsafe -}}
+        {{- import "unsafe" -}}.String(&data[index-{{ .valueLength }}], {{ .valueLength }})
+    {{- else -}}
+        string(data[index-{{ .valueLength }} : index])
+    {{- end -}}
+{{- end -}}

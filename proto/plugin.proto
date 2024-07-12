@@ -86,6 +86,7 @@ message Message {
   bool mem_pool_message = 5;
   bool mem_pool_list = 6;
   bool mem_pool_map = 7;
+  bool unsafe = 8;
 
   message Property {
     oneof type {

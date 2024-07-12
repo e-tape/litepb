@@ -8,4 +8,5 @@ type Config struct {
 	MemPoolListAll    litepb.Activity `yaml:"mem_pool_list_all" toml:"mem_pool_list_all"`
 	MemPoolMapAll     litepb.Activity `yaml:"mem_pool_map_all" toml:"mem_pool_map_all"`
 	MemPoolOneofAll   litepb.Activity `yaml:"mem_pool_oneof_all" toml:"mem_pool_oneof_all"`
+	UnsafeAll         litepb.Activity `yaml:"unsafe_all" toml:"unsafe_all"`
 }

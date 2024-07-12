@@ -23,6 +23,7 @@
                         {{- $packed := . -}}
                         {{ range arr "field_unmarshal_varint" "field_unmarshal_len" "field_unmarshal_i64" "field_unmarshal_i32" -}}
                             {{- $param := kv
+                            "msg" $msg
                             "field" $field
                             "type" $field.GetType
                             "number" $field.GetNumber
@@ -53,6 +54,7 @@
                         {{- $field := . -}}
                         {{ range arr "field_unmarshal_varint" "field_unmarshal_len" "field_unmarshal_i64" "field_unmarshal_i32" -}}
                             {{- $param := kv
+                            "msg" $msg
                             "field" $field
                             "type" $field.GetType
                             "number" $field.GetNumber

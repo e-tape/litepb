@@ -25,6 +25,7 @@
     }}
     switch kvNum {
     {{ $paramKey := kv
+    "msg" .msg
     "type" .type.GetMap.GetKey
     "valueName" "mapKey"
     "valueLength" "mapKeyLength"
@@ -40,6 +41,7 @@
         {{ . }}
     {{- end -}}
     {{ $paramValue := kv
+    "msg" .msg
     "type" .type.GetMap.GetValue
     "valueName" "mapValue"
     "valueLength" "mapValueLength"

@@ -29,6 +29,8 @@ message Bench {
   repeated InnerForMap iarr = 211;
   InnerForMap ifm = 220;
 
+  bytes bytes = 229;
+
   repeated int32 r_int32 = 250;
 
   repeated fixed32 r_fixed32 = 299;

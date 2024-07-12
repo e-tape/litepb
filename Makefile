@@ -33,6 +33,7 @@ test-compile-for-bench: build-protoc-gen-litepb
  		--litepb_opt mem_pool_message_all=true \
  		--litepb_opt mem_pool_list_all=true \
  		--litepb_opt mem_pool_map_all=true \
+ 		--litepb_opt unsafe_all=true \
  		./test/proto/bench/bench.proto
 	mkdir -p test/bench/proto/litepb_no_pool/
 	protoc --plugin ./bin/protoc-gen-litepb \

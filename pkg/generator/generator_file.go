@@ -170,14 +170,16 @@ func (a *generatorFile) generateMessages(
 			Comments:   a.findMessageComments(messageSourceCodePath, messageIndex),
 			Properties: make([]*litepb.Message_Property, 0, len(message.GetField())),
 			Options:    message.GetOptions().ProtoReflect().GetUnknown(),
-			//MemPoolMessage:     len(message.GetField()) > 0, // TODO rathil add option to disable
-			//MemPoolList: true,                        // TODO rathil from options
-			//MemPoolMap:  true,                        // TODO rathil from options
+			// MemPoolMessage:     len(message.GetField()) > 0, // TODO rathil add option to disable
+			// MemPoolList: true,                        // TODO rathil from options
+			// MemPoolMap:  true,                        // TODO rathil from options
+			// Unsafe:  true,                        // TODO rathil from options
 		}
 		msg.MemPoolMessage = a.cfg.MemPoolMessageAll == litepb.Activity_Active
 		msg.MemPoolList = a.cfg.MemPoolListAll == litepb.Activity_Active
 		msg.MemPoolMap = a.cfg.MemPoolMapAll == litepb.Activity_Active
-		// TODO rathil get option to active/inactive all MemPool
+		msg.Unsafe = a.cfg.UnsafeAll == litepb.Activity_Active
+		// TODO rathil get option to active/inactive all MemPool and Unsafe
 		a.messages = append(a.messages, msg)
 
 		oneOfs := make([]*litepb.Message_OneOf, 0, len(message.GetOneofDecl()))
