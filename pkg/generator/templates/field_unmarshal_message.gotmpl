@@ -11,7 +11,14 @@
     {{ with (render "type_custom_unmarshal" (kv "c" . "valueLength" .valueLength)) -}}
         {{ . }}
     {{ else -}}
-        {{ .valueName }} {{ if .valueCreate }}:{{ end }}= {{ template "type_new" .type }}()
+        {{ if .setInField -}}
+            {{ .valueName }} {{ if .valueCreate }}:{{ end }}= a.{{ .field.GetName }}
+            if {{ .valueName }} == nil {
+            {{ .valueName }} = {{ template "type_new" .type }}()
+            }
+        {{ else -}}
+            {{ .valueName }} {{ if .valueCreate }}:{{ end }}= {{ template "type_new" .type }}()
+        {{ end -}}
         if err := {{ .valueName }}.{{ template "func_name_message_unmarshal" "" }}(data[index : index+{{ .valueLength }}]); err != nil { return err }
         index += {{ .valueLength }}
     {{ end -}}

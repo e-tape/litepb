@@ -28,6 +28,7 @@
                             "type" $field.GetType
                             "number" $field.GetNumber
                             "packed" $packed
+                            "setInField" (not $field.GetType.GetRepeated)
                             "valueName" "value"
                             "valueLength" "valueLength"
                             "valueCreate" true
