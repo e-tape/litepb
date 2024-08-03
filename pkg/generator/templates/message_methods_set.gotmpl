@@ -1,0 +1,40 @@
+{{- define "message_methods_set" -}}
+    {{ if is_generate "SETTER" -}}
+        {{- /*gotype: github.com/e-tape/litepb/proto.Message*/ -}}
+        {{- $msg := . -}}
+        {{ range .GetProperties -}}
+            {{ with .GetField -}}
+                func (a *{{ template "type_name" kv "msg" $msg }}) Set{{ .GetName }}(
+                {{- if or (.GetType.GetRepeated) (is_map .GetType) }}values{{ else }}value{{ end }} {{ template "type_name" kv
+                "type" .GetType
+                "i_get" true
+                -}}
+                ) {{ template "type_name" kv
+                "msg" $msg
+                "i" true
+                }} {
+                {{ template "field_set" . }}
+                }
+            {{ end -}}
+            {{ with .GetOneof -}}
+                {{- $oneof := . -}}
+                func (a *{{ template "type_name" kv "msg" $msg }}) Set{{ .GetName }}(value {{ template "oneof_type_name" kv
+                "msg" $msg
+                "oneof" .
+                }}) {{ template "type_name" kv "msg" $msg "i" true }} {
+                if a.{{ .GetName }} != nil { a.{{ .GetName }}.{{ template "func_name_oneof_return_to_pool" }}() }
+                a.{{ .GetName }} = value
+                return a
+                }
+                {{ range .GetFields -}}
+                    func (a *{{ template "type_name" kv "msg" $msg }}) Set{{ .GetName }}(value {{ template "type_name" kv
+                    "type" .GetType
+                    "i_get" true
+                    -}}) {{ template "type_name" kv "msg" $msg "i" true }} {
+                    return a.Set{{ $oneof.GetName }}({{ template "func_name_oneof_new" kv "msg" $msg "field" . }}().Set{{ .GetName }}(value))
+                    }
+                {{ end -}}
+            {{ end -}}
+        {{ end -}}
+    {{ end -}}
+{{- end -}}

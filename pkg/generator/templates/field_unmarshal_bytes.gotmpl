@@ -1,0 +1,19 @@
+{{- define "field_unmarshal_bytes" -}}
+    {{- template "field_unmarshal_int" kv
+    "errorUnexpectedEnd" .errorUnexpectedEndLength
+    "valueName" .valueLength
+    "valueCreate" true
+    "valueTypeName" "int"
+    "rangeItems" (arr 0 7 14 21 28)
+    }}
+    if {{ .valueLength }} < 0 { return {{ .errorIncorrectLength }} }
+    index += {{ .valueLength }}
+    if len(data) < index { return {{ .errorUnexpectedEndValue }} }
+    {{ if .msg.GetUnsafe -}}
+        {{ set . "result" (render "field_unmarshal_bytes_result" .valueLength ) -}}
+    {{ else -}}
+        dataCopy := make([]byte, {{ .valueLength }})
+        copy(dataCopy, data[index-{{ .valueLength }} : index])
+        {{ set . "result" "dataCopy" -}}
+    {{ end -}}
+{{- end -}}

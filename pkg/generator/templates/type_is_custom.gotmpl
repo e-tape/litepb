@@ -1,0 +1,14 @@
+{{- define "type_is_custom" -}}
+    {{- /*gotype: github.com/e-tape/litepb/proto.Message_Field_Type*/ -}}
+    {{- if and (eq .GetReflect.GetName "UUID") (eq .GetReflect.GetDependency.GetPath "github.com/e-tape/litepb/proto") -}}
+        true
+    {{- else if and (eq .GetReflect.GetName "Time") (eq .GetReflect.GetDependency.GetPath "github.com/e-tape/litepb/proto") -}}
+        true
+    {{- else if and (eq .GetReflect.GetName "Duration") (eq .GetReflect.GetDependency.GetPath "github.com/e-tape/litepb/proto") -}}
+        true
+    {{- else if and (eq .GetReflect.GetName "BigInt") (eq .GetReflect.GetDependency.GetPath "github.com/e-tape/litepb/proto") -}}
+        true
+    {{- else if and (eq .GetReflect.GetName "BigFloat") (eq .GetReflect.GetDependency.GetPath "github.com/e-tape/litepb/proto") -}}
+        true
+    {{- end -}}
+{{- end -}}

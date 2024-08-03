@@ -1,0 +1,5 @@
+source_relative = false
+mem_pool_message_all = "TRUE"
+mem_pool_list_all = true
+mem_pool_map_all = "on"
+mem_pool_oneof_all = "aCtive"

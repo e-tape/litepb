@@ -1,0 +1,3 @@
+{{- define "field_unmarshal_double_result" -}}
+    {{ import "math" }}.Float64frombits({{ . }})
+{{- end -}}

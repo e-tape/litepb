@@ -2,6 +2,6 @@ syntax = "proto3";
 
 package dir.dir;
 
-option go_package = "generated/test/dir/dir";
+option go_package = "test/generated/test/dir/dir";
 
 message Baz3 {}

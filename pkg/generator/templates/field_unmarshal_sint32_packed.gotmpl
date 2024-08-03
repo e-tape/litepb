@@ -1,0 +1,7 @@
+{{- define "field_unmarshal_sint32_packed" -}}
+    {{- set . "valueCreate" true -}}
+    {{- set . "valueTypeName" "int32" -}}
+    {{- set . "rangeItems" (arr 0 7 14 21 28) -}}
+    {{- set . "packedResult" (render "field_unmarshal_sint32_result" .valueName) -}}
+    {{- template "field_unmarshal_packed" . -}}
+{{- end -}}

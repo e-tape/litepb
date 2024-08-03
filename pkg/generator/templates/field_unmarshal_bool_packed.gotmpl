@@ -1,0 +1,19 @@
+{{- define "field_unmarshal_bool_packed" -}}
+    {{- template "field_unmarshal_int" kv
+    "errorUnexpectedEnd" .errorUnexpectedEndLength
+    "valueName" .valueLength
+    "valueCreate" true
+    "valueTypeName" "int"
+    "rangeItems" (arr 0 7 14 21 28)
+    }}
+    if {{ .valueLength }} < 0 { return {{ .errorIncorrectLength }} }
+    if len(data) < index + {{ .valueLength }} { return {{ .errorUnexpectedEndValue }} }
+    if a.{{ .field.GetName }} == nil {
+    a.{{ .field.GetName }} = make([]{{ .valueTypeName }}, 0, {{ .valueLength }})
+    }
+    for i := 0; i < {{ .valueLength }}; i++ {
+    if data[index] > 127 { return {{ .errorUnexpectedEndValue }} }
+    index++
+    a.{{ .field.GetName }} = append(a.{{ .field.GetName }}, {{ (render "field_unmarshal_bool_result" .) }})
+    }
+{{- end -}}

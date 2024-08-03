@@ -1,0 +1,12 @@
+{{- define "message_new" -}}
+    {{- /*gotype: github.com/e-tape/litepb/proto.Message*/ -}}
+    {{ if is_generate "NEW" -}}
+        func {{ template "func_name_message_new" . }}() *{{ template "type_name" kv "msg" . }} {
+        {{- if .GetMemPoolMessage -}}
+            return {{ template "pool_name_message" . }}.Get().(*{{ template "type_name" kv "msg" . }})
+        {{- else -}}
+            return {{ template "message_constructor" . }}
+        {{- end -}}
+        }
+    {{ end -}}
+{{- end -}}

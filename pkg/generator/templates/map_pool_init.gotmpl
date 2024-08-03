@@ -1,0 +1,8 @@
+{{- define "map_pool_init" -}}
+    {{- /*gotype: github.com/e-tape/litepb/proto.Message*/ -}}
+    var key K
+    pool, loaded := {{ template "pool_name_map" . }}.Load(key)
+    if !loaded {
+    pool, _ = {{ template "pool_name_map" . }}.LoadOrStore(key, &sync.Pool{})
+    }
+{{- end -}}

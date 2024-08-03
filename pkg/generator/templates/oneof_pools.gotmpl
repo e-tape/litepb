@@ -1,0 +1,17 @@
+{{- define "oneof_pools" -}}
+    {{ if is_generate "POOL" -}}
+        {{- /*gotype: github.com/e-tape/litepb/proto.Message*/ -}}
+        {{- $msg := . -}}
+        {{ range .GetProperties -}}
+            {{ with .GetOneof -}}
+                {{ if .GetMemPool -}}
+                    {{ range .GetFields -}}
+                        {{ template "pool_name_oneof" kv "msg" $msg "oneof" . }} = &{{ import "sync" -}}.Pool{
+                        New: func() any { return &{{ template "oneof_type_name" kv "msg" $msg "field" . }}{} },
+                        }
+                    {{ end -}}
+                {{ end -}}
+            {{ end -}}
+        {{ end -}}
+    {{ end -}}
+{{- end -}}

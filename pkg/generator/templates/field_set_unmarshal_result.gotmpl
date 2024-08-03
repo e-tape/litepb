@@ -1,0 +1,24 @@
+{{- define "field_set_unmarshal_result" }}
+    {{- $c := . -}}
+    {{- if $c.result -}}
+        {{- with .field -}}
+            {{- /*gotype: github.com/e-tape/litepb/proto.Message_Field*/ -}}
+            {{- if .GetType.GetRepeated -}}
+                {{ if and (is_msg .GetType) (not (render "type_is_custom" .GetType)) -}}
+                    if a.{{ .GetName }} == nil {
+                    a.p{{ .GetName }} = {{ template "field_type_path" .GetType -}}
+                    {{ template "func_name_list_new" .GetType.GetReflect -}}(1)
+                    a.{{ .GetName }} = *a.p{{ .GetName }}
+                    }
+                {{ end -}}
+                a.{{ .GetName }} = append(a.{{ .GetName }}, {{ $c.result }})
+            {{- else -}}
+                a.{{ .GetName }} = {{ $c.result }}
+            {{- end -}}
+        {{- end -}}
+        {{- with .oneof -}}
+            {{- /*gotype: github.com/e-tape/litepb/proto.Message_Field*/ -}}
+            a.Set{{ .GetName }}({{ $c.result }})
+        {{- end -}}
+    {{- end -}}
+{{- end -}}

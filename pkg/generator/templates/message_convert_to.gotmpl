@@ -1,0 +1,32 @@
+{{- define "message_convert_to" -}}
+    {{ if is_generate "CONVERT_TO" -}}
+        {{- /*gotype: github.com/e-tape/litepb/proto.Message*/ -}}
+        {{- $msg := . -}}
+        func {{ template "func_name_message_convert_to" . }}(value {{ template "type_name" kv "msg" . "i_get" true }}) *{{ template "type_name" kv "msg" . }} {
+        if a, ok := value.(*{{ template "type_name" kv "msg" . }}); ok { return a }
+        a := {{ template "func_name_message_new" . }}()
+        {{ range .GetProperties -}}
+            {{ with .GetField -}}
+                {{ $isCustom := render "type_is_custom" .GetType -}}
+                {{ if and (is_msg .GetType) (.GetType.GetRepeated) (not $isCustom) -}}
+                    {
+                    values := value.Get{{ .GetName }}()
+                    {{ template "field_set_list" . }}
+                    }
+                {{ else if and (is_map .GetType) (is_msg .GetType.GetMap.GetValue) (not (render "type_is_custom" .GetType.GetMap.GetValue)) -}}
+                    {
+                    values := value.Get{{ .GetName }}()
+                    {{ template "field_set_map" . }}
+                    }
+                {{ else -}}
+                    a.Set{{ .GetName }}(value.Get{{ .GetName }}())
+                {{ end -}}
+            {{ end -}}
+            {{ with .GetOneof -}}
+                a.Set{{ .GetName }}(value.Get{{ .GetName }}())
+            {{ end -}}
+        {{ end -}}
+        return a
+        }
+    {{ end -}}
+{{- end -}}

@@ -1,0 +1,72 @@
+{{- define "type_name" -}}
+    {{- $c := . -}}
+    {{ with .type -}}
+        {{- /*gotype: github.com/e-tape/litepb/proto.Message_Field_Type*/ -}}
+        {{- $custom := render "type_custom" . -}}
+        {{ if not $custom -}}
+            {{- if is_map . -}}
+                {{- if and (is_msg .GetMap.GetValue) (not (or ($c.i) ($c.i_get) ($c.i_set))) (not (render "type_is_custom" .GetMap.GetValue)) -}}
+                    Map{{ .GetMap.GetValue.GetReflect.GetName -}}
+                    [{{ template "type_name" kv "type" .GetMap.GetKey }}]
+                {{- else -}}
+                    map[{{ template "type_name" kv "type" .GetMap.GetKey "i" $c.i "i_get" $c.i_get "no_pointer" $c.no_pointer }}]
+                    {{- template "type_name" kv "type" .GetMap.GetValue "i" $c.i "i_get" $c.i_get "no_pointer" $c.no_pointer }}
+                {{- end -}}
+            {{- else if is_msg . -}}
+                {{- if .GetRepeated -}}
+                    {{- if not $c.list -}}
+                        []
+                        {{- if not (or ($c.i) ($c.i_get) ($c.no_pointer)) -}}
+                            *
+                        {{- end -}}
+                    {{- end -}}
+                {{- else if not (or ($c.i) ($c.i_get) ($c.no_pointer)) -}}
+                    *
+                {{- end -}}
+                {{- with import .GetReflect.GetDependency.GetPath -}}
+                    {{- . -}}.
+                {{- end -}}
+                {{- if or ($c.i) ($c.i_get) -}}
+                    I
+                {{- end -}}
+                {{- if and .GetRepeated $c.list -}}
+                    List{{ .GetReflect.GetName }}
+                {{- else -}}
+                    {{- .GetReflect.GetName -}}
+                {{- end -}}
+                {{- if $c.i_get -}}
+                    Get
+                {{- end -}}
+                {{- if $c.i_set -}}
+                    Set
+                {{- end -}}
+            {{- else -}}
+                {{- if .GetRepeated -}}
+                    []
+                {{- end -}}
+                {{- with import .GetReflect.GetDependency.GetPath -}}
+                    {{- . -}}.
+                {{- end -}}
+                {{- .GetReflect.GetName -}}
+            {{- end -}}
+        {{ else -}}
+            {{- $custom -}}
+        {{ end -}}
+    {{ end -}}
+    {{ with .msg -}}
+        {{- /*gotype: github.com/e-tape/litepb/proto.Message*/ -}}
+        {{- if $c.i_get -}}
+            I{{ .GetName }}Get
+        {{- else if $c.i_set -}}
+            I{{ .GetName }}Set
+        {{- else if $c.i -}}
+            I{{ .GetName }}
+        {{- else if $c.list -}}
+            List{{ .GetName }}
+        {{- else if $c.map -}}
+            Map{{ .GetName }}
+        {{- else -}}
+            {{ .GetName }}
+        {{- end -}}
+    {{ end -}}
+{{- end -}}

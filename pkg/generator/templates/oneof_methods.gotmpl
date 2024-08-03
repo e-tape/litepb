@@ -1,0 +1,53 @@
+{{- define "oneof_methods" -}}
+    {{- /*gotype: github.com/e-tape/litepb/proto.Message*/ -}}
+    {{- $msg := . -}}
+    {{ range .GetProperties -}}
+        {{ with .GetOneof -}}
+            {{- $oneof := . -}}
+            {{ range .GetFields }}
+                {{ if is_generate "RETURN_TO_POOL" -}}
+                    func (a *{{ template "oneof_type_name" kv "msg" $msg "field" . }}){{ template "func_name_oneof_return_to_pool" }}(){
+                    if a == nil { return } // TODO rathil del???
+                    {{ if is_msg .GetType -}}
+                        if a.{{ .GetName }} != nil { a.{{ .GetName }}.{{ template "func_name_oneof_return_to_pool" }}() }
+                    {{ end -}}
+                    *a = {{ template "oneof_type_name" kv "msg" $msg "field" . }}{}
+                    {{ if $oneof.GetMemPool -}}
+                        {{ template "pool_name_oneof" kv "msg" $msg "oneof" . }}.Put(a)
+                    {{ end -}}
+                    }
+                {{ end -}}
+                {{ if is_generate "STRUCT" -}}
+                    func (*{{ template "oneof_type_name" kv "msg" $msg "field" . }})oneof{{ template "oneof_type_name" kv "msg" $msg "field" $oneof }}(){}
+                {{ end -}}
+                {{ if is_generate "MARSHAL" -}}
+                    func (a *{{ template "oneof_type_name" kv "msg" $msg "field" . }})marshalTo([]byte) (int, error) { return 0, nil } // TODO rathil marshalTo
+                {{ end -}}
+                {{ if is_generate "SIZE" -}}
+                    func (a *{{ template "oneof_type_name" kv "msg" $msg "field" . }})size() int {
+                    if a == nil { return 0 }
+                    if a.{{ .GetName }} == {{ .GetZeroValue }} { return 0 }
+                    return 0 // TODO rathil size
+                    }
+                {{ end -}}
+                {{ if is_generate "GETTER" -}}
+                    func (a *{{ template "oneof_type_name" kv "msg" $msg "field" . }}) Get{{ .GetName }}() {{ template "type_name" kv
+                    "type" .GetType
+                    "i_get" true
+                    -}} {
+                    if a == nil { return {{ .GetZeroValue }} }
+                    return a.{{ .GetName }}
+                    }
+                {{ end -}}
+                {{ if is_generate "SETTER" -}}
+                    func (a *{{ template "oneof_type_name" kv "msg" $msg "field" . }}) Set{{ .GetName }}(value {{ template "type_name" kv
+                    "type" .GetType
+                    "i_get" true
+                    -}}) {{ template "oneof_type_name" kv "msg" $msg "oneof" $oneof }} {
+                    {{ template "field_set" . }}
+                    }
+                {{ end -}}
+            {{ end }}
+        {{ end -}}
+    {{ end -}}
+{{- end -}}

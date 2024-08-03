@@ -1,0 +1,19 @@
+{{- define "field_unmarshal_sfixed64_packed" -}}
+    {{- template "field_unmarshal_int" kv
+    "errorUnexpectedEnd" .errorUnexpectedEndLength
+    "valueName" .valueLength
+    "valueCreate" true
+    "valueTypeName" "int"
+    "rangeItems" (arr 0 7 14 21 28)
+    }}
+    if {{ .valueLength }} < 0 { return {{ .errorIncorrectLength }} }
+    if {{ .valueLength }} % 8 != 0 { return {{ .errorIncorrectLength }} }
+    if len(data) < index + {{ .valueLength }} { return {{ .errorUnexpectedEndValue }} }
+    if a.{{ .field.GetName }} == nil {
+    a.{{ .field.GetName }} = make([]int64, 0, {{ .valueLength }} / 8)
+    }
+    for i := 0; i < {{ .valueLength }}; i += 8 {
+    a.{{ .field.GetName }} = append(a.{{ .field.GetName }}, int64({{ import "encoding/binary" "encoding_binary" }}.LittleEndian.Uint64(data[index : index+8])))
+    index += 8
+    }
+{{- end -}}

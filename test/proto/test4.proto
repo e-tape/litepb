@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package ANOTHER.nAmE.test4;
+
+option go_package = "test/generated/test";
+
+// T4 comments
+//   - list1
+//   - list2
+message T4 {
+  // status comments
+  //   - status1
+  //   - status2
+  int32 status = 1;
+}

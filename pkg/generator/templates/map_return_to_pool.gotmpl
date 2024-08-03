@@ -1,0 +1,20 @@
+{{- define "map_return_to_pool" -}}
+    {{- /*gotype: github.com/e-tape/litepb/proto.Message*/ -}}
+    {{ if is_generate "RETURN_TO_POOL" -}}
+        func (a {{ template "type_name" kv "msg" . "map" true }}[K]){{ template "func_name_map_return_to_pool" }}() {
+        {{ if or .GetMemPoolMessage .GetMemPoolMap -}}
+            if a == nil { return }
+        {{ end -}}
+        {{ if .GetMemPoolMessage -}}
+            for _, item := range a {
+            item.{{ template "func_name_message_return_to_pool" }}()
+            }
+        {{ end -}}
+        {{ if .GetMemPoolMap -}}
+            {{ template "map_pool_init" . }}
+            clear(a)
+            pool.(*sync.Pool).Put(a)
+        {{ end -}}
+        }
+    {{ end -}}
+{{- end -}}

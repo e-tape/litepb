@@ -1,0 +1,4 @@
+{{- define "func_name_map_new" -}}
+    {{- /*gotype: github.com/e-tape/litepb/proto.Message*/ -}}
+    New{{ template "type_name" kv "msg" . "map" true }}
+{{- end -}}

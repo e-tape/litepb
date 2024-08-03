@@ -1,0 +1,73 @@
+{{- define "field_unmarshal_map" -}}
+    {{- /* for micro acceleration, we can not initiate the valueLength variable, but just skip the message length */ -}}
+    {{- $c := . -}}
+    {{ template "field_unmarshal_int" kv
+    "errorUnexpectedEnd" .errorUnexpectedEndLength
+    "valueName" .valueLength
+    "valueCreate" true
+    "valueTypeName" "int"
+    "rangeItems" (arr 0 7 14 21 28)
+    }}
+    if {{ .valueLength }} < 0 { return {{ .errorIncorrectLength }} }
+    if len(data) < index+{{ .valueLength }} { return {{ .errorUnexpectedEndValue }} }
+
+    var mapKey {{ template "type_name" kv "type" .type.GetMap.GetKey }}
+    var mapValue {{ template "type_name" kv "type" .type.GetMap.GetValue }}
+    mapEnd := index + {{ .valueLength }}
+
+    for index < mapEnd {
+    {{ template "field_unmarshal_int" kv
+    "errorUnexpectedEnd" (render "error_unexpected_end_of_field_number_kv" .fieldName)
+    "valueName" "kvNum"
+    "valueCreate" true
+    "valueTypeName" "int"
+    "rangeItems" (arr 0 7 14 21)
+    }}
+    switch kvNum {
+    {{ $paramKey := kv
+    "msg" .msg
+    "type" .type.GetMap.GetKey
+    "valueName" "mapKey"
+    "valueLength" "mapKeyLength"
+    "valueCreate" false
+    "fieldName" $c.fieldName
+    "errorUnexpectedEndLength" (render "error_unexpected_end_of_field_length_kv" $c.fieldName)
+    "errorUnexpectedEndValue" (render "error_unexpected_end_of_field_value_kv" $c.fieldName)
+    "errorUnexpectedEnd" (render "error_unexpected_end_of_field_value_kv" $c.fieldName)
+    "errorIncorrectLength" (render "error_incorrect_of_field_length_kv" $c.fieldName)
+    -}}
+    {{ with (render "field_unmarshal_map_nested" $paramKey) -}}
+        case {{ pack_field_num_int 1 (get $paramKey "in_proto") false}}:
+        {{ . }}
+    {{- end -}}
+    {{ $paramValue := kv
+    "msg" .msg
+    "type" .type.GetMap.GetValue
+    "valueName" "mapValue"
+    "valueLength" "mapValueLength"
+    "valueCreate" false
+    "fieldName" $c.fieldName
+    "errorUnexpectedEndLength" (render "error_unexpected_end_of_field_length_kv" $c.fieldName)
+    "errorUnexpectedEndValue" (render "error_unexpected_end_of_field_value_kv" $c.fieldName)
+    "errorUnexpectedEnd" (render "error_unexpected_end_of_field_value_kv" $c.fieldName)
+    "errorIncorrectLength" (render "error_incorrect_of_field_length_kv" $c.fieldName)
+    -}}
+    {{ with (render "field_unmarshal_map_nested" $paramValue) -}}
+        case {{ pack_field_num_int 2 (get $paramValue "in_proto") false}}:
+        {{ . }}
+    {{- end -}}
+    default:
+    // TODO rathil what to do if the value or key never arrived????
+    }
+    }
+    if a.{{ .field.GetName }} == nil {
+    {{ if and (is_msg .type.GetMap.GetValue) (not (render "type_is_custom" .type.GetMap.GetValue)) -}}
+        a.{{ .field.GetName }} = {{- template "field_type_path" .type -}}
+        {{ template "func_name_map_new" .type.GetMap.GetValue.GetReflect -}}
+        [{{ template "type_name" kv "type" .type.GetMap.GetKey }}](1)
+    {{ else -}}
+        a.{{ .field.GetName }} = make({{ template "type_name" kv "type" .type }}, 1)
+    {{ end -}}
+    }
+    a.{{ .field.GetName }}[{{ get $paramKey "result" }}] = {{ get $paramValue "result" }}
+{{- end -}}

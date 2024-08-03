@@ -1,0 +1,3 @@
+{{- define "error_unmarshal_custom_type_uuid" -}}
+    {{- import "fmt" -}}.Errorf("litepb: parse field value for uuid field {{ .field }}, err: %w", {{ .err }})
+{{- end -}}
